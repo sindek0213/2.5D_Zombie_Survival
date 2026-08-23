@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6db1279eadeabfd4ea4aff084a648d45, type: 3}
+  m_Name: ammo_9mm
+  m_EditorClassIdentifier: 
+  itemId: ammo_9mm
+  displayName: "9mm \uD0C4\uC57D"
+  icon: {fileID: 0}
+  itemType: 0
+  maxStack: 30
+  gridWidth: 1
+  gridHeight: 1
+  equipmentSlot: 0
+  containerWidth: 0
+  containerHeight: 0
+  usable: 1
+  description: "\uAD8C\uCD1D \uD0C4\uC57D\uC785\uB2C8\uB2E4."
