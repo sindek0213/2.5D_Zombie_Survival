@@ -14,13 +14,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemId: backpack_small
   displayName: "\uC18C\uD615 \uAC00\uBC29"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: d971ddc26290a1345bbeac385a22cb82, type: 3}
   itemType: 6
+  rarity: 1
+  ammoType: 0
   maxStack: 1
   gridWidth: 4
   gridHeight: 4
+  gridShape: 01010101010101010101010101010101
   equipmentSlot: 5
+  weaponDefinition: {fileID: 0}
+  armorDamageReduction: 0
+  armorMaxDurability: 0
   containerWidth: 5
   containerHeight: 4
+  healthRestoreAmount: 0
+  satietyRestoreAmount: 0
   usable: 0
+  baseValue: 400
   description: "5x4 \uB0B4\uBD80 \uACA9\uC790\uB97C \uC81C\uACF5\uD569\uB2C8\uB2E4."

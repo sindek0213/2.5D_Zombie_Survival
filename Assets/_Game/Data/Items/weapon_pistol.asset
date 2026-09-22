@@ -14,13 +14,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemId: weapon_pistol
   displayName: "\uAD8C\uCD1D"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 16ede970f0e18b34aa74efed781e4aa0, type: 3}
   itemType: 4
+  rarity: 1
+  ammoType: 0
   maxStack: 1
   gridWidth: 2
   gridHeight: 1
+  gridShape: 0101
   equipmentSlot: 2
+  weaponDefinition: {fileID: 11400000, guid: b8d2f4a603c94e7ba01d3f5286c9e714, type: 2}
+  armorDamageReduction: 0
+  armorMaxDurability: 0
   containerWidth: 0
   containerHeight: 0
+  healthRestoreAmount: 0
+  satietyRestoreAmount: 0
   usable: 0
-  description: "\uBCF4\uC870\uBB34\uAE30\uC785\uB2C8\uB2E4."
+  baseValue: 300
+  description: "\uBC18\uC790\uB3D9 \uBCF4\uC870\uBB34\uAE30\uC785\uB2C8\uB2E4."

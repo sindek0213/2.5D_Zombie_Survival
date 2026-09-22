@@ -16,11 +16,20 @@ MonoBehaviour:
   displayName: "\uACE0\uC7A5 \uB09C \uBB34\uC804\uAE30"
   icon: {fileID: 0}
   itemType: 3
+  rarity: 3
+  ammoType: 0
   maxStack: 1
   gridWidth: 2
   gridHeight: 2
+  gridShape: 01010101
   equipmentSlot: 0
+  weaponDefinition: {fileID: 0}
+  armorDamageReduction: 0
+  armorMaxDurability: 0
   containerWidth: 0
   containerHeight: 0
+  healthRestoreAmount: 0
+  satietyRestoreAmount: 0
   usable: 0
+  baseValue: 250
   description: "\uD0C8\uCD9C \uC870\uAC74\uC6A9 \uD018\uC2A4\uD2B8 \uC544\uC774\uD15C\uC785\uB2C8\uB2E4."

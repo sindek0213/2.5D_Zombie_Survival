@@ -19,3 +19,12 @@
 .vs/
 .idea/
 
+# Unity에서 사용할 최종 리소스는 Assets 아래에 따로 보관합니다.
+# 원본 아트, Blender 작업 파일과 함께 설치된 도구는 용량이 매우 크므로 로컬 작업 자료로만 유지합니다.
+/ArtRemake/
+
+# 자동 테스트가 실행될 때마다 생성되는 결과와 로그는 소스 코드가 아니므로 새 파일만 Git에서 제외합니다.
+# 이미 저장소에 존재하는 EditMode.xml과 PlayMode.xml은 이 규칙을 추가해도 자동 삭제되지 않습니다.
+/TestResults/*.log
+/TestResults/*-*.xml
+

@@ -16,11 +16,20 @@ MonoBehaviour:
   displayName: "9mm \uD0C4\uC57D"
   icon: {fileID: 0}
   itemType: 0
+  rarity: 0
+  ammoType: 1
   maxStack: 30
   gridWidth: 1
   gridHeight: 1
+  gridShape: 01
   equipmentSlot: 0
+  weaponDefinition: {fileID: 0}
+  armorDamageReduction: 0
+  armorMaxDurability: 0
   containerWidth: 0
   containerHeight: 0
-  usable: 1
-  description: "\uAD8C\uCD1D \uD0C4\uC57D\uC785\uB2C8\uB2E4."
+  healthRestoreAmount: 0
+  satietyRestoreAmount: 0
+  usable: 0
+  baseValue: 2
+  description: "9mm \uAD8C\uCD1D\uC6A9 \uD0C4\uC57D\uC785\uB2C8\uB2E4."

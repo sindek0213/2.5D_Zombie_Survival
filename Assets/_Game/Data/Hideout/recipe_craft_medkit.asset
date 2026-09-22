@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dd58607ebc4d7f849873add7803fdb80, type: 3}
+  m_Name: recipe_craft_medkit
+  m_EditorClassIdentifier: 
+  recipeId: craft_medkit
+  displayName: "\uC18C\uD615 \uAD6C\uAE09\uC0C1\uC790"
+  facilityType: 3
+  requiredFacilityLevel: 1
+  ingredients:
+  - item: {fileID: 11400000, guid: 07f80b697df7df04bbda0befa58b27ad, type: 2}
+    quantity: 4
+  - item: {fileID: 11400000, guid: d8cc5416db26e6a4a9be2463e0c67aa2, type: 2}
+    quantity: 1
+  outputItem: {fileID: 11400000, guid: d563bd5957ca6824a89fb6ea1d9cb420, type: 2}
+  baseOutputQuantity: 1
+  bonusOutputPerLevel: 1

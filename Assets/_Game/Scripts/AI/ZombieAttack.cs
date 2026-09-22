@@ -7,10 +7,17 @@ namespace ZombieSurvival.AI
     // 공격 거리 판정은 Brain이 담당하고 이 클래스는 쿨다운과 IDamageable 호출에만 책임을 둡니다.
     public sealed class ZombieAttack : MonoBehaviour
     {
-        [SerializeField, Min(0f)] private float damage = 15f;
+        [SerializeField, Min(0f)] private float damage = 12f;
         [SerializeField, Min(0.05f)] private float attackInterval = 1f;
 
         private float nextAttackTime;
+
+        // 스폰된 좀비 종류의 한 번 공격 피해량을 설정합니다.
+        // 공격 주기와 쿨다운 계산은 그대로 유지되므로 종류 데이터는 피해량만 책임집니다.
+        public void ConfigureDamage(float newDamage)
+        {
+            damage = Mathf.Max(0f, newDamage);
+        }
 
         // target이 없거나 Time.time이 nextAttackTime보다 작으면 아직 다음 공격 시점이 아니므로 실패합니다.
         // 부모 방향으로 IDamageable을 검색해 캐릭터의 자식 Transform이 목표로 전달되어도 루트 Health를 찾습니다.

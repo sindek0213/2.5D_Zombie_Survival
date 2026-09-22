@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="3" result="Passed" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-09-20 14:24:47Z" end-time="2026-09-20 14:24:48Z" duration="1.1677283">
+  <test-suite type="TestSuite" id="1000" name="2.5D_Zombie_Survival" fullname="2.5D_Zombie_Survival" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-09-20 14:24:47Z" end-time="2026-09-20 14:24:48Z" duration="1.167728" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties />
+    <test-suite type="Assembly" id="1006" name="ZombieSurvival.PlayModeTests.dll" fullname="C:/Users/Public/Documents/ESTsoft/CreatorTemp/ZombieSurvival_InventoryUXTest_20260919/Library/ScriptAssemblies/ZombieSurvival.PlayModeTests.dll" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-09-20 14:24:47Z" end-time="2026-09-20 14:24:48Z" duration="1.163300" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="72888" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="PlayMode" />
+      </properties>
+      <test-suite type="TestFixture" id="1002" name="RoadmapPlayModeTests" fullname="RoadmapPlayModeTests" classname="RoadmapPlayModeTests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-09-20 14:24:47Z" end-time="2026-09-20 14:24:48Z" duration="1.162244" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-case id="1003" name="EquippedArmor_ReducesHealthDamageAndConsumesDurability" fullname="RoadmapPlayModeTests.EquippedArmor_ReducesHealthDamageAndConsumesDurability" methodname="EquippedArmor_ReducesHealthDamageAndConsumesDurability" classname="RoadmapPlayModeTests" runstate="Runnable" seed="1479321617" result="Passed" start-time="2026-09-20 14:24:47Z" end-time="2026-09-20 14:24:47Z" duration="0.019403" asserts="0">
+          <properties>
+            <property name="_JOINTYPE" value="UnityCombinatorial" />
+          </properties>
+        </test-case>
+        <test-case id="1005" name="GameLoopScenes_LoadWithRoadmapSystemsConnected" fullname="RoadmapPlayModeTests.GameLoopScenes_LoadWithRoadmapSystemsConnected" methodname="GameLoopScenes_LoadWithRoadmapSystemsConnected" classname="RoadmapPlayModeTests" runstate="Runnable" seed="1902075521" result="Passed" start-time="2026-09-20 14:24:47Z" end-time="2026-09-20 14:24:48Z" duration="1.122794" asserts="0">
+          <properties>
+            <property name="_JOINTYPE" value="UnityCombinatorial" />
+          </properties>
+        </test-case>
+        <test-case id="1004" name="ZombieDeath_SpawnsConfiguredWorldLootOnce" fullname="RoadmapPlayModeTests.ZombieDeath_SpawnsConfiguredWorldLootOnce" methodname="ZombieDeath_SpawnsConfiguredWorldLootOnce" classname="RoadmapPlayModeTests" runstate="Runnable" seed="592307326" result="Passed" start-time="2026-09-20 14:24:48Z" end-time="2026-09-20 14:24:48Z" duration="0.010380" asserts="0">
+          <properties>
+            <property name="_JOINTYPE" value="UnityCombinatorial" />
+          </properties>
+        </test-case>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

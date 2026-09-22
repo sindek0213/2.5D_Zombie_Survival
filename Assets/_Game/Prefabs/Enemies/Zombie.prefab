@@ -14,6 +14,9 @@ GameObject:
   - component: {fileID: 4691495864199296954}
   - component: {fileID: 2575344742098428704}
   - component: {fileID: 8296108651656984292}
+  - component: {fileID: 7723589999600848552}
+  - component: {fileID: 8800000000000000011}
+  - component: {fileID: 8800000000000000012}
   m_Layer: 0
   m_Name: Zombie
   m_TagString: Untagged
@@ -75,7 +78,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3b576f559eab9be43ad0c1c779394669, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHealth: 100
+  maxHealth: 90
   destroyOnDeath: 1
 --- !u!114 &4691495864199296954
 MonoBehaviour:
@@ -89,8 +92,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e6e03a7ab63900c4b9a9f9ced3dd5411, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 2.2
+  moveSpeed: 2.35
   gravity: -20
+  agentAcceleration: 12
+  agentStoppingDistance: 1.05
+  agentPlacementDistance: 2
+  destinationSampleDistance: 2
+  destinationRefreshInterval: 0.2
+  targetMoveThreshold: 0.35
+  knockbackDamping: 10
 --- !u!114 &2575344742098428704
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -103,7 +113,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 678313008e96f5f46a5256e5327686c8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  damage: 15
+  damage: 12
   attackInterval: 1
 --- !u!114 &8296108651656984292
 MonoBehaviour:
@@ -120,6 +130,51 @@ MonoBehaviour:
   detectionRange: 9
   attackRange: 1.35
   loseTargetRange: 13
+--- !u!114 &7723589999600848552
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5058318393865375081}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5be9904f46a01354da10647755d9c03c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  lootEntries: []
+--- !u!114 &8800000000000000011
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5058318393865375081}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a21831a460fa43cbac33e4b010cc0f72, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  health: {fileID: 8620687728509160241}
+  targetRenderer: {fileID: 115811744361928394}
+  flashColor: {r: 1, g: 0.18, b: 0.12, a: 1}
+  flashDuration: 0.12
+--- !u!114 &8800000000000000012
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5058318393865375081}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9f8c43555e074024a63a7b37ce444a33, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  health: {fileID: 8620687728509160241}
+  role: 1
+  impactVolume: 0.38
+  deathVolume: 0.5
 --- !u!1 &8667565464548796308
 GameObject:
   m_ObjectHideFlags: 0

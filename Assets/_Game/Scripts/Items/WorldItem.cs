@@ -18,7 +18,14 @@ namespace ZombieSurvival.Items
         public bool CanInteract => definition != null && nearbyInventory != null;
         public string InteractionPrompt => definition == null
             ? string.Empty
-            : $"E - {definition.DisplayName} x{quantity} 줍기";
+            : $"[E]  {definition.DisplayName}  ×{quantity}  줍기";
+
+        private void Awake()
+        {
+            // 바닥에 놓인 작은 아이템은 물리 장애물이 아니라 줍기 감지 대상이므로 모든 Collider를 Trigger로 사용합니다.
+            // 이렇게 하면 CharacterController가 아이템에 막히거나 작은 Cube 위로 계단처럼 올라타는 현상이 사라집니다.
+            ConfigurePickupColliders();
+        }
 
         // 탐색 중인 플레이어 인벤토리를 연결합니다.
         public void SetInteractor(PlayerInventory inventory) => nearbyInventory = inventory;
@@ -28,6 +35,54 @@ namespace ZombieSurvival.Items
         {
             definition = item;
             quantity = Mathf.Max(1, amount);
+            ConfigurePickupColliders();
+        }
+
+        // 좀비 전리품처럼 플레이 도중 만들어지는 아이템을 기존 배치 아이템과 같은 구조로 생성합니다.
+        // 임시 Cube 외형은 최종 드롭 프리팹이 준비되기 전에도 Collider, 색상과 상호작용을 모두 시험할 수 있게 해 줍니다.
+        public static WorldItem Spawn(ItemDefinition item, int amount, Vector3 position)
+        {
+            if (item == null || amount <= 0) return null;
+
+            GameObject drop = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            drop.name = "Dropped_" + item.ItemId;
+            drop.transform.position = position + Vector3.up * 0.28f;
+            drop.transform.localScale = new Vector3(0.42f, 0.42f, 0.42f);
+
+            Renderer renderer = drop.GetComponent<Renderer>();
+            if (renderer != null)
+            {
+                Shader shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+                if (shader != null)
+                    renderer.material = new Material(shader) { color = GetDropColor(item.Type) };
+            }
+
+            WorldItem worldItem = drop.AddComponent<WorldItem>();
+            worldItem.Initialize(item, amount);
+            return worldItem;
+        }
+
+        // 아이템 종류마다 임시 드롭 색상을 통일해 멀리서도 탄약·치료품·장비를 대략 구분할 수 있게 합니다.
+        private static Color GetDropColor(ItemType type)
+        {
+            switch (type)
+            {
+                case ItemType.Ammo: return new Color(0.82f, 0.68f, 0.22f);
+                case ItemType.Healing: return new Color(0.85f, 0.2f, 0.2f);
+                case ItemType.Weapon: return new Color(0.28f, 0.3f, 0.32f);
+                case ItemType.Armor: return new Color(0.25f, 0.45f, 0.55f);
+                case ItemType.Container: return new Color(0.32f, 0.48f, 0.3f);
+                // 강화 재료는 장비나 소비품과 구분되는 주황빛으로 표시해 레이드 중 경제 자원을 빠르게 알아보게 합니다.
+                case ItemType.Material: return new Color(0.78f, 0.42f, 0.16f);
+                default: return new Color(0.55f, 0.62f, 0.68f);
+            }
+        }
+
+        private void ConfigurePickupColliders()
+        {
+            Collider[] colliders = GetComponentsInChildren<Collider>(true);
+            foreach (Collider collider in colliders)
+                if (collider != null) collider.isTrigger = true;
         }
 
         // TryAdd는 전체 수량을 받을 공간이 있을 때만 true를 반환합니다.

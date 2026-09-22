@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 074d17106b56cb74a924a7f76e74dec7, type: 3}
+  m_Name: rifle
+  m_EditorClassIdentifier: 
+  displayName: "\uB0A1\uC740 \uC18C\uCD1D"
+  triggerMode: 1
+  damage: 28
+  range: 38
+  fireInterval: 0.14
+  reloadDuration: 1.7
+  magazineSize: 20
+  ammoType: 2
+  pelletCount: 1
+  spreadAngle: 0
+  accuracySpreadAngle: 1.6
+  knockbackForce: 1.1

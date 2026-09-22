@@ -226,7 +226,14 @@ GameObject:
   - component: {fileID: 2856507663236805472}
   - component: {fileID: 8335442159652409083}
   - component: {fileID: 6999252766280718754}
+  - component: {fileID: 8800000000000000006}
+  - component: {fileID: 2690677932313619572}
   - component: {fileID: 7738832721646612932}
+  - component: {fileID: 8800000000000000003}
+  - component: {fileID: 8800000000000000001}
+  - component: {fileID: 8800000000000000004}
+  - component: {fileID: 8800000000000000005}
+  - component: {fileID: 8800000000000000002}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -323,12 +330,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   weaponSocket: {fileID: 3478876822258667555}
-  damage: 34
-  range: 30
-  fireInterval: 0.2
-  reloadDuration: 1.1
-  magazineSize: 8
-  startingReserve: 24
   hitMask:
     serializedVersion: 2
     m_Bits: 4294967295
@@ -360,6 +361,43 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gridWidth: 10
   gridHeight: 6
+  healingUseDuration: 1.5
+  foodUseDuration: 1.2
+--- !u!114 &8800000000000000006
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8876641461711413501}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4e9f1a73d214c08ab7f52d9618e4c6a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maximumSatiety: 100
+  startingSatiety: 85
+  drainPerSecond: 0.25
+  lowSatietyThreshold: 20
+  minimumMovementMultiplier: 0.75
+  maximumStamina: 100
+  startingStamina: 100
+  sprintDrainPerSecond: 20
+  staminaRecoveryPerSecond: 16
+  sprintSpeedMultiplier: 1.4
+  exhaustedResumeStamina: 25
+--- !u!114 &2690677932313619572
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8876641461711413501}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1bb8ccca9847de74386e2761ad9bbb45, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &7738832721646612932
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -376,3 +414,83 @@ MonoBehaviour:
   interactionMask:
     serializedVersion: 2
     m_Bits: 4294967295
+--- !u!114 &8800000000000000003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8876641461711413501}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d7463c4012454ece9e1adbfa3342c427, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  movement: {fileID: 0}
+  aim: {fileID: 0}
+  combat: {fileID: 0}
+  interaction: {fileID: 0}
+--- !u!114 &8800000000000000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8876641461711413501}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb8e855fcfea4ddc9f714f270339a28c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  combat: {fileID: 0}
+  tracerDuration: 0.07
+  muzzleLightDuration: 0.05
+  tracerWidth: 0.035
+  missColor: {r: 1, g: 0.82, b: 0.2, a: 1}
+  hitColor: {r: 1, g: 0.28, b: 0.12, a: 1}
+--- !u!114 &8800000000000000004
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8876641461711413501}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4789cfc3ae4481395a7c82b8e6b6264, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  combat: {fileID: 0}
+  volume: 0.42
+--- !u!114 &8800000000000000005
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8876641461711413501}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9f8c43555e074024a63a7b37ce444a33, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  health: {fileID: 8335442159652409083}
+  role: 0
+  impactVolume: 0.38
+  deathVolume: 0.5
+--- !u!114 &8800000000000000002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8876641461711413501}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a21831a460fa43cbac33e4b010cc0f72, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  health: {fileID: 8335442159652409083}
+  targetRenderer: {fileID: 3342574283026973968}
+  flashColor: {r: 1, g: 0.18, b: 0.12, a: 1}
+  flashDuration: 0.12

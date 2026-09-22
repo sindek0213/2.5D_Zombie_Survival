@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 074d17106b56cb74a924a7f76e74dec7, type: 3}
+  m_Name: shotgun
+  m_EditorClassIdentifier: 
+  displayName: "\uD38C\uD504 \uC0B0\uD0C4\uCD1D"
+  triggerMode: 0
+  damage: 14
+  range: 14
+  fireInterval: 0.85
+  reloadDuration: 2.3
+  magazineSize: 5
+  ammoType: 3
+  pelletCount: 7
+  spreadAngle: 16
+  accuracySpreadAngle: 1.5
+  knockbackForce: 0.35

@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 39bd96ec24b94b438225764f7c694ab0, type: 3}
+  m_Name: brute
+  m_EditorClassIdentifier: 
+  displayName: "\uD2BC\uD2BC\uD55C \uC880\uBE44"
+  prefab: {fileID: 5058318393865375081, guid: 0220f09235faa5946b9adee48fcf3ac1, type: 3}
+  spawnWeight: 0.25
+  unlockTimeSeconds: 120
+  maximumHealth: 190
+  movementSpeed: 1.65
+  attackDamage: 22
+  visualColor: {r: 0.58, g: 0.24, b: 0.18, a: 1}
+  lootEntries:
+  - item: {fileID: 11400000, guid: 7ec0e42290ebbb54dadc6adb5717b920, type: 2}
+    dropChance: 0.7
+    minimumQuantity: 5
+    maximumQuantity: 12
+  - item: {fileID: 11400000, guid: 2e14d7a9348d4753b74be12827f8d6c1, type: 2}
+    dropChance: 0.25
+    minimumQuantity: 2
+    maximumQuantity: 4
+  - item: {fileID: 11400000, guid: d8cc5416db26e6a4a9be2463e0c67aa2, type: 2}
+    dropChance: 0.58
+    minimumQuantity: 2
+    maximumQuantity: 5
+  - item: {fileID: 11400000, guid: 238ae109b360ba5409a946faab655b93, type: 2}
+    dropChance: 0.24
+    minimumQuantity: 1
+    maximumQuantity: 2
+  - item: {fileID: 11400000, guid: d18a551b033b4de478c036b83fc76205, type: 2}
+    dropChance: 0.08
+    minimumQuantity: 1
+    maximumQuantity: 1

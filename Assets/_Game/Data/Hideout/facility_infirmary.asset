@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 34540080a41656d48b805a83908473d7, type: 3}
+  m_Name: facility_infirmary
+  m_EditorClassIdentifier: 
+  facilityId: infirmary
+  displayName: "\uCE58\uB8CC\uC18C"
+  description: "\uCC9C \uC870\uAC01\uC744 \uC0AC\uC6A9\uD574 \uC758\uB8CC\uD488\uC744
+    \uB9CC\uB4E4\uACE0 \uCE58\uB8CC \uD6A8\uC728\uC744 \uB192\uC785\uB2C8\uB2E4."
+  facilityType: 3
+  startingLevel: 1
+  maximumLevel: 3
+  baseEffectValue: 1
+  effectPerLevel: 1
+  effectLabel: "\uC758\uB8CC\uD488 \uC81C\uC791 \uC218\uB7C9"
+  upgradeSteps:
+  - targetLevel: 2
+    costs:
+    - item: {fileID: 11400000, guid: 07f80b697df7df04bbda0befa58b27ad, type: 2}
+      quantity: 5
+    - item: {fileID: 11400000, guid: d8cc5416db26e6a4a9be2463e0c67aa2, type: 2}
+      quantity: 2
+  - targetLevel: 3
+    costs:
+    - item: {fileID: 11400000, guid: 07f80b697df7df04bbda0befa58b27ad, type: 2}
+      quantity: 9
+    - item: {fileID: 11400000, guid: 238ae109b360ba5409a946faab655b93, type: 2}
+      quantity: 3

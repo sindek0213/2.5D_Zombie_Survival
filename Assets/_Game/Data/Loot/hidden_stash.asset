@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1cda75633c904a1ab8f4d2f37f89cad9, type: 3}
+  m_Name: hidden_stash
+  m_EditorClassIdentifier: 
+  displayName: "\uC740\uB2C9 \uBCF4\uAE09\uD488"
+  minimumRolls: 2
+  maximumRolls: 3
+  entries:
+  - item: {fileID: 11400000, guid: 9f66314435deee74681361b56c70f0f1, type: 2}
+    weight: 1.2
+    minimumQuantity: 1
+    maximumQuantity: 1
+  - item: {fileID: 11400000, guid: 24bd518f8a78a084794a91f18883a77b, type: 2}
+    weight: 3
+    minimumQuantity: 5
+    maximumQuantity: 12
+  - item: {fileID: 11400000, guid: 2e14d7a9348d4753b74be12827f8d6c1, type: 2}
+    weight: 1.5
+    minimumQuantity: 2
+    maximumQuantity: 5
+  - item: {fileID: 11400000, guid: d563bd5957ca6824a89fb6ea1d9cb420, type: 2}
+    weight: 2
+    minimumQuantity: 1
+    maximumQuantity: 1
+  - item: {fileID: 11400000, guid: 1aaa2527bbec9c842a15c7524b1a5586, type: 2}
+    weight: 3
+    minimumQuantity: 1
+    maximumQuantity: 2
+  - item: {fileID: 11400000, guid: d8cc5416db26e6a4a9be2463e0c67aa2, type: 2}
+    weight: 2.6
+    minimumQuantity: 2
+    maximumQuantity: 6
+  - item: {fileID: 11400000, guid: 238ae109b360ba5409a946faab655b93, type: 2}
+    weight: 1.1
+    minimumQuantity: 1
+    maximumQuantity: 3
+  - item: {fileID: 11400000, guid: 07f80b697df7df04bbda0befa58b27ad, type: 2}
+    weight: 2.8
+    minimumQuantity: 2
+    maximumQuantity: 6
+  - item: {fileID: 11400000, guid: e124b21129176e440892117031d2914e, type: 2}
+    weight: 0.5
+    minimumQuantity: 1
+    maximumQuantity: 1

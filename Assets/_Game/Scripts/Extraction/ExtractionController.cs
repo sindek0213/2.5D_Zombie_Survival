@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using ZombieSurvival.Inventory;
 using ZombieSurvival.Player;
+using ZombieSurvival.Core;
 
 namespace ZombieSurvival.Extraction
 {
@@ -23,13 +24,22 @@ namespace ZombieSurvival.Extraction
         [SerializeField] private Renderer visualRenderer;
 
         private PlayerInventory playerInventory;
+        private RaidSession raidSession;
         private bool playerInside;
+        private ExtractionState lastRenderedState;
+        private bool hasRenderedState;
 
         public ExtractionState State { get; private set; } = ExtractionState.Locked;
         public float Progress { get; private set; }
         public float RemainingTime => Mathf.Max(0f, countdownDuration - Progress);
         public ExtractionRequirement Requirement => requirement;
+        public RaidSession RaidSession => raidSession;
+        public bool ItemRequirementMet => HasItemRequirement();
+        public bool RaidRequirementMet => raidSession == null || raidSession.AreExtractionConditionsMet;
         public event Action ExtractionSucceeded;
+
+        // RaidSession이 처치 수와 최소 생존 시간 조건을 제공하도록 서로를 연결합니다.
+        public void SetRaidSession(RaidSession session) => raidSession = session;
 
         private void Awake()
         {
@@ -43,6 +53,7 @@ namespace ZombieSurvival.Extraction
             // 구역 밖에서도 HUD와 Visual이 조건 충족 여부를 갱신할 수 있도록 씬의 플레이어 인벤토리를 미리 찾습니다.
             // OnTriggerEnter에서만 참조를 얻으면 무전기를 주운 순간이 아니라 구역에 들어간 뒤에야 Available로 바뀌게 됩니다.
             playerInventory = FindObjectOfType<PlayerInventory>();
+            if (raidSession == null) raidSession = FindObjectOfType<RaidSession>();
         }
 
         private void Update()
@@ -97,6 +108,11 @@ namespace ZombieSurvival.Extraction
 
         private bool HasRequirement()
         {
+            return HasItemRequirement() && RaidRequirementMet;
+        }
+
+        private bool HasItemRequirement()
+        {
             return requirement != null && playerInventory != null &&
                    HasRequiredQuantity(playerInventory.CountItem(requirement.RequiredItemId), requirement.RequiredQuantity);
         }
@@ -105,12 +121,21 @@ namespace ZombieSurvival.Extraction
         {
             State = ExtractionState.Succeeded;
 
-            // 성공 뒤 플레이어가 움직이거나 총을 쏘지 못하게 현재 조작 컴포넌트를 비활성화합니다.
-            // 다음 단계에서 이 지점에 RaidResult 생성과 Hideout 씬 전환을 연결할 예정입니다.
-            PlayerMovement movement = playerInventory.GetComponent<PlayerMovement>();
-            PlayerCombat combat = playerInventory.GetComponent<PlayerCombat>();
-            if (movement != null) movement.enabled = false;
-            if (combat != null) combat.enabled = false;
+            // 성공 즉시 PlayerControlGate에 탈출 지점 자신의 잠금을 남겨 결과 생성 전에 추가 조작이 들어오지 않게 합니다.
+            // 아래 이벤트를 RaidSession이 받아 별도 종료 잠금을 추가하고 RaidResult 생성과 Hideout 복귀를 순서대로 진행합니다.
+            PlayerControlGate controlGate = playerInventory.GetComponent<PlayerControlGate>();
+            if (controlGate != null)
+            {
+                controlGate.AcquireLock(this);
+            }
+            else
+            {
+                // Gate가 없는 이전 테스트 프리팹에서도 탈출 직후 이동과 사격이 계속되지 않도록 예비 처리를 유지합니다.
+                PlayerMovement movement = playerInventory.GetComponent<PlayerMovement>();
+                PlayerCombat combat = playerInventory.GetComponent<PlayerCombat>();
+                if (movement != null) movement.enabled = false;
+                if (combat != null) combat.enabled = false;
+            }
             ExtractionSucceeded?.Invoke();
             UpdateVisual();
         }
@@ -119,12 +144,15 @@ namespace ZombieSurvival.Extraction
         // Renderer가 연결되지 않은 테스트 오브젝트에서도 로직이 작동하도록 null이면 시각 처리만 건너뜁니다.
         private void UpdateVisual()
         {
-            if (visualRenderer == null) return;
+            if (visualRenderer == null || (hasRenderedState && lastRenderedState == State)) return;
             visualRenderer.material.color = State == ExtractionState.Locked
                 ? new Color(0.45f, 0.08f, 0.08f)
                 : State == ExtractionState.Succeeded
                     ? new Color(0.1f, 0.9f, 0.9f)
                     : new Color(0.1f, 0.8f, 0.3f);
+            // 상태가 실제로 달라졌을 때만 Renderer 색을 다시 설정해 매 프레임 material 접근과 색상 쓰기를 반복하지 않습니다.
+            lastRenderedState = State;
+            hasRenderedState = true;
         }
 
         // 보유 수량이 요구 수량 이상일 때만 조건을 충족합니다.

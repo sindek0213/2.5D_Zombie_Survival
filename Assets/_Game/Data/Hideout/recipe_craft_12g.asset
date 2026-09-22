@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dd58607ebc4d7f849873add7803fdb80, type: 3}
+  m_Name: recipe_craft_12g
+  m_EditorClassIdentifier: 
+  recipeId: craft_12g
+  displayName: "12\uAC8C\uC774\uC9C0 \uC0B0\uD0C4 \uBB36\uC74C"
+  facilityType: 2
+  requiredFacilityLevel: 3
+  ingredients:
+  - item: {fileID: 11400000, guid: d8cc5416db26e6a4a9be2463e0c67aa2, type: 2}
+    quantity: 5
+  - item: {fileID: 11400000, guid: 238ae109b360ba5409a946faab655b93, type: 2}
+    quantity: 2
+  outputItem: {fileID: 11400000, guid: 2e14d7a9348d4753b74be12827f8d6c1, type: 2}
+  baseOutputQuantity: 8
+  bonusOutputPerLevel: 0

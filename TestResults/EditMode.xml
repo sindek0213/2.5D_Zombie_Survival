@@ -1,0 +1,764 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="200" result="Passed" total="200" passed="200" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.4478875">
+  <test-suite type="TestSuite" id="1242" name="2.5D_Zombie_Survival" fullname="2.5D_Zombie_Survival" runstate="Runnable" testcasecount="200" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.447888" total="200" passed="200" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties />
+    <test-suite type="Assembly" id="1483" name="ZombieSurvival.EditModeTests.dll" fullname="C:/Users/Public/Documents/ESTsoft/CreatorTemp/ZombieSurvival_InventoryUXTest_20260919/Library/ScriptAssemblies/ZombieSurvival.EditModeTests.dll" runstate="Runnable" testcasecount="200" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.434444" total="200" passed="200" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="34088" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+      </properties>
+      <test-suite type="TestFixture" id="1246" name="CombatTests" fullname="CombatTests" classname="CombatTests" runstate="Runnable" testcasecount="51" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.135971" total="51" passed="51" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="ParameterizedMethod" id="1288" name="AmmoHud_BuildAmmoText_DescribesCombatState" fullname="CombatTests.AmmoHud_BuildAmmoText_DescribesCombatState" classname="CombatTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.013938" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-case id="1284" name="AmmoHud_BuildAmmoText_DescribesCombatState(-1,-1,False,&quot;- / -&quot;)" fullname="CombatTests.AmmoHud_BuildAmmoText_DescribesCombatState(-1,-1,False,&quot;- / -&quot;)" methodname="AmmoHud_BuildAmmoText_DescribesCombatState" classname="CombatTests" runstate="Runnable" seed="1068707586" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.007553" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1285" name="AmmoHud_BuildAmmoText_DescribesCombatState(15,45,False,&quot;15 / 45&quot;)" fullname="CombatTests.AmmoHud_BuildAmmoText_DescribesCombatState(15,45,False,&quot;15 / 45&quot;)" methodname="AmmoHud_BuildAmmoText_DescribesCombatState" classname="CombatTests" runstate="Runnable" seed="632033894" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000149" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1286" name="AmmoHud_BuildAmmoText_DescribesCombatState(0,12,False,&quot;0 / 12&quot;)" fullname="CombatTests.AmmoHud_BuildAmmoText_DescribesCombatState(0,12,False,&quot;0 / 12&quot;)" methodname="AmmoHud_BuildAmmoText_DescribesCombatState" classname="CombatTests" runstate="Runnable" seed="19640842" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000077" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1287" name="AmmoHud_BuildAmmoText_DescribesCombatState(7,21,True,&quot;재장전 중...&quot;)" fullname="CombatTests.AmmoHud_BuildAmmoText_DescribesCombatState(7,21,True,&quot;재장전 중...&quot;)" methodname="AmmoHud_BuildAmmoText_DescribesCombatState" classname="CombatTests" runstate="Runnable" seed="734475290" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000043" asserts="0">
+            <properties />
+          </test-case>
+        </test-suite>
+        <test-suite type="ParameterizedMethod" id="1265" name="CalculateAccuracyAngle_MapsRollAcrossWeaponSpread" fullname="CombatTests.CalculateAccuracyAngle_MapsRollAcrossWeaponSpread" classname="CombatTests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.002199" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-case id="1262" name="CalculateAccuracyAngle_MapsRollAcrossWeaponSpread(0.0f,4.0f,-2.0f)" fullname="CombatTests.CalculateAccuracyAngle_MapsRollAcrossWeaponSpread(0.0f,4.0f,-2.0f)" methodname="CalculateAccuracyAngle_MapsRollAcrossWeaponSpread" classname="CombatTests" runstate="Runnable" seed="1498904050" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.001363" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1263" name="CalculateAccuracyAngle_MapsRollAcrossWeaponSpread(0.5f,4.0f,0.0f)" fullname="CombatTests.CalculateAccuracyAngle_MapsRollAcrossWeaponSpread(0.5f,4.0f,0.0f)" methodname="CalculateAccuracyAngle_MapsRollAcrossWeaponSpread" classname="CombatTests" runstate="Runnable" seed="1721441536" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000106" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1264" name="CalculateAccuracyAngle_MapsRollAcrossWeaponSpread(1.0f,4.0f,2.0f)" fullname="CombatTests.CalculateAccuracyAngle_MapsRollAcrossWeaponSpread(1.0f,4.0f,2.0f)" methodname="CalculateAccuracyAngle_MapsRollAcrossWeaponSpread" classname="CombatTests" runstate="Runnable" seed="425947682" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000054" asserts="0">
+            <properties />
+          </test-case>
+        </test-suite>
+        <test-case id="1266" name="CalculateEffectiveAccuracySpread_AimingReducesOnlyCurrentShotError" fullname="CombatTests.CalculateEffectiveAccuracySpread_AimingReducesOnlyCurrentShotError" methodname="CalculateEffectiveAccuracySpread_AimingReducesOnlyCurrentShotError" classname="CombatTests" runstate="Runnable" seed="674395731" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000217" asserts="0">
+          <properties />
+        </test-case>
+        <test-suite type="ParameterizedMethod" id="1261" name="CalculatePelletAngle_DistributesPelletsAcrossTotalSpread" fullname="CombatTests.CalculatePelletAngle_DistributesPelletsAcrossTotalSpread" classname="CombatTests" runstate="Runnable" testcasecount="5" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.001743" total="5" passed="5" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-case id="1256" name="CalculatePelletAngle_DistributesPelletsAcrossTotalSpread(0,5,20.0f,-10.0f)" fullname="CombatTests.CalculatePelletAngle_DistributesPelletsAcrossTotalSpread(0,5,20.0f,-10.0f)" methodname="CalculatePelletAngle_DistributesPelletsAcrossTotalSpread" classname="CombatTests" runstate="Runnable" seed="809451499" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000300" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1257" name="CalculatePelletAngle_DistributesPelletsAcrossTotalSpread(1,5,20.0f,-5.0f)" fullname="CombatTests.CalculatePelletAngle_DistributesPelletsAcrossTotalSpread(1,5,20.0f,-5.0f)" methodname="CalculatePelletAngle_DistributesPelletsAcrossTotalSpread" classname="CombatTests" runstate="Runnable" seed="1399354918" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000065" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1258" name="CalculatePelletAngle_DistributesPelletsAcrossTotalSpread(2,5,20.0f,0.0f)" fullname="CombatTests.CalculatePelletAngle_DistributesPelletsAcrossTotalSpread(2,5,20.0f,0.0f)" methodname="CalculatePelletAngle_DistributesPelletsAcrossTotalSpread" classname="CombatTests" runstate="Runnable" seed="402725500" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000045" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1259" name="CalculatePelletAngle_DistributesPelletsAcrossTotalSpread(4,5,20.0f,10.0f)" fullname="CombatTests.CalculatePelletAngle_DistributesPelletsAcrossTotalSpread(4,5,20.0f,10.0f)" methodname="CalculatePelletAngle_DistributesPelletsAcrossTotalSpread" classname="CombatTests" runstate="Runnable" seed="920396351" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000038" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1260" name="CalculatePelletAngle_DistributesPelletsAcrossTotalSpread(0,1,20.0f,0.0f)" fullname="CombatTests.CalculatePelletAngle_DistributesPelletsAcrossTotalSpread(0,1,20.0f,0.0f)" methodname="CalculatePelletAngle_DistributesPelletsAcrossTotalSpread" classname="CombatTests" runstate="Runnable" seed="2142489777" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000036" asserts="0">
+            <properties />
+          </test-case>
+        </test-suite>
+        <test-suite type="ParameterizedMethod" id="1304" name="CalculateReloadRequest_UsesMagazineSpaceAndAvailableAmmo" fullname="CombatTests.CalculateReloadRequest_UsesMagazineSpaceAndAvailableAmmo" classname="CombatTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.003443" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-case id="1300" name="CalculateReloadRequest_UsesMagazineSpaceAndAvailableAmmo(3,8,20,5)" fullname="CombatTests.CalculateReloadRequest_UsesMagazineSpaceAndAvailableAmmo(3,8,20,5)" methodname="CalculateReloadRequest_UsesMagazineSpaceAndAvailableAmmo" classname="CombatTests" runstate="Runnable" seed="2122225458" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000743" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1301" name="CalculateReloadRequest_UsesMagazineSpaceAndAvailableAmmo(3,8,2,2)" fullname="CombatTests.CalculateReloadRequest_UsesMagazineSpaceAndAvailableAmmo(3,8,2,2)" methodname="CalculateReloadRequest_UsesMagazineSpaceAndAvailableAmmo" classname="CombatTests" runstate="Runnable" seed="1115855875" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000100" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1302" name="CalculateReloadRequest_UsesMagazineSpaceAndAvailableAmmo(8,8,20,0)" fullname="CombatTests.CalculateReloadRequest_UsesMagazineSpaceAndAvailableAmmo(8,8,20,0)" methodname="CalculateReloadRequest_UsesMagazineSpaceAndAvailableAmmo" classname="CombatTests" runstate="Runnable" seed="314073318" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000050" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1303" name="CalculateReloadRequest_UsesMagazineSpaceAndAvailableAmmo(0,20,0,0)" fullname="CombatTests.CalculateReloadRequest_UsesMagazineSpaceAndAvailableAmmo(0,20,0,0)" methodname="CalculateReloadRequest_UsesMagazineSpaceAndAvailableAmmo" classname="CombatTests" runstate="Runnable" seed="2089476148" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000085" asserts="0">
+            <properties />
+          </test-case>
+        </test-suite>
+        <test-suite type="ParameterizedMethod" id="1253" name="CanFire_EvaluatesAllConditions" fullname="CombatTests.CanFire_EvaluatesAllConditions" classname="CombatTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.004016" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-case id="1249" name="CanFire_EvaluatesAllConditions(1,False,2.0f,1.0f,True)" fullname="CombatTests.CanFire_EvaluatesAllConditions(1,False,2.0f,1.0f,True)" methodname="CanFire_EvaluatesAllConditions" classname="CombatTests" runstate="Runnable" seed="2013129344" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.001397" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1250" name="CanFire_EvaluatesAllConditions(0,False,2.0f,1.0f,False)" fullname="CombatTests.CanFire_EvaluatesAllConditions(0,False,2.0f,1.0f,False)" methodname="CanFire_EvaluatesAllConditions" classname="CombatTests" runstate="Runnable" seed="1176212212" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000135" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1251" name="CanFire_EvaluatesAllConditions(1,True,2.0f,1.0f,False)" fullname="CombatTests.CanFire_EvaluatesAllConditions(1,True,2.0f,1.0f,False)" methodname="CanFire_EvaluatesAllConditions" classname="CombatTests" runstate="Runnable" seed="2057645338" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000060" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1252" name="CanFire_EvaluatesAllConditions(1,False,0.5f,1.0f,False)" fullname="CombatTests.CanFire_EvaluatesAllConditions(1,False,0.5f,1.0f,False)" methodname="CanFire_EvaluatesAllConditions" classname="CombatTests" runstate="Runnable" seed="693663406" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000049" asserts="0">
+            <properties />
+          </test-case>
+        </test-suite>
+        <test-case id="1247" name="ConsumeRound_DecreasesMagazine" fullname="CombatTests.ConsumeRound_DecreasesMagazine" methodname="ConsumeRound_DecreasesMagazine" classname="CombatTests" runstate="Runnable" seed="1350370011" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000395" asserts="0">
+          <properties />
+        </test-case>
+        <test-suite type="ParameterizedMethod" id="1293" name="ExtractionHud_BuildMessage_DescribesEveryState" fullname="CombatTests.ExtractionHud_BuildMessage_DescribesEveryState" classname="CombatTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.001231" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-case id="1289" name="ExtractionHud_BuildMessage_DescribesEveryState(Locked,0.0f,&quot;탈출 조건: 퀘스트 무전기 x1&quot;)" fullname="CombatTests.ExtractionHud_BuildMessage_DescribesEveryState(Locked,0.0f,&quot;탈출 조건: 퀘스트 무전기 x1&quot;)" methodname="ExtractionHud_BuildMessage_DescribesEveryState" classname="CombatTests" runstate="Runnable" seed="1595258241" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000364" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1290" name="ExtractionHud_BuildMessage_DescribesEveryState(Available,0.0f,&quot;탈출 가능 - 녹색 구역으로 이동하세요&quot;)" fullname="CombatTests.ExtractionHud_BuildMessage_DescribesEveryState(Available,0.0f,&quot;탈출 가능 - 녹색 구역으로 이동하세요&quot;)" methodname="ExtractionHud_BuildMessage_DescribesEveryState" classname="CombatTests" runstate="Runnable" seed="1439587509" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000073" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1291" name="ExtractionHud_BuildMessage_DescribesEveryState(CountingDown,1.24f,&quot;탈출까지 1.2초&quot;)" fullname="CombatTests.ExtractionHud_BuildMessage_DescribesEveryState(CountingDown,1.24f,&quot;탈출까지 1.2초&quot;)" methodname="ExtractionHud_BuildMessage_DescribesEveryState" classname="CombatTests" runstate="Runnable" seed="975542133" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000052" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1292" name="ExtractionHud_BuildMessage_DescribesEveryState(Succeeded,0.0f,&quot;탈출 성공&quot;)" fullname="CombatTests.ExtractionHud_BuildMessage_DescribesEveryState(Succeeded,0.0f,&quot;탈출 성공&quot;)" methodname="ExtractionHud_BuildMessage_DescribesEveryState" classname="CombatTests" runstate="Runnable" seed="197871259" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000038" asserts="0">
+            <properties />
+          </test-case>
+        </test-suite>
+        <test-suite type="ParameterizedMethod" id="1283" name="InteractionStatusVisibility_UsesMessageAndEndTime" fullname="CombatTests.InteractionStatusVisibility_UsesMessageAndEndTime" classname="CombatTests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.003989" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-case id="1280" name="InteractionStatusVisibility_UsesMessageAndEndTime(&quot;아이템을 획득했습니다.&quot;,1.0f,2.0f,True)" fullname="CombatTests.InteractionStatusVisibility_UsesMessageAndEndTime(&quot;아이템을 획득했습니다.&quot;,1.0f,2.0f,True)" methodname="InteractionStatusVisibility_UsesMessageAndEndTime" classname="CombatTests" runstate="Runnable" seed="619375603" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000431" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1281" name="InteractionStatusVisibility_UsesMessageAndEndTime(&quot;아이템을 획득했습니다.&quot;,2.0f,2.0f,False)" fullname="CombatTests.InteractionStatusVisibility_UsesMessageAndEndTime(&quot;아이템을 획득했습니다.&quot;,2.0f,2.0f,False)" methodname="InteractionStatusVisibility_UsesMessageAndEndTime" classname="CombatTests" runstate="Runnable" seed="196657499" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000103" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1282" name="InteractionStatusVisibility_UsesMessageAndEndTime(&quot;&quot;,1.0f,2.0f,False)" fullname="CombatTests.InteractionStatusVisibility_UsesMessageAndEndTime(&quot;&quot;,1.0f,2.0f,False)" methodname="InteractionStatusVisibility_UsesMessageAndEndTime" classname="CombatTests" runstate="Runnable" seed="750845512" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000054" asserts="0">
+            <properties />
+          </test-case>
+        </test-suite>
+        <test-suite type="ParameterizedMethod" id="1276" name="InventoryGridView_CalculateDropCellRoundsToNearestCell" fullname="CombatTests.InventoryGridView_CalculateDropCellRoundsToNearestCell" classname="CombatTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.003074" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-case id="1272" name="InventoryGridView_CalculateDropCellRoundsToNearestCell(0.0f,0.0f,0,0)" fullname="CombatTests.InventoryGridView_CalculateDropCellRoundsToNearestCell(0.0f,0.0f,0,0)" methodname="InventoryGridView_CalculateDropCellRoundsToNearestCell" classname="CombatTests" runstate="Runnable" seed="1158811624" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000677" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1273" name="InventoryGridView_CalculateDropCellRoundsToNearestCell(24.0f,24.0f,0,0)" fullname="CombatTests.InventoryGridView_CalculateDropCellRoundsToNearestCell(24.0f,24.0f,0,0)" methodname="InventoryGridView_CalculateDropCellRoundsToNearestCell" classname="CombatTests" runstate="Runnable" seed="869687353" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000080" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1274" name="InventoryGridView_CalculateDropCellRoundsToNearestCell(26.0f,74.0f,1,1)" fullname="CombatTests.InventoryGridView_CalculateDropCellRoundsToNearestCell(26.0f,74.0f,1,1)" methodname="InventoryGridView_CalculateDropCellRoundsToNearestCell" classname="CombatTests" runstate="Runnable" seed="294515038" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000053" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1275" name="InventoryGridView_CalculateDropCellRoundsToNearestCell(126.0f,151.0f,3,3)" fullname="CombatTests.InventoryGridView_CalculateDropCellRoundsToNearestCell(126.0f,151.0f,3,3)" methodname="InventoryGridView_CalculateDropCellRoundsToNearestCell" classname="CombatTests" runstate="Runnable" seed="144515129" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000045" asserts="0">
+            <properties />
+          </test-case>
+        </test-suite>
+        <test-suite type="ParameterizedMethod" id="1299" name="InventoryHud_EaseTransition_ClampsAndSmoothsProgress" fullname="CombatTests.InventoryHud_EaseTransition_ClampsAndSmoothsProgress" classname="CombatTests" runstate="Runnable" testcasecount="5" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.003331" total="5" passed="5" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-case id="1294" name="InventoryHud_EaseTransition_ClampsAndSmoothsProgress(-1.0f,0.0f)" fullname="CombatTests.InventoryHud_EaseTransition_ClampsAndSmoothsProgress(-1.0f,0.0f)" methodname="InventoryHud_EaseTransition_ClampsAndSmoothsProgress" classname="CombatTests" runstate="Runnable" seed="1441155128" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000338" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1295" name="InventoryHud_EaseTransition_ClampsAndSmoothsProgress(0.0f,0.0f)" fullname="CombatTests.InventoryHud_EaseTransition_ClampsAndSmoothsProgress(0.0f,0.0f)" methodname="InventoryHud_EaseTransition_ClampsAndSmoothsProgress" classname="CombatTests" runstate="Runnable" seed="621627174" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000090" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1296" name="InventoryHud_EaseTransition_ClampsAndSmoothsProgress(0.5f,0.5f)" fullname="CombatTests.InventoryHud_EaseTransition_ClampsAndSmoothsProgress(0.5f,0.5f)" methodname="InventoryHud_EaseTransition_ClampsAndSmoothsProgress" classname="CombatTests" runstate="Runnable" seed="1204683239" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000050" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1297" name="InventoryHud_EaseTransition_ClampsAndSmoothsProgress(1.0f,1.0f)" fullname="CombatTests.InventoryHud_EaseTransition_ClampsAndSmoothsProgress(1.0f,1.0f)" methodname="InventoryHud_EaseTransition_ClampsAndSmoothsProgress" classname="CombatTests" runstate="Runnable" seed="1282767377" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000039" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1298" name="InventoryHud_EaseTransition_ClampsAndSmoothsProgress(2.0f,1.0f)" fullname="CombatTests.InventoryHud_EaseTransition_ClampsAndSmoothsProgress(2.0f,1.0f)" methodname="InventoryHud_EaseTransition_ClampsAndSmoothsProgress" classname="CombatTests" runstate="Runnable" seed="1227406837" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000038" asserts="0">
+            <properties />
+          </test-case>
+        </test-suite>
+        <test-case id="1271" name="InventoryHud_OpenLocksWorldControlsAndCloseRestoresThem" fullname="CombatTests.InventoryHud_OpenLocksWorldControlsAndCloseRestoresThem" methodname="InventoryHud_OpenLocksWorldControlsAndCloseRestoresThem" classname="CombatTests" runstate="Runnable" seed="271834299" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.005647" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1270" name="PlayerControlGate_DestroyedOwnerIsPrunedAndRestoresControls" fullname="CombatTests.PlayerControlGate_DestroyedOwnerIsPrunedAndRestoresControls" methodname="PlayerControlGate_DestroyedOwnerIsPrunedAndRestoresControls" classname="CombatTests" runstate="Runnable" seed="1517795336" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000560" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1269" name="PlayerControlGate_MultipleOwnersRestoreOnlyAfterLastRelease" fullname="CombatTests.PlayerControlGate_MultipleOwnersRestoreOnlyAfterLastRelease" methodname="PlayerControlGate_MultipleOwnersRestoreOnlyAfterLastRelease" classname="CombatTests" runstate="Runnable" seed="974779954" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000557" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1279" name="PrototypeSoundFactory_GeneratedSamplesAreFiniteAndNormalized" fullname="CombatTests.PrototypeSoundFactory_GeneratedSamplesAreFiniteAndNormalized" methodname="PrototypeSoundFactory_GeneratedSamplesAreFiniteAndNormalized" classname="CombatTests" runstate="Runnable" seed="1428059491" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.062935" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1248" name="Reload_TransfersOnlyRequiredRounds" fullname="CombatTests.Reload_TransfersOnlyRequiredRounds" methodname="Reload_TransfersOnlyRequiredRounds" classname="CombatTests" runstate="Runnable" seed="1134682661" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000410" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1306" name="ReloadTransfer_ConsumesInventoryAmmoAndFillsStoredMagazine" fullname="CombatTests.ReloadTransfer_ConsumesInventoryAmmoAndFillsStoredMagazine" methodname="ReloadTransfer_ConsumesInventoryAmmoAndFillsStoredMagazine" classname="CombatTests" runstate="Runnable" seed="452634221" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.009228" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1277" name="SelectEquippedWeapon_AppliesDefinitionAndPreservesItsAmmunition" fullname="CombatTests.SelectEquippedWeapon_AppliesDefinitionAndPreservesItsAmmunition" methodname="SelectEquippedWeapon_AppliesDefinitionAndPreservesItsAmmunition" classname="CombatTests" runstate="Runnable" seed="578392557" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.002052" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1278" name="SelectWeaponWithoutDefinition_IsRejectedWithoutChangingFallback" fullname="CombatTests.SelectWeaponWithoutDefinition_IsRejectedWithoutChangingFallback" methodname="SelectWeaponWithoutDefinition_IsRejectedWithoutChangingFallback" classname="CombatTests" runstate="Runnable" seed="1030259047" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000666" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1267" name="ShotgunFire_ConsumesOneShellAndRaisesOneShotEvent" fullname="CombatTests.ShotgunFire_ConsumesOneShellAndRaisesOneShotEvent" methodname="ShotgunFire_ConsumesOneShellAndRaisesOneShotEvent" classname="CombatTests" runstate="Runnable" seed="1621225058" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.003905" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1254" name="TakeDamage_RaisesFeedbackEventWithAppliedDamageAndHitPoint" fullname="CombatTests.TakeDamage_RaisesFeedbackEventWithAppliedDamageAndHitPoint" methodname="TakeDamage_RaisesFeedbackEventWithAppliedDamageAndHitPoint" classname="CombatTests" runstate="Runnable" seed="1245661113" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.001152" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1305" name="TryConsumeAmmo_RemovesOnlyMatchingCaliber" fullname="CombatTests.TryConsumeAmmo_RemovesOnlyMatchingCaliber" methodname="TryConsumeAmmo_RemovesOnlyMatchingCaliber" classname="CombatTests" runstate="Runnable" seed="1382252640" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000597" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1255" name="TryFire_RaisesOneShotResolvedEventWithTraceEndpoint" fullname="CombatTests.TryFire_RaisesOneShotResolvedEventWithTraceEndpoint" methodname="TryFire_RaisesOneShotResolvedEventWithTraceEndpoint" classname="CombatTests" runstate="Runnable" seed="933942820" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000876" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1268" name="TryFire_WithoutEquippedWeapon_IsRejected" fullname="CombatTests.TryFire_WithoutEquippedWeapon_IsRejected" methodname="TryFire_WithoutEquippedWeapon_IsRejected" classname="CombatTests" runstate="Runnable" seed="1765939107" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000416" asserts="0">
+          <properties />
+        </test-case>
+      </test-suite>
+      <test-suite type="TestFixture" id="1307" name="ExtractionTests" fullname="ExtractionTests" classname="ExtractionTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.005122" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-case id="1312" name="Countdown_AdvancesAndCancels" fullname="ExtractionTests.Countdown_AdvancesAndCancels" methodname="Countdown_AdvancesAndCancels" classname="ExtractionTests" runstate="Runnable" seed="733249736" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000313" asserts="0">
+          <properties />
+        </test-case>
+        <test-suite type="ParameterizedMethod" id="1311" name="RequiredQuantity_IsEvaluatedAtBoundary" fullname="ExtractionTests.RequiredQuantity_IsEvaluatedAtBoundary" classname="ExtractionTests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.004178" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-case id="1308" name="RequiredQuantity_IsEvaluatedAtBoundary(0,1,False)" fullname="ExtractionTests.RequiredQuantity_IsEvaluatedAtBoundary(0,1,False)" methodname="RequiredQuantity_IsEvaluatedAtBoundary" classname="ExtractionTests" runstate="Runnable" seed="1185486912" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000355" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1309" name="RequiredQuantity_IsEvaluatedAtBoundary(1,1,True)" fullname="ExtractionTests.RequiredQuantity_IsEvaluatedAtBoundary(1,1,True)" methodname="RequiredQuantity_IsEvaluatedAtBoundary" classname="ExtractionTests" runstate="Runnable" seed="1693061591" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000091" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1310" name="RequiredQuantity_IsEvaluatedAtBoundary(2,1,True)" fullname="ExtractionTests.RequiredQuantity_IsEvaluatedAtBoundary(2,1,True)" methodname="RequiredQuantity_IsEvaluatedAtBoundary" classname="ExtractionTests" runstate="Runnable" seed="2048194769" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000050" asserts="0">
+            <properties />
+          </test-case>
+        </test-suite>
+      </test-suite>
+      <test-suite type="TestFixture" id="1313" name="HideoutTests" fullname="HideoutTests" classname="HideoutTests" runstate="Runnable" testcasecount="26" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.131344" total="26" passed="26" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-case id="1329" name="BootstrapInitialization_LoadsPersistentStateAndClearsTransientResult" fullname="HideoutTests.BootstrapInitialization_LoadsPersistentStateAndClearsTransientResult" methodname="BootstrapInitialization_LoadsPersistentStateAndClearsTransientResult" classname="HideoutTests" runstate="Runnable" seed="44002348" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.014506" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1338" name="Crafting_UsesGeneratorDiscountAndKeepsInventoryWhenOutputCannotFit" fullname="HideoutTests.Crafting_UsesGeneratorDiscountAndKeepsInventoryWhenOutputCannotFit" methodname="Crafting_UsesGeneratorDiscountAndKeepsInventoryWhenOutputCannotFit" classname="HideoutTests" runstate="Runnable" seed="572594466" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.004121" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1339" name="FacilityDefinition_ProvidesLevelCostsAndScaledEffects" fullname="HideoutTests.FacilityDefinition_ProvidesLevelCostsAndScaledEffects" methodname="FacilityDefinition_ProvidesLevelCostsAndScaledEffects" classname="HideoutTests" runstate="Runnable" seed="1540101271" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000911" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1331" name="FacilityUpgrade_StopsAtConfiguredMaximumLevel" fullname="HideoutTests.FacilityUpgrade_StopsAtConfiguredMaximumLevel" methodname="FacilityUpgrade_StopsAtConfiguredMaximumLevel" classname="HideoutTests" runstate="Runnable" seed="601889540" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000454" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1315" name="FailedRaid_DoesNotAddStashReward" fullname="HideoutTests.FailedRaid_DoesNotAddStashReward" methodname="FailedRaid_DoesNotAddStashReward" classname="HideoutTests" runstate="Runnable" seed="1983931880" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000438" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1326" name="InvalidDefaultSave_RepeatedLoadKeepsFailureResult" fullname="HideoutTests.InvalidDefaultSave_RepeatedLoadKeepsFailureResult" methodname="InvalidDefaultSave_RepeatedLoadKeepsFailureResult" classname="HideoutTests" runstate="Runnable" seed="705082282" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.007214" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1325" name="InvalidSaveFile_DoesNotOverwriteCurrentMemoryState" fullname="HideoutTests.InvalidSaveFile_DoesNotOverwriteCurrentMemoryState" methodname="InvalidSaveFile_DoesNotOverwriteCurrentMemoryState" classname="HideoutTests" runstate="Runnable" seed="896554876" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.009274" asserts="0">
+          <properties />
+          <output><![CDATA[Serialization depth limit 10 exceeded at 'ZombieSurvival.Core::RaidItemSnapshot.contents'. There may be an object composition cycle in one or more of your serialized classes. Consider rearranging data or use `[SerializeReference]`. 
+
+Serialization hierarchy:
+11: ZombieSurvival.Core::RaidItemSnapshot.contents
+10: ZombieSurvival.Core::RaidItemSnapshot.contents
+9: ZombieSurvival.Core::RaidItemSnapshot.contents
+8: ZombieSurvival.Core::RaidItemSnapshot.contents
+7: ZombieSurvival.Core::RaidItemSnapshot.contents
+6: ZombieSurvival.Core::RaidItemSnapshot.contents
+5: ZombieSurvival.Core::RaidItemSnapshot.contents
+4: ZombieSurvival.Core::RaidItemSnapshot.contents
+3: ZombieSurvival.Core::RaidItemSnapshot.contents
+2: ZombieSurvival.Core::RaidItemSnapshot.contents
+1: ZombieSurvival.Core::RaidItemSnapshot.contents
+0: LegacyHideoutSaveData.stashItems
+
+Serialization depth limit 10 exceeded at 'ZombieSurvival.Core::RaidItemSnapshot.contents'. There may be an object composition cycle in one or more of your serialized classes. Consider rearranging data or use `[SerializeReference]`. 
+
+Serialization hierarchy:
+11: ZombieSurvival.Core::RaidItemSnapshot.contents
+10: ZombieSurvival.Core::RaidItemSnapshot.contents
+9: ZombieSurvival.Core::RaidItemSnapshot.contents
+8: ZombieSurvival.Core::RaidItemSnapshot.contents
+7: ZombieSurvival.Core::RaidItemSnapshot.contents
+6: ZombieSurvival.Core::RaidItemSnapshot.contents
+5: ZombieSurvival.Core::RaidItemSnapshot.contents
+4: ZombieSurvival.Core::RaidItemSnapshot.contents
+3: ZombieSurvival.Core::RaidItemSnapshot.contents
+2: ZombieSurvival.Core::RaidItemSnapshot.contents
+1: ZombieSurvival.Core::RaidItemSnapshot.contents
+0: ZombieSurvival.Core::RaidItemSnapshot.contents
+
+]]></output>
+        </test-case>
+        <test-case id="1323" name="JsonSaveAndLoad_PreservesEmptyWeaponMagazine" fullname="HideoutTests.JsonSaveAndLoad_PreservesEmptyWeaponMagazine" methodname="JsonSaveAndLoad_PreservesEmptyWeaponMagazine" classname="HideoutTests" runstate="Runnable" seed="1813696143" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.011928" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1322" name="JsonSaveAndLoad_RoundTripPreservesStashLoadoutAndContents" fullname="HideoutTests.JsonSaveAndLoad_RoundTripPreservesStashLoadoutAndContents" methodname="JsonSaveAndLoad_RoundTripPreservesStashLoadoutAndContents" classname="HideoutTests" runstate="Runnable" seed="1841436615" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.011988" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1328" name="MissionBoard_AcceptReportsAutomaticSaveFailure" fullname="HideoutTests.MissionBoard_AcceptReportsAutomaticSaveFailure" methodname="MissionBoard_AcceptReportsAutomaticSaveFailure" classname="HideoutTests" runstate="Runnable" seed="1001731342" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.003416" asserts="0">
+          <properties />
+          <output><![CDATA[Hideout 저장 실패: Illegal characters in path.
+]]></output>
+        </test-case>
+        <test-case id="1335" name="MissionObjectives_CountCollectedItemsAndSuccessfulExtractions" fullname="HideoutTests.MissionObjectives_CountCollectedItemsAndSuccessfulExtractions" methodname="MissionObjectives_CountCollectedItemsAndSuccessfulExtractions" classname="HideoutTests" runstate="Runnable" seed="1642956707" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.002666" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1332" name="MissionProgress_AcceptsOneMissionAccumulatesKillsAndCanBeAbandoned" fullname="HideoutTests.MissionProgress_AcceptsOneMissionAccumulatesKillsAndCanBeAbandoned" methodname="MissionProgress_AcceptsOneMissionAccumulatesKillsAndCanBeAbandoned" classname="HideoutTests" runstate="Runnable" seed="386043631" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.001275" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1336" name="MissionReward_UsesAllOrNothingStorageCapacityCheck" fullname="HideoutTests.MissionReward_UsesAllOrNothingStorageCapacityCheck" methodname="MissionReward_UsesAllOrNothingStorageCapacityCheck" classname="HideoutTests" runstate="Runnable" seed="1348560504" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.002828" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1337" name="NonRepeatableMission_CompletionHistoryPersistsAndBlocksAcceptance" fullname="HideoutTests.NonRepeatableMission_CompletionHistoryPersistsAndBlocksAcceptance" methodname="NonRepeatableMission_CompletionHistoryPersistsAndBlocksAcceptance" classname="HideoutTests" runstate="Runnable" seed="881797473" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.008992" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1316" name="PlayerDeath_ClearsAnyStalePreparedLoadout" fullname="HideoutTests.PlayerDeath_ClearsAnyStalePreparedLoadout" methodname="PlayerDeath_ClearsAnyStalePreparedLoadout" classname="HideoutTests" runstate="Runnable" seed="264523166" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000705" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1319" name="RaidLoadoutApplier_ConsumesPreparedItemsWithoutDuplication" fullname="HideoutTests.RaidLoadoutApplier_ConsumesPreparedItemsWithoutDuplication" methodname="RaidLoadoutApplier_ConsumesPreparedItemsWithoutDuplication" classname="HideoutTests" runstate="Runnable" seed="528938937" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.005311" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1321" name="RaidLoadoutApplier_NoPreparedSidearm_EquipsOneProvidedPistol" fullname="HideoutTests.RaidLoadoutApplier_NoPreparedSidearm_EquipsOneProvidedPistol" methodname="RaidLoadoutApplier_NoPreparedSidearm_EquipsOneProvidedPistol" classname="HideoutTests" runstate="Runnable" seed="1246050492" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.001818" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1320" name="RaidLoadoutApplier_SaveFailureRollsAppliedItemsBackToStash" fullname="HideoutTests.RaidLoadoutApplier_SaveFailureRollsAppliedItemsBackToStash" methodname="RaidLoadoutApplier_SaveFailureRollsAppliedItemsBackToStash" classname="HideoutTests" runstate="Runnable" seed="1442179727" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.003060" asserts="0">
+          <properties />
+          <output><![CDATA[Hideout 저장 실패: Illegal characters in path.
+출격품 소비 상태를 저장하지 못해 레이드를 취소하고 아이템을 거점으로 반환합니다.
+]]></output>
+        </test-case>
+        <test-case id="1318" name="SnapshotRestore_RebuildsContainerAndContentsInAvailableSpace" fullname="HideoutTests.SnapshotRestore_RebuildsContainerAndContentsInAvailableSpace" methodname="SnapshotRestore_RebuildsContainerAndContentsInAvailableSpace" classname="HideoutTests" runstate="Runnable" seed="1619170704" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.001567" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1330" name="StartRaid_SaveFailureCancelsSceneTransition" fullname="HideoutTests.StartRaid_SaveFailureCancelsSceneTransition" methodname="StartRaid_SaveFailureCancelsSceneTransition" classname="HideoutTests" runstate="Runnable" seed="984834258" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.001927" asserts="0">
+          <properties />
+          <output><![CDATA[Hideout 저장 실패: Illegal characters in path.
+]]></output>
+        </test-case>
+        <test-case id="1317" name="StashAndLoadoutMovement_PreservesWholeSnapshot" fullname="HideoutTests.StashAndLoadoutMovement_PreservesWholeSnapshot" methodname="StashAndLoadoutMovement_PreservesWholeSnapshot" classname="HideoutTests" runstate="Runnable" seed="1594560278" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000739" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1314" name="SuccessfulRaid_IsAppliedToStashExactlyOnce" fullname="HideoutTests.SuccessfulRaid_IsAppliedToStashExactlyOnce" methodname="SuccessfulRaid_IsAppliedToStashExactlyOnce" classname="HideoutTests" runstate="Runnable" seed="762722259" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000670" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1327" name="VersionFiveSave_RejectsFacilityIdsThatDuplicateAfterTrimming" fullname="HideoutTests.VersionFiveSave_RejectsFacilityIdsThatDuplicateAfterTrimming" methodname="VersionFiveSave_RejectsFacilityIdsThatDuplicateAfterTrimming" classname="HideoutTests" runstate="Runnable" seed="1614816521" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.009203" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1333" name="VersionFiveSave_RoundTripPreservesFacilityAndMissionProgress" fullname="HideoutTests.VersionFiveSave_RoundTripPreservesFacilityAndMissionProgress" methodname="VersionFiveSave_RoundTripPreservesFacilityAndMissionProgress" classname="HideoutTests" runstate="Runnable" seed="2028110553" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.007890" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1334" name="VersionFourSave_LoadsMissionProgressIntoVersionFiveState" fullname="HideoutTests.VersionFourSave_LoadsMissionProgressIntoVersionFiveState" methodname="VersionFourSave_LoadsMissionProgressIntoVersionFiveState" classname="HideoutTests" runstate="Runnable" seed="201854026" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.006383" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1324" name="VersionOneSave_RemainsLoadableAfterMagazineUpgrade" fullname="HideoutTests.VersionOneSave_RemainsLoadableAfterMagazineUpgrade" methodname="VersionOneSave_RemainsLoadableAfterMagazineUpgrade" classname="HideoutTests" runstate="Runnable" seed="363076704" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.005918" asserts="0">
+          <properties />
+        </test-case>
+      </test-suite>
+      <test-suite type="TestFixture" id="1340" name="InventoryTests" fullname="InventoryTests" classname="InventoryTests" runstate="Runnable" testcasecount="27" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.038166" total="27" passed="27" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-case id="1352" name="Add_CustomLShape_AllowsAnotherItemInsideEmptyCell" fullname="InventoryTests.Add_CustomLShape_AllowsAnotherItemInsideEmptyCell" methodname="Add_CustomLShape_AllowsAnotherItemInsideEmptyCell" classname="InventoryTests" runstate="Runnable" seed="1662632331" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.001835" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1341" name="Add_UsesMultipleSlotsWhenStackIsFull" fullname="InventoryTests.Add_UsesMultipleSlotsWhenStackIsFull" methodname="Add_UsesMultipleSlotsWhenStackIsFull" classname="InventoryTests" runstate="Runnable" seed="90817504" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000414" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1342" name="Add_WhenCapacityIsInsufficient_DoesNotChangeInventory" fullname="InventoryTests.Add_WhenCapacityIsInsufficient_DoesNotChangeInventory" methodname="Add_WhenCapacityIsInsufficient_DoesNotChangeInventory" classname="InventoryTests" runstate="Runnable" seed="1122637888" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000423" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1360" name="AutoSort_MergesStacksAndCompactsToTopLeft" fullname="InventoryTests.AutoSort_MergesStacksAndCompactsToTopLeft" methodname="AutoSort_MergesStacksAndCompactsToTopLeft" classname="InventoryTests" runstate="Runnable" seed="1552625250" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.003122" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1362" name="AutoSort_RepeatedCall_IsDeterministicAndPreservesQuantity" fullname="InventoryTests.AutoSort_RepeatedCall_IsDeterministicAndPreservesQuantity" methodname="AutoSort_RepeatedCall_IsDeterministicAndPreservesQuantity" classname="InventoryTests" runstate="Runnable" seed="1400216225" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.004298" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1361" name="AutoSort_RifleAndAmmo_NeverOverlapOccupiedCells" fullname="InventoryTests.AutoSort_RifleAndAmmo_NeverOverlapOccupiedCells" methodname="AutoSort_RifleAndAmmo_NeverOverlapOccupiedCells" classname="InventoryTests" runstate="Runnable" seed="1476143388" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.001606" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1363" name="AutoSort_WhenPlanningFails_DoesNotMutateGrid" fullname="InventoryTests.AutoSort_WhenPlanningFails_DoesNotMutateGrid" methodname="AutoSort_WhenPlanningFails_DoesNotMutateGrid" classname="InventoryTests" runstate="Runnable" seed="1740828845" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000878" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1359" name="Commands_WithEntryNotOwnedByGrid_AreRejected" fullname="InventoryTests.Commands_WithEntryNotOwnedByGrid_AreRejected" methodname="Commands_WithEntryNotOwnedByGrid_AreRejected" classname="InventoryTests" runstate="Runnable" seed="250155215" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000760" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1367" name="Container_CannotBeMovedIntoItsOwnContents" fullname="InventoryTests.Container_CannotBeMovedIntoItsOwnContents" methodname="Container_CannotBeMovedIntoItsOwnContents" classname="InventoryTests" runstate="Runnable" seed="557062841" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.002323" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1368" name="DropFailureReason_ExplainsProtectedItems" fullname="InventoryTests.DropFailureReason_ExplainsProtectedItems" methodname="DropFailureReason_ExplainsProtectedItems" classname="InventoryTests" runstate="Runnable" seed="452178294" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.001579" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1348" name="Equip_MovesEntryIntoMatchingSlot" fullname="InventoryTests.Equip_MovesEntryIntoMatchingSlot" methodname="Equip_MovesEntryIntoMatchingSlot" classname="InventoryTests" runstate="Runnable" seed="236567275" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000924" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1365" name="EquipSwap_ReturnsOldEquipmentAtomicallyAndPreservesContents" fullname="InventoryTests.EquipSwap_ReturnsOldEquipmentAtomicallyAndPreservesContents" methodname="EquipSwap_ReturnsOldEquipmentAtomicallyAndPreservesContents" classname="InventoryTests" runstate="Runnable" seed="1601171792" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.002502" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1366" name="EquipSwap_WhenOldEquipmentHasNoReturnSpace_RollsBackEverything" fullname="InventoryTests.EquipSwap_WhenOldEquipmentHasNoReturnSpace_RollsBackEverything" methodname="EquipSwap_WhenOldEquipmentHasNoReturnSpace_RollsBackEverything" classname="InventoryTests" runstate="Runnable" seed="2139543556" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.001128" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1354" name="Move_AmmoOntoRifleAnchor_UsesNearestRiflePosition" fullname="InventoryTests.Move_AmmoOntoRifleAnchor_UsesNearestRiflePosition" methodname="Move_AmmoOntoRifleAnchor_UsesNearestRiflePosition" classname="InventoryTests" runstate="Runnable" seed="405537906" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.002447" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1353" name="Move_AmmoOntoRifleEnd_KeepsDropCellAndMovesRifleLocally" fullname="InventoryTests.Move_AmmoOntoRifleEnd_KeepsDropCellAndMovesRifleLocally" methodname="Move_AmmoOntoRifleEnd_KeepsDropCellAndMovesRifleLocally" classname="InventoryTests" runstate="Runnable" seed="1588890620" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000935" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1351" name="Move_DifferentItemsOntoEachOther_SwapsTheirPositions" fullname="InventoryTests.Move_DifferentItemsOntoEachOther_SwapsTheirPositions" methodname="Move_DifferentItemsOntoEachOther_SwapsTheirPositions" classname="InventoryTests" runstate="Runnable" seed="255037390" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000782" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1357" name="Move_MultipleOverlapsWithoutDestinationSpace_RollsBackEverything" fullname="InventoryTests.Move_MultipleOverlapsWithoutDestinationSpace_RollsBackEverything" methodname="Move_MultipleOverlapsWithoutDestinationSpace_RollsBackEverything" classname="InventoryTests" runstate="Runnable" seed="836300933" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.001200" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1355" name="Move_RifleOntoAmmo_KeepsRifleAtDroppedPosition" fullname="InventoryTests.Move_RifleOntoAmmo_KeepsRifleAtDroppedPosition" methodname="Move_RifleOntoAmmo_KeepsRifleAtDroppedPosition" classname="InventoryTests" runstate="Runnable" seed="1349404948" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000750" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1356" name="Move_RifleOverMultipleAmmo_RelocatesEveryOverlapWithoutCollision" fullname="InventoryTests.Move_RifleOverMultipleAmmo_RelocatesEveryOverlapWithoutCollision" methodname="Move_RifleOverMultipleAmmo_RelocatesEveryOverlapWithoutCollision" classname="InventoryTests" runstate="Runnable" seed="638811684" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000974" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1350" name="Move_SplitStacksOntoEachOther_MergesThemAgain" fullname="InventoryTests.Move_SplitStacksOntoEachOther_MergesThemAgain" methodname="Move_SplitStacksOntoEachOther_MergesThemAgain" classname="InventoryTests" runstate="Runnable" seed="918370181" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000590" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1364" name="PlacementPreview_UsesSamePlanAsMoveWithoutMutatingData" fullname="InventoryTests.PlacementPreview_UsesSamePlanAsMoveWithoutMutatingData" methodname="PlacementPreview_UsesSamePlanAsMoveWithoutMutatingData" classname="InventoryTests" runstate="Runnable" seed="1588064592" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000799" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1347" name="Rotate_SwapsGridDimensions" fullname="InventoryTests.Rotate_SwapsGridDimensions" methodname="Rotate_SwapsGridDimensions" classname="InventoryTests" runstate="Runnable" seed="2070106791" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000681" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1349" name="Split_CreatesNonOverlappingEntry" fullname="InventoryTests.Split_CreatesNonOverlappingEntry" methodname="Split_CreatesNonOverlappingEntry" classname="InventoryTests" runstate="Runnable" seed="825074394" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000467" asserts="0">
+          <properties />
+        </test-case>
+        <test-suite type="ParameterizedMethod" id="1346" name="StatefulItems_AlwaysUseSingleItemStacks" fullname="InventoryTests.StatefulItems_AlwaysUseSingleItemStacks" classname="InventoryTests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.002376" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-case id="1343" name="StatefulItems_AlwaysUseSingleItemStacks(Weapon)" fullname="InventoryTests.StatefulItems_AlwaysUseSingleItemStacks(Weapon)" methodname="StatefulItems_AlwaysUseSingleItemStacks" classname="InventoryTests" runstate="Runnable" seed="218767673" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000869" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1344" name="StatefulItems_AlwaysUseSingleItemStacks(Armor)" fullname="InventoryTests.StatefulItems_AlwaysUseSingleItemStacks(Armor)" methodname="StatefulItems_AlwaysUseSingleItemStacks" classname="InventoryTests" runstate="Runnable" seed="1320782710" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000395" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1345" name="StatefulItems_AlwaysUseSingleItemStacks(Container)" fullname="InventoryTests.StatefulItems_AlwaysUseSingleItemStacks(Container)" methodname="StatefulItems_AlwaysUseSingleItemStacks" classname="InventoryTests" runstate="Runnable" seed="828947282" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000467" asserts="0">
+            <properties />
+          </test-case>
+        </test-suite>
+        <test-case id="1358" name="Swap_WhenNoAlternativeArrangementExists_LeavesPositionsUnchanged" fullname="InventoryTests.Swap_WhenNoAlternativeArrangementExists_LeavesPositionsUnchanged" methodname="Swap_WhenNoAlternativeArrangementExists_LeavesPositionsUnchanged" classname="InventoryTests" runstate="Runnable" seed="509888938" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000760" asserts="0">
+          <properties />
+        </test-case>
+      </test-suite>
+      <test-suite type="TestFixture" id="1369" name="ItemRarityTests" fullname="ItemRarityTests" classname="ItemRarityTests" runstate="Runnable" testcasecount="5" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.005826" total="5" passed="5" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-case id="1375" name="RarityColor_PreservesCommonColorAndSeparatesHigherTiers" fullname="ItemRarityTests.RarityColor_PreservesCommonColorAndSeparatesHigherTiers" methodname="RarityColor_PreservesCommonColorAndSeparatesHigherTiers" classname="ItemRarityTests" runstate="Runnable" seed="1752976619" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000513" asserts="0">
+          <properties />
+        </test-case>
+        <test-suite type="ParameterizedMethod" id="1374" name="RarityName_ReturnsReadableKoreanLabel" fullname="ItemRarityTests.RarityName_ReturnsReadableKoreanLabel" classname="ItemRarityTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.004725" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-case id="1370" name="RarityName_ReturnsReadableKoreanLabel(Common,&quot;일반&quot;)" fullname="ItemRarityTests.RarityName_ReturnsReadableKoreanLabel(Common,&quot;일반&quot;)" methodname="RarityName_ReturnsReadableKoreanLabel" classname="ItemRarityTests" runstate="Runnable" seed="337965863" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000369" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1371" name="RarityName_ReturnsReadableKoreanLabel(Uncommon,&quot;고급&quot;)" fullname="ItemRarityTests.RarityName_ReturnsReadableKoreanLabel(Uncommon,&quot;고급&quot;)" methodname="RarityName_ReturnsReadableKoreanLabel" classname="ItemRarityTests" runstate="Runnable" seed="1304743998" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000085" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1372" name="RarityName_ReturnsReadableKoreanLabel(Rare,&quot;희귀&quot;)" fullname="ItemRarityTests.RarityName_ReturnsReadableKoreanLabel(Rare,&quot;희귀&quot;)" methodname="RarityName_ReturnsReadableKoreanLabel" classname="ItemRarityTests" runstate="Runnable" seed="1066980687" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000052" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1373" name="RarityName_ReturnsReadableKoreanLabel(Quest,&quot;퀘스트&quot;)" fullname="ItemRarityTests.RarityName_ReturnsReadableKoreanLabel(Quest,&quot;퀘스트&quot;)" methodname="RarityName_ReturnsReadableKoreanLabel" classname="ItemRarityTests" runstate="Runnable" seed="832631008" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000043" asserts="0">
+            <properties />
+          </test-case>
+        </test-suite>
+      </test-suite>
+      <test-suite type="TestFixture" id="1376" name="MovementAndAimTests" fullname="MovementAndAimTests" classname="MovementAndAimTests" runstate="Runnable" testcasecount="8" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.006103" total="8" passed="8" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-case id="1378" name="AimRay_ProjectsOntoGround" fullname="MovementAndAimTests.AimRay_ProjectsOntoGround" methodname="AimRay_ProjectsOntoGround" classname="MovementAndAimTests" runstate="Runnable" seed="2093887295" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000699" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1379" name="AimRay_ProjectsOntoWeaponHeightPlane" fullname="MovementAndAimTests.AimRay_ProjectsOntoWeaponHeightPlane" methodname="AimRay_ProjectsOntoWeaponHeightPlane" classname="MovementAndAimTests" runstate="Runnable" seed="1097631415" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000376" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1384" name="AimZoom_ReducesCameraLensValue" fullname="MovementAndAimTests.AimZoom_ReducesCameraLensValue" methodname="AimZoom_ReducesCameraLensValue" classname="MovementAndAimTests" runstate="Runnable" seed="1935217194" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000175" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1377" name="DiagonalMovement_IsNormalized" fullname="MovementAndAimTests.DiagonalMovement_IsNormalized" methodname="DiagonalMovement_IsNormalized" classname="MovementAndAimTests" runstate="Runnable" seed="461417991" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000297" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1380" name="PlayerSpriteDirection_MapsCardinalWorldDirectionsToSheetRows" fullname="MovementAndAimTests.PlayerSpriteDirection_MapsCardinalWorldDirectionsToSheetRows" methodname="PlayerSpriteDirection_MapsCardinalWorldDirectionsToSheetRows" classname="MovementAndAimTests" runstate="Runnable" seed="603219231" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000795" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1381" name="PlayerSpriteDirection_UsesFallbackWhenDirectionIsZero" fullname="MovementAndAimTests.PlayerSpriteDirection_UsesFallbackWhenDirectionIsZero" methodname="PlayerSpriteDirection_UsesFallbackWhenDirectionIsZero" classname="MovementAndAimTests" runstate="Runnable" seed="1150516219" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000147" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1382" name="PlayerSpriteFacing_AimDirectionOverridesMovementDirection" fullname="MovementAndAimTests.PlayerSpriteFacing_AimDirectionOverridesMovementDirection" methodname="PlayerSpriteFacing_AimDirectionOverridesMovementDirection" classname="MovementAndAimTests" runstate="Runnable" seed="107131244" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000362" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1383" name="PlayerSpriteFacing_WhenAimIsDisabledUsesMovementDirection" fullname="MovementAndAimTests.PlayerSpriteFacing_WhenAimIsDisabledUsesMovementDirection" methodname="PlayerSpriteFacing_WhenAimIsDisabledUsesMovementDirection" classname="MovementAndAimTests" runstate="Runnable" seed="1671834498" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000147" asserts="0">
+          <properties />
+        </test-case>
+      </test-suite>
+      <test-suite type="TestFixture" id="1385" name="RaidMapLayoutTests" fullname="RaidMapLayoutTests" classname="RaidMapLayoutTests" runstate="Runnable" testcasecount="9" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.004982" total="9" passed="9" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-case id="1393" name="StartAndExtraction_AreInsideMapAndFarApart" fullname="RaidMapLayoutTests.StartAndExtraction_AreInsideMapAndFarApart" methodname="StartAndExtraction_AreInsideMapAndFarApart" classname="RaidMapLayoutTests" runstate="Runnable" seed="291790009" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000624" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1394" name="ZombieSpawnPoints_AreInsideMapAndAwayFromPlayerStart" fullname="RaidMapLayoutTests.ZombieSpawnPoints_AreInsideMapAndAwayFromPlayerStart" methodname="ZombieSpawnPoints_AreInsideMapAndAwayFromPlayerStart" classname="RaidMapLayoutTests" runstate="Runnable" seed="315934387" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000288" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1395" name="ZoneCenters_AreInsidePlayableArea" fullname="RaidMapLayoutTests.ZoneCenters_AreInsidePlayableArea" methodname="ZoneCenters_AreInsidePlayableArea" classname="RaidMapLayoutTests" runstate="Runnable" seed="608840884" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000248" asserts="0">
+          <properties />
+        </test-case>
+        <test-suite type="ParameterizedMethod" id="1392" name="ZoneDisplayName_UsesStableMapRegions" fullname="RaidMapLayoutTests.ZoneDisplayName_UsesStableMapRegions" classname="RaidMapLayoutTests" runstate="Runnable" testcasecount="6" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.003035" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-case id="1386" name="ZoneDisplayName_UsesStableMapRegions(0.0f,-14.0f,&quot;남부 캠프&quot;)" fullname="RaidMapLayoutTests.ZoneDisplayName_UsesStableMapRegions(0.0f,-14.0f,&quot;남부 캠프&quot;)" methodname="ZoneDisplayName_UsesStableMapRegions" classname="RaidMapLayoutTests" runstate="Runnable" seed="215587166" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000421" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1387" name="ZoneDisplayName_UsesStableMapRegions(-11.0f,0.0f,&quot;서부 주거지&quot;)" fullname="RaidMapLayoutTests.ZoneDisplayName_UsesStableMapRegions(-11.0f,0.0f,&quot;서부 주거지&quot;)" methodname="ZoneDisplayName_UsesStableMapRegions" classname="RaidMapLayoutTests" runstate="Runnable" seed="403162989" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000086" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1388" name="ZoneDisplayName_UsesStableMapRegions(0.0f,3.0f,&quot;중앙 검문소&quot;)" fullname="RaidMapLayoutTests.ZoneDisplayName_UsesStableMapRegions(0.0f,3.0f,&quot;중앙 검문소&quot;)" methodname="ZoneDisplayName_UsesStableMapRegions" classname="RaidMapLayoutTests" runstate="Runnable" seed="474362261" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000042" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1389" name="ZoneDisplayName_UsesStableMapRegions(11.0f,0.0f,&quot;동부 창고&quot;)" fullname="RaidMapLayoutTests.ZoneDisplayName_UsesStableMapRegions(11.0f,0.0f,&quot;동부 창고&quot;)" methodname="ZoneDisplayName_UsesStableMapRegions" classname="RaidMapLayoutTests" runstate="Runnable" seed="621472223" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000036" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1390" name="ZoneDisplayName_UsesStableMapRegions(0.0f,15.0f,&quot;북부 탈출로&quot;)" fullname="RaidMapLayoutTests.ZoneDisplayName_UsesStableMapRegions(0.0f,15.0f,&quot;북부 탈출로&quot;)" methodname="ZoneDisplayName_UsesStableMapRegions" classname="RaidMapLayoutTests" runstate="Runnable" seed="1633286705" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000036" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1391" name="ZoneDisplayName_UsesStableMapRegions(30.0f,0.0f,&quot;맵 외부&quot;)" fullname="RaidMapLayoutTests.ZoneDisplayName_UsesStableMapRegions(30.0f,0.0f,&quot;맵 외부&quot;)" methodname="ZoneDisplayName_UsesStableMapRegions" classname="RaidMapLayoutTests" runstate="Runnable" seed="320309736" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000033" asserts="0">
+            <properties />
+          </test-case>
+        </test-suite>
+      </test-suite>
+      <test-suite type="TestFixture" id="1396" name="RaidResultTests" fullname="RaidResultTests" classname="RaidResultTests" runstate="Runnable" testcasecount="7" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.009655" total="7" passed="7" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-case id="1402" name="FailedRaid_DiscardAllRaidItemsRemovesRootEquipmentAndNestedContents" fullname="RaidResultTests.FailedRaid_DiscardAllRaidItemsRemovesRootEquipmentAndNestedContents" methodname="FailedRaid_DiscardAllRaidItemsRemovesRootEquipmentAndNestedContents" classname="RaidResultTests" runstate="Runnable" seed="371961342" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.002123" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1398" name="FailedRaid_DoesNotExposeRewardInventory" fullname="RaidResultTests.FailedRaid_DoesNotExposeRewardInventory" methodname="FailedRaid_DoesNotExposeRewardInventory" classname="RaidResultTests" runstate="Runnable" seed="1825681741" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000400" asserts="0">
+          <properties />
+        </test-case>
+        <test-suite type="ParameterizedMethod" id="1401" name="MissingInventory_StillCreatesAUsableRaidResult" fullname="RaidResultTests.MissingInventory_StillCreatesAUsableRaidResult" classname="RaidResultTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.001277" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-case id="1399" name="MissingInventory_StillCreatesAUsableRaidResult(PlayerDied,False)" fullname="RaidResultTests.MissingInventory_StillCreatesAUsableRaidResult(PlayerDied,False)" methodname="MissingInventory_StillCreatesAUsableRaidResult" classname="RaidResultTests" runstate="Runnable" seed="1909300057" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000568" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1400" name="MissingInventory_StillCreatesAUsableRaidResult(Extracted,True)" fullname="RaidResultTests.MissingInventory_StillCreatesAUsableRaidResult(Extracted,True)" methodname="MissingInventory_StillCreatesAUsableRaidResult" classname="RaidResultTests" runstate="Runnable" seed="231379834" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000292" asserts="0">
+            <properties />
+          </test-case>
+        </test-suite>
+        <test-case id="1403" name="RaidProvidedSidearm_IsExcludedFromRewardAndLoss" fullname="RaidResultTests.RaidProvidedSidearm_IsExcludedFromRewardAndLoss" methodname="RaidProvidedSidearm_IsExcludedFromRewardAndLoss" classname="RaidResultTests" runstate="Runnable" seed="1640737667" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.001348" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1397" name="SuccessfulRaid_PreservesInventorySnapshot" fullname="RaidResultTests.SuccessfulRaid_PreservesInventorySnapshot" methodname="SuccessfulRaid_PreservesInventorySnapshot" classname="RaidResultTests" runstate="Runnable" seed="1524813345" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000432" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1404" name="WeaponMagazine_RaidSnapshotAndRestorePreserveLoadedRounds" fullname="RaidResultTests.WeaponMagazine_RaidSnapshotAndRestorePreserveLoadedRounds" methodname="WeaponMagazine_RaidSnapshotAndRestorePreserveLoadedRounds" classname="RaidResultTests" runstate="Runnable" seed="85796343" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.001245" asserts="0">
+          <properties />
+        </test-case>
+      </test-suite>
+      <test-suite type="TestFixture" id="1405" name="RoadmapFeatureTests" fullname="RoadmapFeatureTests" classname="RoadmapFeatureTests" runstate="Runnable" testcasecount="26" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.060444" total="26" passed="26" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="ParameterizedMethod" id="1409" name="ArmorCalculation_UsesReductionWithoutExceedingDurability" fullname="RoadmapFeatureTests.ArmorCalculation_UsesReductionWithoutExceedingDurability" classname="RoadmapFeatureTests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.005283" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-case id="1406" name="ArmorCalculation_UsesReductionWithoutExceedingDurability(20.0f,0.4f,100.0f,12.0f,8.0f)" fullname="RoadmapFeatureTests.ArmorCalculation_UsesReductionWithoutExceedingDurability(20.0f,0.4f,100.0f,12.0f,8.0f)" methodname="ArmorCalculation_UsesReductionWithoutExceedingDurability" classname="RoadmapFeatureTests" runstate="Runnable" seed="1290412028" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.001458" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1407" name="ArmorCalculation_UsesReductionWithoutExceedingDurability(20.0f,0.4f,3.0f,17.0f,3.0f)" fullname="RoadmapFeatureTests.ArmorCalculation_UsesReductionWithoutExceedingDurability(20.0f,0.4f,3.0f,17.0f,3.0f)" methodname="ArmorCalculation_UsesReductionWithoutExceedingDurability" classname="RoadmapFeatureTests" runstate="Runnable" seed="1836046077" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000357" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1408" name="ArmorCalculation_UsesReductionWithoutExceedingDurability(20.0f,0.4f,0.0f,20.0f,0.0f)" fullname="RoadmapFeatureTests.ArmorCalculation_UsesReductionWithoutExceedingDurability(20.0f,0.4f,0.0f,20.0f,0.0f)" methodname="ArmorCalculation_UsesReductionWithoutExceedingDurability" classname="RoadmapFeatureTests" runstate="Runnable" seed="446533907" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000293" asserts="0">
+            <properties />
+          </test-case>
+        </test-suite>
+        <test-case id="1435" name="FieldLootSource_PopulatesOnlyOnFirstSearch" fullname="RoadmapFeatureTests.FieldLootSource_PopulatesOnlyOnFirstSearch" methodname="FieldLootSource_PopulatesOnlyOnFirstSearch" classname="RoadmapFeatureTests" runstate="Runnable" seed="2014006104" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.008760" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1420" name="GridTransfer_NoSpaceLeavesOriginalStateUntouched" fullname="RoadmapFeatureTests.GridTransfer_NoSpaceLeavesOriginalStateUntouched" methodname="GridTransfer_NoSpaceLeavesOriginalStateUntouched" classname="RoadmapFeatureTests" runstate="Runnable" seed="807643401" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.001088" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1419" name="GridTransfer_RotatesOnlyWhenNeeded" fullname="RoadmapFeatureTests.GridTransfer_RotatesOnlyWhenNeeded" methodname="GridTransfer_RotatesOnlyWhenNeeded" classname="RoadmapFeatureTests" runstate="Runnable" seed="888103055" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000896" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1424" name="ItemDetail_ExplainsBrokenArmor" fullname="RoadmapFeatureTests.ItemDetail_ExplainsBrokenArmor" methodname="ItemDetail_ExplainsBrokenArmor" classname="RoadmapFeatureTests" runstate="Runnable" seed="210647888" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.001346" asserts="0">
+          <properties />
+        </test-case>
+        <test-suite type="ParameterizedMethod" id="1429" name="LootTableRollCount_UsesInclusiveConfiguredRange" fullname="RoadmapFeatureTests.LootTableRollCount_UsesInclusiveConfiguredRange" classname="RoadmapFeatureTests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.001930" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-case id="1426" name="LootTableRollCount_UsesInclusiveConfiguredRange(2,4,0.0f,2)" fullname="RoadmapFeatureTests.LootTableRollCount_UsesInclusiveConfiguredRange(2,4,0.0f,2)" methodname="LootTableRollCount_UsesInclusiveConfiguredRange" classname="RoadmapFeatureTests" runstate="Runnable" seed="878024402" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000585" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1427" name="LootTableRollCount_UsesInclusiveConfiguredRange(2,4,0.34f,3)" fullname="RoadmapFeatureTests.LootTableRollCount_UsesInclusiveConfiguredRange(2,4,0.34f,3)" methodname="LootTableRollCount_UsesInclusiveConfiguredRange" classname="RoadmapFeatureTests" runstate="Runnable" seed="595591404" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000346" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1428" name="LootTableRollCount_UsesInclusiveConfiguredRange(2,4,1.0f,4)" fullname="RoadmapFeatureTests.LootTableRollCount_UsesInclusiveConfiguredRange(2,4,1.0f,4)" methodname="LootTableRollCount_UsesInclusiveConfiguredRange" classname="RoadmapFeatureTests" runstate="Runnable" seed="1610630789" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000294" asserts="0">
+            <properties />
+          </test-case>
+        </test-suite>
+        <test-suite type="ParameterizedMethod" id="1434" name="LootTableWeightedSelection_UsesEntryWeights" fullname="RoadmapFeatureTests.LootTableWeightedSelection_UsesEntryWeights" classname="RoadmapFeatureTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.005134" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-case id="1430" name="LootTableWeightedSelection_UsesEntryWeights(0.0f,0)" fullname="RoadmapFeatureTests.LootTableWeightedSelection_UsesEntryWeights(0.0f,0)" methodname="LootTableWeightedSelection_UsesEntryWeights" classname="RoadmapFeatureTests" runstate="Runnable" seed="1895386405" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.001024" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1431" name="LootTableWeightedSelection_UsesEntryWeights(0.249f,0)" fullname="RoadmapFeatureTests.LootTableWeightedSelection_UsesEntryWeights(0.249f,0)" methodname="LootTableWeightedSelection_UsesEntryWeights" classname="RoadmapFeatureTests" runstate="Runnable" seed="563123121" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000537" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1432" name="LootTableWeightedSelection_UsesEntryWeights(0.25f,1)" fullname="RoadmapFeatureTests.LootTableWeightedSelection_UsesEntryWeights(0.25f,1)" methodname="LootTableWeightedSelection_UsesEntryWeights" classname="RoadmapFeatureTests" runstate="Runnable" seed="2095406040" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000521" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1433" name="LootTableWeightedSelection_UsesEntryWeights(1.0f,1)" fullname="RoadmapFeatureTests.LootTableWeightedSelection_UsesEntryWeights(1.0f,1)" methodname="LootTableWeightedSelection_UsesEntryWeights" classname="RoadmapFeatureTests" runstate="Runnable" seed="1135224500" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000482" asserts="0">
+            <properties />
+          </test-case>
+        </test-suite>
+        <test-case id="1436" name="PrototypeBalanceAssets_MatchFirstPlayablePass" fullname="RoadmapFeatureTests.PrototypeBalanceAssets_MatchFirstPlayablePass" methodname="PrototypeBalanceAssets_MatchFirstPlayablePass" classname="RoadmapFeatureTests" runstate="Runnable" seed="264632717" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.004537" asserts="0">
+          <properties />
+        </test-case>
+        <test-suite type="ParameterizedMethod" id="1418" name="RaidExtractionProgress_RequiresKillsAndMinimumTime" fullname="RoadmapFeatureTests.RaidExtractionProgress_RequiresKillsAndMinimumTime" classname="RoadmapFeatureTests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.001932" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-case id="1415" name="RaidExtractionProgress_RequiresKillsAndMinimumTime(1,2,20.0f,15.0f,False)" fullname="RoadmapFeatureTests.RaidExtractionProgress_RequiresKillsAndMinimumTime(1,2,20.0f,15.0f,False)" methodname="RaidExtractionProgress_RequiresKillsAndMinimumTime" classname="RoadmapFeatureTests" runstate="Runnable" seed="1454889499" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000725" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1416" name="RaidExtractionProgress_RequiresKillsAndMinimumTime(2,2,14.99f,15.0f,False)" fullname="RoadmapFeatureTests.RaidExtractionProgress_RequiresKillsAndMinimumTime(2,2,14.99f,15.0f,False)" methodname="RaidExtractionProgress_RequiresKillsAndMinimumTime" classname="RoadmapFeatureTests" runstate="Runnable" seed="762359087" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000334" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1417" name="RaidExtractionProgress_RequiresKillsAndMinimumTime(2,2,15.0f,15.0f,True)" fullname="RoadmapFeatureTests.RaidExtractionProgress_RequiresKillsAndMinimumTime(2,2,15.0f,15.0f,True)" methodname="RaidExtractionProgress_RequiresKillsAndMinimumTime" classname="RoadmapFeatureTests" runstate="Runnable" seed="1319090402" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000298" asserts="0">
+            <properties />
+          </test-case>
+        </test-suite>
+        <test-case id="1421" name="VersionFiveSave_RoundTripPreservesHierarchyAndArmorDurability" fullname="RoadmapFeatureTests.VersionFiveSave_RoundTripPreservesHierarchyAndArmorDurability" methodname="VersionFiveSave_RoundTripPreservesHierarchyAndArmorDurability" classname="RoadmapFeatureTests" runstate="Runnable" seed="1888540835" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.007215" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1422" name="VersionThreeSave_RemainsLoadableAfterHideoutProgressionUpgrade" fullname="RoadmapFeatureTests.VersionThreeSave_RemainsLoadableAfterHideoutProgressionUpgrade" methodname="VersionThreeSave_RemainsLoadableAfterHideoutProgressionUpgrade" classname="RoadmapFeatureTests" runstate="Runnable" seed="53458478" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.006893" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1423" name="VersionTwoSave_RemainsLoadableAfterArmorAndFlatSaveUpgrade" fullname="RoadmapFeatureTests.VersionTwoSave_RemainsLoadableAfterArmorAndFlatSaveUpgrade" methodname="VersionTwoSave_RemainsLoadableAfterArmorAndFlatSaveUpgrade" classname="RoadmapFeatureTests" runstate="Runnable" seed="673437262" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.007131" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1425" name="WorldLootCollisionPolicy_SeparatesPickupsCorpsesAndSolidBoxes" fullname="RoadmapFeatureTests.WorldLootCollisionPolicy_SeparatesPickupsCorpsesAndSolidBoxes" methodname="WorldLootCollisionPolicy_SeparatesPickupsCorpsesAndSolidBoxes" classname="RoadmapFeatureTests" runstate="Runnable" seed="1789733590" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.003580" asserts="0">
+          <properties />
+        </test-case>
+        <test-suite type="ParameterizedMethod" id="1414" name="ZombieLootCalculation_RespectsChanceAndQuantityBounds" fullname="RoadmapFeatureTests.ZombieLootCalculation_RespectsChanceAndQuantityBounds" classname="RoadmapFeatureTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.002412" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-case id="1410" name="ZombieLootCalculation_RespectsChanceAndQuantityBounds(0.0f,2,5,0.0f,0.0f,0)" fullname="RoadmapFeatureTests.ZombieLootCalculation_RespectsChanceAndQuantityBounds(0.0f,2,5,0.0f,0.0f,0)" methodname="ZombieLootCalculation_RespectsChanceAndQuantityBounds" classname="RoadmapFeatureTests" runstate="Runnable" seed="1927330008" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000774" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1411" name="ZombieLootCalculation_RespectsChanceAndQuantityBounds(0.5f,2,5,0.75f,0.0f,0)" fullname="RoadmapFeatureTests.ZombieLootCalculation_RespectsChanceAndQuantityBounds(0.5f,2,5,0.75f,0.0f,0)" methodname="ZombieLootCalculation_RespectsChanceAndQuantityBounds" classname="RoadmapFeatureTests" runstate="Runnable" seed="1696864195" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000344" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1412" name="ZombieLootCalculation_RespectsChanceAndQuantityBounds(0.5f,2,5,0.49f,0.0f,2)" fullname="RoadmapFeatureTests.ZombieLootCalculation_RespectsChanceAndQuantityBounds(0.5f,2,5,0.49f,0.0f,2)" methodname="ZombieLootCalculation_RespectsChanceAndQuantityBounds" classname="RoadmapFeatureTests" runstate="Runnable" seed="1289871247" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000288" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1413" name="ZombieLootCalculation_RespectsChanceAndQuantityBounds(1.0f,2,5,1.0f,1.0f,5)" fullname="RoadmapFeatureTests.ZombieLootCalculation_RespectsChanceAndQuantityBounds(1.0f,2,5,1.0f,1.0f,5)" methodname="ZombieLootCalculation_RespectsChanceAndQuantityBounds" classname="RoadmapFeatureTests" runstate="Runnable" seed="778233388" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000265" asserts="0">
+            <properties />
+          </test-case>
+        </test-suite>
+      </test-suite>
+      <test-suite type="TestFixture" id="1437" name="SurvivalTests" fullname="SurvivalTests" classname="SurvivalTests" runstate="Runnable" testcasecount="16" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.012996" total="16" passed="16" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-case id="1451" name="ConsumableFailureReason_ExplainsFullSatiety" fullname="SurvivalTests.ConsumableFailureReason_ExplainsFullSatiety" methodname="ConsumableFailureReason_ExplainsFullSatiety" classname="SurvivalTests" runstate="Runnable" seed="1569674199" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.001294" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1450" name="FoodUse_AtMaximumSatietyDoesNotConsumeItem" fullname="SurvivalTests.FoodUse_AtMaximumSatietyDoesNotConsumeItem" methodname="FoodUse_AtMaximumSatietyDoesNotConsumeItem" classname="SurvivalTests" runstate="Runnable" seed="532221043" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.001144" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1449" name="FoodUse_RestoresConfiguredSatietyAndConsumesOneItem" fullname="SurvivalTests.FoodUse_RestoresConfiguredSatietyAndConsumesOneItem" methodname="FoodUse_RestoresConfiguredSatietyAndConsumesOneItem" classname="SurvivalTests" runstate="Runnable" seed="2127181046" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000861" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1452" name="FoodUse_WithLessThanOnePointMissingDoesNotConsumeItem" fullname="SurvivalTests.FoodUse_WithLessThanOnePointMissingDoesNotConsumeItem" methodname="FoodUse_WithLessThanOnePointMissingDoesNotConsumeItem" classname="SurvivalTests" runstate="Runnable" seed="1318584794" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000775" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1453" name="HealingUse_UsesItemDefinitionAmount" fullname="SurvivalTests.HealingUse_UsesItemDefinitionAmount" methodname="HealingUse_UsesItemDefinitionAmount" classname="SurvivalTests" runstate="Runnable" seed="1352730341" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000678" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1454" name="HealingUse_WithLessThanOnePointMissingDoesNotConsumeItem" fullname="SurvivalTests.HealingUse_WithLessThanOnePointMissingDoesNotConsumeItem" methodname="HealingUse_WithLessThanOnePointMissingDoesNotConsumeItem" classname="SurvivalTests" runstate="Runnable" seed="1746531567" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000548" asserts="0">
+          <properties />
+        </test-case>
+        <test-suite type="ParameterizedMethod" id="1448" name="MovementMultiplier_UsesLowSatietyPenalty" fullname="SurvivalTests.MovementMultiplier_UsesLowSatietyPenalty" classname="SurvivalTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.001027" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-case id="1444" name="MovementMultiplier_UsesLowSatietyPenalty(25.0f,25.0f,0.7f,1.0f)" fullname="SurvivalTests.MovementMultiplier_UsesLowSatietyPenalty(25.0f,25.0f,0.7f,1.0f)" methodname="MovementMultiplier_UsesLowSatietyPenalty" classname="SurvivalTests" runstate="Runnable" seed="203551480" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000296" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1445" name="MovementMultiplier_UsesLowSatietyPenalty(12.5f,25.0f,0.7f,0.85f)" fullname="SurvivalTests.MovementMultiplier_UsesLowSatietyPenalty(12.5f,25.0f,0.7f,0.85f)" methodname="MovementMultiplier_UsesLowSatietyPenalty" classname="SurvivalTests" runstate="Runnable" seed="1662825720" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000078" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1446" name="MovementMultiplier_UsesLowSatietyPenalty(0.0f,25.0f,0.7f,0.7f)" fullname="SurvivalTests.MovementMultiplier_UsesLowSatietyPenalty(0.0f,25.0f,0.7f,0.7f)" methodname="MovementMultiplier_UsesLowSatietyPenalty" classname="SurvivalTests" runstate="Runnable" seed="666004645" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000049" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1447" name="MovementMultiplier_UsesLowSatietyPenalty(50.0f,0.0f,0.7f,1.0f)" fullname="SurvivalTests.MovementMultiplier_UsesLowSatietyPenalty(50.0f,0.0f,0.7f,1.0f)" methodname="MovementMultiplier_UsesLowSatietyPenalty" classname="SurvivalTests" runstate="Runnable" seed="1683948973" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000056" asserts="0">
+            <properties />
+          </test-case>
+        </test-suite>
+        <test-case id="1455" name="SatietyHud_ShowsMovementPenaltyOnlyWhenActive" fullname="SurvivalTests.SatietyHud_ShowsMovementPenaltyOnlyWhenActive" methodname="SatietyHud_ShowsMovementPenaltyOnlyWhenActive" classname="SurvivalTests" runstate="Runnable" seed="1968400091" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000264" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1443" name="StaminaHud_ShowsSprintStateOnlyWhileRunning" fullname="SurvivalTests.StaminaHud_ShowsSprintStateOnlyWhileRunning" methodname="StaminaHud_ShowsSprintStateOnlyWhileRunning" classname="SurvivalTests" runstate="Runnable" seed="1530293966" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000216" asserts="0">
+          <properties />
+        </test-case>
+        <test-suite type="ParameterizedMethod" id="1442" name="StaminaTick_DrainsRecoversAndClamps" fullname="SurvivalTests.StaminaTick_DrainsRecoversAndClamps" classname="SurvivalTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.003577" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-case id="1438" name="StaminaTick_DrainsRecoversAndClamps(100.0f,True,22.0f,18.0f,1.0f,78.0f)" fullname="SurvivalTests.StaminaTick_DrainsRecoversAndClamps(100.0f,True,22.0f,18.0f,1.0f,78.0f)" methodname="StaminaTick_DrainsRecoversAndClamps" classname="SurvivalTests" runstate="Runnable" seed="466472319" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000530" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1439" name="StaminaTick_DrainsRecoversAndClamps(10.0f,True,22.0f,18.0f,1.0f,0.0f)" fullname="SurvivalTests.StaminaTick_DrainsRecoversAndClamps(10.0f,True,22.0f,18.0f,1.0f,0.0f)" methodname="StaminaTick_DrainsRecoversAndClamps" classname="SurvivalTests" runstate="Runnable" seed="864982149" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000099" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1440" name="StaminaTick_DrainsRecoversAndClamps(90.0f,False,22.0f,18.0f,1.0f,100.0f)" fullname="SurvivalTests.StaminaTick_DrainsRecoversAndClamps(90.0f,False,22.0f,18.0f,1.0f,100.0f)" methodname="StaminaTick_DrainsRecoversAndClamps" classname="SurvivalTests" runstate="Runnable" seed="308261419" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000046" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1441" name="StaminaTick_DrainsRecoversAndClamps(20.0f,False,22.0f,18.0f,0.5f,29.0f)" fullname="SurvivalTests.StaminaTick_DrainsRecoversAndClamps(20.0f,False,22.0f,18.0f,0.5f,29.0f)" methodname="StaminaTick_DrainsRecoversAndClamps" classname="SurvivalTests" runstate="Runnable" seed="998454566" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000042" asserts="0">
+            <properties />
+          </test-case>
+        </test-suite>
+      </test-suite>
+      <test-suite type="TestFixture" id="1456" name="ZombieAITests" fullname="ZombieAITests" classname="ZombieAITests" runstate="Runnable" testcasecount="21" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.020682" total="21" passed="21" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="ParameterizedMethod" id="1466" name="AvoidancePriority_UsesStableMiddleRange" fullname="ZombieAITests.AvoidancePriority_UsesStableMiddleRange" classname="ZombieAITests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.004316" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-case id="1463" name="AvoidancePriority_UsesStableMiddleRange(0,25)" fullname="ZombieAITests.AvoidancePriority_UsesStableMiddleRange(0,25)" methodname="AvoidancePriority_UsesStableMiddleRange" classname="ZombieAITests" runstate="Runnable" seed="1116850280" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000418" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1464" name="AvoidancePriority_UsesStableMiddleRange(49,74)" fullname="ZombieAITests.AvoidancePriority_UsesStableMiddleRange(49,74)" methodname="AvoidancePriority_UsesStableMiddleRange" classname="ZombieAITests" runstate="Runnable" seed="960487452" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000090" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1465" name="AvoidancePriority_UsesStableMiddleRange(-1,26)" fullname="ZombieAITests.AvoidancePriority_UsesStableMiddleRange(-1,26)" methodname="AvoidancePriority_UsesStableMiddleRange" classname="ZombieAITests" runstate="Runnable" seed="819191208" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000048" asserts="0">
+            <properties />
+          </test-case>
+        </test-suite>
+        <test-case id="1471" name="Chase_UsesLargerLoseTargetRange" fullname="ZombieAITests.Chase_UsesLargerLoseTargetRange" methodname="Chase_UsesLargerLoseTargetRange" classname="ZombieAITests" runstate="Runnable" seed="2055990796" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000256" asserts="0">
+          <properties />
+        </test-case>
+        <test-suite type="ParameterizedMethod" id="1462" name="DestinationRefresh_UsesTimeAndMovementThreshold" fullname="ZombieAITests.DestinationRefresh_UsesTimeAndMovementThreshold" classname="ZombieAITests" runstate="Runnable" testcasecount="5" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.003295" total="5" passed="5" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-case id="1457" name="DestinationRefresh_UsesTimeAndMovementThreshold(False,0.0f,0.0f,0.0f,0.35f,True)" fullname="ZombieAITests.DestinationRefresh_UsesTimeAndMovementThreshold(False,0.0f,0.0f,0.0f,0.35f,True)" methodname="DestinationRefresh_UsesTimeAndMovementThreshold" classname="ZombieAITests" runstate="Runnable" seed="1303771115" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000315" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1458" name="DestinationRefresh_UsesTimeAndMovementThreshold(False,0.1f,0.2f,0.0f,0.35f,False)" fullname="ZombieAITests.DestinationRefresh_UsesTimeAndMovementThreshold(False,0.1f,0.2f,0.0f,0.35f,False)" methodname="DestinationRefresh_UsesTimeAndMovementThreshold" classname="ZombieAITests" runstate="Runnable" seed="1667576125" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000074" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1459" name="DestinationRefresh_UsesTimeAndMovementThreshold(True,0.1f,0.2f,1.0f,0.35f,False)" fullname="ZombieAITests.DestinationRefresh_UsesTimeAndMovementThreshold(True,0.1f,0.2f,1.0f,0.35f,False)" methodname="DestinationRefresh_UsesTimeAndMovementThreshold" classname="ZombieAITests" runstate="Runnable" seed="1318369785" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000047" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1460" name="DestinationRefresh_UsesTimeAndMovementThreshold(True,0.3f,0.2f,0.2f,0.35f,False)" fullname="ZombieAITests.DestinationRefresh_UsesTimeAndMovementThreshold(True,0.3f,0.2f,0.2f,0.35f,False)" methodname="DestinationRefresh_UsesTimeAndMovementThreshold" classname="ZombieAITests" runstate="Runnable" seed="203390923" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000042" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1461" name="DestinationRefresh_UsesTimeAndMovementThreshold(True,0.3f,0.2f,0.4f,0.35f,True)" fullname="ZombieAITests.DestinationRefresh_UsesTimeAndMovementThreshold(True,0.3f,0.2f,0.4f,0.35f,True)" methodname="DestinationRefresh_UsesTimeAndMovementThreshold" classname="ZombieAITests" runstate="Runnable" seed="443118181" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000041" asserts="0">
+            <properties />
+          </test-case>
+        </test-suite>
+        <test-suite type="ParameterizedMethod" id="1470" name="Distance_SelectsExpectedState" fullname="ZombieAITests.Distance_SelectsExpectedState" classname="ZombieAITests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.002718" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-case id="1468" name="Distance_SelectsExpectedState(8.0f,Chase)" fullname="ZombieAITests.Distance_SelectsExpectedState(8.0f,Chase)" methodname="Distance_SelectsExpectedState" classname="ZombieAITests" runstate="Runnable" seed="567639000" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000293" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1469" name="Distance_SelectsExpectedState(1.0f,Attack)" fullname="ZombieAITests.Distance_SelectsExpectedState(1.0f,Attack)" methodname="Distance_SelectsExpectedState" classname="ZombieAITests" runstate="Runnable" seed="1391409880" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000080" asserts="0">
+            <properties />
+          </test-case>
+        </test-suite>
+        <test-case id="1467" name="OutsideDetectionRange_RemainsIdle" fullname="ZombieAITests.OutsideDetectionRange_RemainsIdle" methodname="OutsideDetectionRange_RemainsIdle" classname="ZombieAITests" runstate="Runnable" seed="641493659" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000119" asserts="0">
+          <properties />
+        </test-case>
+        <test-case id="1476" name="SpawnDifficulty_InterpolatesAliveLimitAndInterval" fullname="ZombieAITests.SpawnDifficulty_InterpolatesAliveLimitAndInterval" methodname="SpawnDifficulty_InterpolatesAliveLimitAndInterval" classname="ZombieAITests" runstate="Runnable" seed="352015190" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000335" asserts="0">
+          <properties />
+        </test-case>
+        <test-suite type="ParameterizedMethod" id="1475" name="SpawnDifficultyProgress_StaysInsideZeroToOne" fullname="ZombieAITests.SpawnDifficultyProgress_StaysInsideZeroToOne" classname="ZombieAITests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.002487" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-case id="1472" name="SpawnDifficultyProgress_StaysInsideZeroToOne(0.0f,150.0f,0.0f)" fullname="ZombieAITests.SpawnDifficultyProgress_StaysInsideZeroToOne(0.0f,150.0f,0.0f)" methodname="SpawnDifficultyProgress_StaysInsideZeroToOne" classname="ZombieAITests" runstate="Runnable" seed="968808352" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000206" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1473" name="SpawnDifficultyProgress_StaysInsideZeroToOne(75.0f,150.0f,0.5f)" fullname="ZombieAITests.SpawnDifficultyProgress_StaysInsideZeroToOne(75.0f,150.0f,0.5f)" methodname="SpawnDifficultyProgress_StaysInsideZeroToOne" classname="ZombieAITests" runstate="Runnable" seed="2006159027" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000062" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1474" name="SpawnDifficultyProgress_StaysInsideZeroToOne(200.0f,150.0f,1.0f)" fullname="ZombieAITests.SpawnDifficultyProgress_StaysInsideZeroToOne(200.0f,150.0f,1.0f)" methodname="SpawnDifficultyProgress_StaysInsideZeroToOne" classname="ZombieAITests" runstate="Runnable" seed="1490725861" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000040" asserts="0">
+            <properties />
+          </test-case>
+        </test-suite>
+        <test-case id="1477" name="WeightedSpawnSelection_ExcludesLockedArchetypes" fullname="ZombieAITests.WeightedSpawnSelection_ExcludesLockedArchetypes" methodname="WeightedSpawnSelection_ExcludesLockedArchetypes" classname="ZombieAITests" runstate="Runnable" seed="1023708269" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000640" asserts="0">
+          <properties />
+        </test-case>
+        <test-suite type="ParameterizedMethod" id="1482" name="WeightedSpawnSelection_UsesConfiguredWeights" fullname="ZombieAITests.WeightedSpawnSelection_UsesConfiguredWeights" classname="ZombieAITests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.003642" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-case id="1478" name="WeightedSpawnSelection_UsesConfiguredWeights(0.0f,0)" fullname="ZombieAITests.WeightedSpawnSelection_UsesConfiguredWeights(0.0f,0)" methodname="WeightedSpawnSelection_UsesConfiguredWeights" classname="ZombieAITests" runstate="Runnable" seed="1577073447" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000322" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1479" name="WeightedSpawnSelection_UsesConfiguredWeights(0.249f,0)" fullname="ZombieAITests.WeightedSpawnSelection_UsesConfiguredWeights(0.249f,0)" methodname="WeightedSpawnSelection_UsesConfiguredWeights" classname="ZombieAITests" runstate="Runnable" seed="219349505" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000095" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1480" name="WeightedSpawnSelection_UsesConfiguredWeights(0.25f,1)" fullname="ZombieAITests.WeightedSpawnSelection_UsesConfiguredWeights(0.25f,1)" methodname="WeightedSpawnSelection_UsesConfiguredWeights" classname="ZombieAITests" runstate="Runnable" seed="257200100" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000064" asserts="0">
+            <properties />
+          </test-case>
+          <test-case id="1481" name="WeightedSpawnSelection_UsesConfiguredWeights(1.0f,1)" fullname="ZombieAITests.WeightedSpawnSelection_UsesConfiguredWeights(1.0f,1)" methodname="WeightedSpawnSelection_UsesConfiguredWeights" classname="ZombieAITests" runstate="Runnable" seed="1090325210" result="Passed" start-time="2026-09-18 19:38:50Z" end-time="2026-09-18 19:38:50Z" duration="0.000061" asserts="0">
+            <properties />
+          </test-case>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

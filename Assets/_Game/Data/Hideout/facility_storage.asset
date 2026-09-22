@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 34540080a41656d48b805a83908473d7, type: 3}
+  m_Name: facility_storage
+  m_EditorClassIdentifier: 
+  facilityId: storage
+  displayName: "\uCC3D\uACE0"
+  description: "\uBCF4\uAD00\uD488\uC744 \uC815\uB9AC\uD558\uACE0 \uB2E4\uC74C \uB808\uC774\uB4DC
+    \uCD9C\uACA9 \uC7A5\uBE44\uB97C \uC900\uBE44\uD569\uB2C8\uB2E4."
+  facilityType: 0
+  startingLevel: 1
+  maximumLevel: 5
+  baseEffectValue: 0
+  effectPerLevel: 2
+  effectLabel: "\uCD94\uAC00 \uCC3D\uACE0 \uD589"
+  upgradeSteps:
+  - targetLevel: 2
+    costs:
+    - item: {fileID: 11400000, guid: d8cc5416db26e6a4a9be2463e0c67aa2, type: 2}
+      quantity: 4
+    - item: {fileID: 11400000, guid: 07f80b697df7df04bbda0befa58b27ad, type: 2}
+      quantity: 2
+  - targetLevel: 3
+    costs:
+    - item: {fileID: 11400000, guid: d8cc5416db26e6a4a9be2463e0c67aa2, type: 2}
+      quantity: 7
+    - item: {fileID: 11400000, guid: 238ae109b360ba5409a946faab655b93, type: 2}
+      quantity: 2
+  - targetLevel: 4
+    costs:
+    - item: {fileID: 11400000, guid: d8cc5416db26e6a4a9be2463e0c67aa2, type: 2}
+      quantity: 10
+    - item: {fileID: 11400000, guid: 238ae109b360ba5409a946faab655b93, type: 2}
+      quantity: 4
+  - targetLevel: 5
+    costs:
+    - item: {fileID: 11400000, guid: d8cc5416db26e6a4a9be2463e0c67aa2, type: 2}
+      quantity: 14
+    - item: {fileID: 11400000, guid: 238ae109b360ba5409a946faab655b93, type: 2}
+      quantity: 7

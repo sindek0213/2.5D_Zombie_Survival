@@ -29,6 +29,13 @@ namespace ZombieSurvival.AI
 
         public ZombieState CurrentState { get; private set; } = ZombieState.Idle;
 
+        // ZombieSpawner가 이미 알고 있는 플레이어 Transform을 새 좀비에 직접 전달할 때 사용합니다.
+        // 스폰된 좀비마다 씬 전체를 다시 검색하지 않게 하며, null은 잘못된 연결을 만들지 않도록 무시합니다.
+        public void SetTarget(Transform newTarget)
+        {
+            if (newTarget != null) target = newTarget;
+        }
+
         private void Awake()
         {
             movement = GetComponent<ZombieMovement>();
@@ -39,7 +46,9 @@ namespace ZombieSurvival.AI
 
         private void Start()
         {
-            // 현재 단계는 플레이어가 한 명이므로 씬에서 PlayerMovement를 가진 대상을 찾습니다.
+            // 정상 레이드에서는 ZombieSpawner가 같은 플레이어 참조를 미리 전달합니다.
+            // 스포너가 없는 독립 테스트 씬에서만 한 번 자동 탐색해 ZombieBrain 단독 사용도 계속 지원합니다.
+            if (target != null) return;
             PlayerMovement player = FindObjectOfType<PlayerMovement>();
             target = player != null ? player.transform : null;
         }

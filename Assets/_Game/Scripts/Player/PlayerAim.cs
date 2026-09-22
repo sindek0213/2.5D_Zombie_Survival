@@ -14,6 +14,7 @@ namespace ZombieSurvival.Player
         [SerializeField] private Transform aimOrigin;
         [SerializeField] private float groundHeight;
         [SerializeField, Min(0f)] private float weaponHeight = 1f;
+        private PlayerSpriteAnimator spriteAnimator;
 
         // 다른 전투 시스템이 사용할 수 있는 현재 월드 조준 방향입니다.
         public Vector3 AimDirection { get; private set; } = Vector3.forward;
@@ -23,6 +24,9 @@ namespace ZombieSurvival.Player
         private void Start()
         {
             if (aimCamera == null) aimCamera = Camera.main;
+            // 새 8방향 그림 애니메이터가 있으면 그 컴포넌트가 방향별 Sprite를 직접 고릅니다.
+            // 참조를 한 번만 저장해 두고 아래 좌우 반전 방식과 동시에 적용되지 않게 구분합니다.
+            spriteAnimator = GetComponent<PlayerSpriteAnimator>();
         }
 
         // 매 프레임 현재 마우스 위치를 다시 읽어 조준점과 AimDirection을 즉시 갱신합니다.
@@ -55,7 +59,9 @@ namespace ZombieSurvival.Player
             if (aimMarker != null) aimMarker.position = groundPoint + Vector3.up * 0.03f;
 
             // 조준 방향의 X 부호에 따라 2D 스프라이트만 좌우 반전합니다.
-            if (visual != null && Mathf.Abs(AimDirection.x) > 0.01f)
+            // 단일 임시 그림은 왼쪽을 볼 때 좌우 반전해야 하지만, 8방향 시트에는 왼쪽과 오른쪽 그림이 이미 따로 들어 있습니다.
+            // 두 방식을 동시에 적용하면 왼쪽 행이 다시 오른쪽으로 뒤집히므로 새 애니메이터가 없는 이전 프리팹에서만 반전합니다.
+            if (spriteAnimator == null && visual != null && Mathf.Abs(AimDirection.x) > 0.01f)
             {
                 Vector3 scale = visual.localScale;
                 scale.x = Mathf.Abs(scale.x) * (AimDirection.x < 0f ? -1f : 1f);
