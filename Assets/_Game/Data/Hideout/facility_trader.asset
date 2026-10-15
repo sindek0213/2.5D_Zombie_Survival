@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 34540080a41656d48b805a83908473d7, type: 3}
+  m_Name: facility_trader
+  m_EditorClassIdentifier: 
+  facilityId: trader
+  displayName: "\uBCF4\uAE09 \uC0C1\uC778"
+  description: "\uD06C\uB808\uB527\uC73C\uB85C \uBCF4\uAE09\uD488\uC744 \uC0AC\uACE0
+    \uCC3D\uACE0\uC758 \uC804\uB9AC\uD488\uC744 \uD310\uB9E4\uD569\uB2C8\uB2E4."
+  facilityType: 5
+  startingLevel: 1
+  maximumLevel: 3
+  baseEffectValue: 5
+  effectPerLevel: 5
+  effectLabel: "\uAC70\uB798 \uAC00\uACA9 \uBCF4\uC815\uB960(%)"
+  upgradeSteps:
+  - targetLevel: 2
+    costs:
+    - item: {fileID: 11400000, guid: d8cc5416db26e6a4a9be2463e0c67aa2, type: 2}
+      quantity: 6
+    - item: {fileID: 11400000, guid: 238ae109b360ba5409a946faab655b93, type: 2}
+      quantity: 2
+  - targetLevel: 3
+    costs:
+    - item: {fileID: 11400000, guid: d8cc5416db26e6a4a9be2463e0c67aa2, type: 2}
+      quantity: 10
+    - item: {fileID: 11400000, guid: 238ae109b360ba5409a946faab655b93, type: 2}
+      quantity: 5

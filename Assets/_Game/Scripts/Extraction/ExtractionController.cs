@@ -113,7 +113,9 @@ namespace ZombieSurvival.Extraction
 
         private bool HasItemRequirement()
         {
-            return requirement != null && playerInventory != null &&
+            if (requirement == null) return false;
+            if (requirement.RequirementType == ExtractionRequirementType.AlwaysAvailable) return true;
+            return playerInventory != null &&
                    HasRequiredQuantity(playerInventory.CountItem(requirement.RequiredItemId), requirement.RequiredQuantity);
         }
 

@@ -22,3 +22,4 @@ MonoBehaviour:
   outputItem: {fileID: 11400000, guid: 24bd518f8a78a084794a91f18883a77b, type: 2}
   baseOutputQuantity: 15
   bonusOutputPerLevel: 0
+  baseCraftDurationSeconds: 15

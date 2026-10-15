@@ -109,13 +109,20 @@ namespace ZombieSurvival.AI
             if (livingZombies.Count >= aliveLimit) return;
 
             // 후보가 없거나 모든 지점이 막혀 실패해도 위에서 다음 시각을 정했으므로 매 프레임 물리 검사를 반복하지 않습니다.
-            TrySpawnOne(elapsedTime);
+            TrySpawnOne(elapsedTime, progress);
         }
 
-        private bool TrySpawnOne(float elapsedTime)
+        private bool TrySpawnOne(float elapsedTime, float difficultyProgress)
         {
-            int archetypeIndex = SelectWeightedArchetypeIndex(archetypes, elapsedTime, UnityEngine.Random.value);
-            if (archetypeIndex < 0 || !TrySelectSpawnPoint(out ZombieSpawnPoint spawnPoint)) return false;
+            // 위치를 먼저 고른 뒤 그 지점에서 허용하는 좀비만 추립니다.
+            // 이 순서가 반대면 정문에서 금지된 튼튼한 좀비를 먼저 뽑은 뒤 스폰 전체가 실패해 생성 주기가 낭비됩니다.
+            if (!TrySelectSpawnPoint(elapsedTime, difficultyProgress, out ZombieSpawnPoint spawnPoint)) return false;
+            int archetypeIndex = SelectWeightedArchetypeIndexForPoint(
+                archetypes,
+                elapsedTime,
+                UnityEngine.Random.value,
+                spawnPoint);
+            if (archetypeIndex < 0) return false;
 
             ZombieArchetype archetype = archetypes[archetypeIndex];
             if (archetype == null || archetype.Prefab == null) return false;
@@ -152,21 +159,27 @@ namespace ZombieSurvival.AI
             }
         }
 
-        private bool TrySelectSpawnPoint(out ZombieSpawnPoint selected)
+        private bool TrySelectSpawnPoint(
+            float elapsedTime,
+            float difficultyProgress,
+            out ZombieSpawnPoint selected)
         {
             selected = null;
-            int validCount = 0;
+            float totalWeight = 0f;
             if (spawnPoints == null) return false;
 
             for (int i = 0; i < spawnPoints.Length; i++)
             {
                 ZombieSpawnPoint candidate = spawnPoints[i];
-                if (candidate == null || !IsFarEnoughFromPlayer(candidate.Position) || !IsSpawnAreaClear(candidate.Position))
+                if (candidate == null || !candidate.IsAvailable(elapsedTime) ||
+                    !IsFarEnoughFromPlayer(candidate.Position) || !IsSpawnAreaClear(candidate.Position))
                     continue;
 
-                // Reservoir sampling 방식이라 유효 지점 수를 미리 세지 않아도 모든 후보가 같은 확률로 선택됩니다.
-                validCount++;
-                if (UnityEngine.Random.Range(0, validCount) == 0) selected = candidate;
+                // 가중 Reservoir sampling을 사용해 목록을 두 번 만들지 않고도 후반 고위험 지점의 선택 확률을 높입니다.
+                // Random 값이 현재 지점 가중치/누적 가중치보다 작을 때 교체하면 모든 유효 지점이 정확한 비율로 경쟁합니다.
+                float weight = candidate.GetSelectionWeight(difficultyProgress);
+                totalWeight += weight;
+                if (UnityEngine.Random.value * totalWeight < weight) selected = candidate;
             }
 
             return selected != null;
@@ -243,6 +256,41 @@ namespace ZombieSurvival.AI
             }
 
             // normalizedRoll이 정확히 1이면 target과 totalWeight가 같아지므로 마지막 유효 후보를 반환합니다.
+            return lastEligibleIndex;
+        }
+
+        // 기존 공용 선택 규칙에 스폰 지점의 특성 허용 조건만 추가한 내부 버전입니다.
+        // 정적 공용 함수는 테스트와 다른 맵 호환을 위해 그대로 두고, 실제 생성에서만 위치별 제한을 적용합니다.
+        private static int SelectWeightedArchetypeIndexForPoint(
+            ZombieArchetype[] definitions,
+            float elapsedTime,
+            float normalizedRoll,
+            ZombieSpawnPoint spawnPoint)
+        {
+            if (definitions == null || definitions.Length == 0 || spawnPoint == null) return -1;
+
+            float totalWeight = 0f;
+            int lastEligibleIndex = -1;
+            for (int i = 0; i < definitions.Length; i++)
+            {
+                ZombieArchetype definition = definitions[i];
+                if (definition == null || !definition.IsUnlocked(elapsedTime) ||
+                    definition.SpawnWeight <= 0f || !spawnPoint.Allows(definition)) continue;
+                totalWeight += definition.SpawnWeight;
+                lastEligibleIndex = i;
+            }
+            if (totalWeight <= 0f) return -1;
+
+            float target = Mathf.Clamp01(normalizedRoll) * totalWeight;
+            float accumulated = 0f;
+            for (int i = 0; i < definitions.Length; i++)
+            {
+                ZombieArchetype definition = definitions[i];
+                if (definition == null || !definition.IsUnlocked(elapsedTime) ||
+                    definition.SpawnWeight <= 0f || !spawnPoint.Allows(definition)) continue;
+                accumulated += definition.SpawnWeight;
+                if (target < accumulated) return i;
+            }
             return lastEligibleIndex;
         }
     }

@@ -32,12 +32,20 @@ namespace ZombieSurvival.Inventory
         [SerializeField, Min(1)] private int gridWidth = 10;
         [SerializeField, Min(1)] private int gridHeight = 6;
         [Header("소모품 사용 시간")]
-        [SerializeField, Min(0f)] private float healingUseDuration = 1.5f;
+        // 구급상자는 전체 체력을 회복하며, 출혈을 막는 붕대보다 오래 걸리는 기본 치료 시간을 사용합니다.
+        [SerializeField, Min(0f)] private float healingUseDuration = 4f;
+        [SerializeField, Min(0f)] private float bandageUseDuration = 2.2f;
+        [SerializeField, Min(0f)] private float splintUseDuration = 3.5f;
         [SerializeField, Min(0f)] private float foodUseDuration = 1.2f;
+        [SerializeField, Min(0f)] private float buffUseDuration = 1f;
         private GridData root;
         private readonly Dictionary<EquipmentSlotType, InventoryEntry> equipment =
             new Dictionary<EquipmentSlotType, InventoryEntry>();
         private Coroutine itemUseCoroutine;
+        private Health ownerHealth;
+        private PlayerCondition ownerCondition;
+        private PlayerStatusEffects ownerStatusEffects;
+        private float itemUseMessageExpiresAt;
 
         // 일반 플레이에서는 Awake가 먼저 호출되어 Root가 준비되지만, Unity EditMode 테스트나 에디터 도구는 Awake 전에 공개 API를 호출할 수 있습니다.
         // 그래서 Root를 읽는 순간에도 초기화를 보장하여 null 때문에 명령이 실패하지 않게 하고, 한 번 만든 격자는 계속 같은 객체를 반환합니다.
@@ -56,11 +64,21 @@ namespace ZombieSurvival.Inventory
         public bool IsUsingItem => itemUseCoroutine != null;
         public float ItemUseProgress { get; private set; }
         public string CurrentItemUseName { get; private set; } = string.Empty;
+        public string LastItemUseMessage { get; private set; } = string.Empty;
+        // 취소와 완료 안내는 잠깐만 표시해 오래된 치료 메시지가 다음 아이템 설명에 남지 않게 합니다.
+        public bool HasVisibleItemUseMessage => !string.IsNullOrEmpty(LastItemUseMessage) &&
+                                                Time.unscaledTime < itemUseMessageExpiresAt;
         public event Action InventoryChanged;
         public event Action<ItemDefinition, int> DropRequested;
         // 사용 시작·취소·완료 때 UI가 즉시 상태 문구를 다시 그릴 수 있도록 별도 알림을 제공합니다.
         // 진행률 자체는 매 프레임 이벤트를 보내지 않고 HUD가 공개 값을 읽어 불필요한 전체 격자 재생성을 막습니다.
         public event Action ItemUseStateChanged;
+        // 장비 슬롯이나 무기 부착물이 실제로 바뀐 순간만 알립니다.
+        // 일반 아이템 이동에도 발생하는 InventoryChanged와 분리해야 재장전이 인벤토리 정리만으로 취소되지 않습니다.
+        public event Action EquipmentChanged;
+        // 치료품·음식·버프의 효과가 적용되기 전, 사용 준비가 정상적으로 시작된 바로 그 순간 발생합니다.
+        // 사용 시간이 0인 아이템도 이 이벤트를 보내므로 전투 시스템이 재장전을 먼저 안전하게 취소할 수 있습니다.
+        public event Action ItemUseStarted;
 
         // 탄창이나 방어구 내구도처럼 목록·좌표가 아닌 아이템 내부 상태만 바뀌었을 때 화면과 저장 계층에 알립니다.
         // 상태를 바꾼 담당 코드가 이 메서드를 한 번 호출하면 모든 HUD가 같은 최종 값을 다시 읽습니다.
@@ -71,6 +89,11 @@ namespace ZombieSurvival.Inventory
             // Inspector에서 지정한 크기로 플레이어의 기본 보관 격자를 준비합니다.
             // 에디터 도구가 Awake보다 먼저 Root를 읽었다면 이미 만든 객체를 유지하여 그 안의 아이템이 초기화 과정에서 사라지지 않게 합니다.
             EnsureRoot();
+            ownerHealth = GetComponent<Health>();
+            ownerCondition = GetComponent<PlayerCondition>();
+            ownerStatusEffects = GetComponent<PlayerStatusEffects>();
+            // 직접 공격을 받으면 치료를 취소합니다. 상세 피해를 구독해 출혈 피해는 구분하고 붕대 사용을 끝까지 진행할 수 있게 합니다.
+            if (ownerHealth != null) ownerHealth.DamageResolved += HandleOwnerDamage;
         }
 
         // Root 생성 경로를 한곳으로 모아 런타임 Awake와 EditMode의 지연 초기화가 서로 다른 격자를 만들지 않게 합니다.
@@ -92,6 +115,36 @@ namespace ZombieSurvival.Inventory
 
             var entry = new InventoryEntry(item, 1, Vector2Int.zero, false, true);
             equipment.Add(slot, entry);
+            EquipmentChanged?.Invoke();
+            InventoryChanged?.Invoke();
+            return true;
+        }
+
+        // 테스트용 시작 탄약처럼 레이드에서만 사용하는 소모품을 일반 전리품과 섞지 않고 루트 격자에 추가합니다.
+        // 별도 묶음마다 IsRaidProvided를 표시하므로 탈출 결과와 튜토리얼 획득 판정에서는 제외되지만 전투 중 재장전에는 정상 사용됩니다.
+        public bool TryAddRaidProvidedItem(ItemDefinition item, int quantity)
+        {
+            EnsureRoot();
+            if (item == null || quantity <= 0) return false;
+
+            // 일반 TryAdd처럼 기존 묶음에 합치면 플레이어가 가져온 탄약까지 테스트 지급품으로 구분할 수 없습니다.
+            // 따라서 기존 점유 상태 위에 필요한 새 묶음 전체가 들어가는지 먼저 계산한 뒤 한 번에 추가합니다.
+            bool[,] occupied = InventoryGridUtility.BuildOccupancy(Root, null);
+            var plannedEntries = new List<InventoryEntry>();
+            int remaining = quantity;
+            while (remaining > 0)
+            {
+                if (!InventoryGridUtility.FindSpace(Root, item, false, occupied, out Vector2Int position))
+                    return false;
+
+                int stackQuantity = Mathf.Min(remaining, item.MaxStack);
+                var entry = new InventoryEntry(item, stackQuantity, position, false, true);
+                plannedEntries.Add(entry);
+                InventoryGridUtility.Fill(occupied, entry);
+                remaining -= stackQuantity;
+            }
+
+            Root.Entries.AddRange(plannedEntries);
             InventoryChanged?.Invoke();
             return true;
         }
@@ -118,6 +171,18 @@ namespace ZombieSurvival.Inventory
                 total += InventoryGridContent.CountItem(equipped.Contents, itemId);
             }
             return total;
+        }
+
+        // 퀵슬롯은 아이템을 옮기거나 묶음을 합친 뒤에도 ItemId로 현재 실제 엔트리를 다시 찾습니다.
+        // 루트 격자와 장착한 가방·조끼의 중첩 Contents를 재귀적으로 검사하고, 찾은 엔트리의 소유 격자도 함께 반환합니다.
+        public bool TryFindItem(string itemId, out GridData grid, out InventoryEntry entry)
+        {
+            if (TryFindItemRecursive(Root, itemId, out grid, out entry)) return true;
+            foreach (InventoryEntry equipped in equipment.Values)
+                if (TryFindItemRecursive(equipped.Contents, itemId, out grid, out entry)) return true;
+            grid = null;
+            entry = null;
+            return false;
         }
 
         // 현재 플레이어가 가진 특정 탄종의 전체 수량을 반환합니다.
@@ -212,6 +277,98 @@ namespace ZombieSurvival.Inventory
         public bool TryEquip(GridData source, InventoryEntry entry)
             => TryEquipOrSwap(source, entry, entry?.Item.EquipmentSlot ?? EquipmentSlotType.None, out _);
 
+        // 격자의 부착물 한 개를 지정 무기에 설치합니다.
+        // 같은 슬롯의 기존 부착물이 있다면 먼저 되돌릴 공간을 계산하고, 공간이 없으면 어떤 목록도 변경하지 않습니다.
+        public bool TryInstallAttachment(
+            GridData source,
+            InventoryEntry attachmentEntry,
+            InventoryEntry targetWeapon,
+            out string failureReason)
+        {
+            failureReason = string.Empty;
+            if (source == null || attachmentEntry == null || !source.Entries.Contains(attachmentEntry))
+            {
+                failureReason = "부착물이 현재 격자에 없습니다.";
+                return false;
+            }
+            if (attachmentEntry.Quantity != 1 || attachmentEntry.Item.Type != ItemType.Attachment)
+            {
+                failureReason = "한 개짜리 무기 부착물만 설치할 수 있습니다.";
+                return false;
+            }
+            if (targetWeapon == null || !targetWeapon.CanInstallAttachment(attachmentEntry.Item))
+            {
+                failureReason = "이 부착물은 선택한 무기의 탄종이나 슬롯과 호환되지 않습니다.";
+                return false;
+            }
+
+            WeaponAttachmentSlot slot = attachmentEntry.Item.WeaponAttachmentDefinition.Slot;
+            ItemDefinition previous = targetWeapon.GetAttachment(slot);
+            GridData returnGrid = source;
+            Vector2Int returnPosition = Vector2Int.zero;
+            bool returnRotated = false;
+            if (previous != null &&
+                !TryFindDefinitionReturnSpace(source, attachmentEntry, previous, out returnPosition, out returnRotated))
+            {
+                returnGrid = Root;
+                if (source == Root || !TryFindDefinitionReturnSpace(Root, null, previous, out returnPosition, out returnRotated))
+                {
+                    failureReason = "교체될 부착물을 돌려놓을 인벤토리 공간이 없습니다.";
+                    return false;
+                }
+            }
+
+            // 모든 검사가 끝난 뒤에만 격자에서 새 부착물을 제거하고 무기 상태를 변경합니다.
+            source.Entries.Remove(attachmentEntry);
+            if (!targetWeapon.TryInstallAttachment(attachmentEntry.Item, out ItemDefinition replaced))
+            {
+                source.Entries.Add(attachmentEntry);
+                failureReason = "부착물 설치 규칙이 변경되어 작업을 취소했습니다.";
+                return false;
+            }
+
+            if (replaced != null)
+            {
+                var returnedEntry = new InventoryEntry(replaced, 1, returnPosition, returnRotated);
+                returnGrid.Entries.Add(returnedEntry);
+            }
+            EquipmentChanged?.Invoke();
+            InventoryChanged?.Invoke();
+            return true;
+        }
+
+        // 무기에 장착된 한 부착물을 지정 격자로 되돌립니다.
+        // 빈자리 확인을 먼저 수행하므로 해제 실패 시 무기의 부착물 목록과 탄창 상태가 그대로 유지됩니다.
+        public bool TryDetachAttachment(
+            InventoryEntry weapon,
+            WeaponAttachmentSlot slot,
+            GridData target,
+            out string failureReason)
+        {
+            failureReason = string.Empty;
+            ItemDefinition installed = weapon?.GetAttachment(slot);
+            if (weapon == null || installed == null)
+            {
+                failureReason = "해제할 부착물이 없습니다.";
+                return false;
+            }
+            if (target == null || !TryFindDefinitionReturnSpace(target, null, installed, out Vector2Int position, out bool rotated))
+            {
+                failureReason = "해제한 부착물을 놓을 인벤토리 공간이 없습니다.";
+                return false;
+            }
+            if (!weapon.TryDetachAttachment(slot, out ItemDefinition detached) || detached == null)
+            {
+                failureReason = "부착물 해제에 실패했습니다.";
+                return false;
+            }
+
+            target.Entries.Add(new InventoryEntry(detached, 1, position, rotated));
+            EquipmentChanged?.Invoke();
+            InventoryChanged?.Invoke();
+            return true;
+        }
+
         // 새 장비를 슬롯에 넣고 기존 장비를 출발 격자 또는 루트 격자의 빈칸으로 돌려보내는 전체 계획을 먼저 검사합니다.
         // 되돌릴 공간이 없으면 source, equipment와 두 InventoryEntry의 위치를 하나도 바꾸지 않으므로 부분 교체가 남지 않습니다.
         public bool TryEquipOrSwap(
@@ -267,6 +424,7 @@ namespace ZombieSurvival.Inventory
             }
 
             equipment[slot] = entry;
+            EquipmentChanged?.Invoke();
             InventoryChanged?.Invoke();
             return true;
         }
@@ -281,6 +439,7 @@ namespace ZombieSurvival.Inventory
             equipment.Remove(slot);
             entry.Place(position, rotated);
             Root.Entries.Add(entry);
+            EquipmentChanged?.Invoke();
             InventoryChanged?.Invoke();
             return true;
         }
@@ -323,6 +482,7 @@ namespace ZombieSurvival.Inventory
             equipment.Remove(slot);
             entry.Place(position, entry.Rotated);
             target.Entries.Add(entry);
+            EquipmentChanged?.Invoke();
             InventoryChanged?.Invoke();
             return true;
         }
@@ -335,7 +495,7 @@ namespace ZombieSurvival.Inventory
             return true;
         }
 
-        // 의료품은 체력, 음식은 포만감이 실제로 회복되었을 때만 한 개를 소비합니다.
+        // 의료품은 체력 회복이나 상태 이상 치료, 음식은 포만감 회복이 실제 적용되었을 때만 한 개를 소비합니다.
         // 탄약은 더 이상 우클릭으로 별도 Reserve 숫자에 옮기지 않고, 재장전 완료 순간 인벤토리에서 직접 소비합니다.
         public bool TryUse(GridData grid, InventoryEntry entry)
         {
@@ -344,9 +504,16 @@ namespace ZombieSurvival.Inventory
             bool used = false;
             if (entry.Item.Type == ItemType.Healing)
             {
-                // 고정된 35가 아니라 ItemDefinition의 값을 사용하므로 아이템마다 서로 다른 치료량을 만들 수 있습니다.
-                Health health = GetComponent<Health>();
-                used = health != null && health.Heal(entry.Item.HealthRestoreAmount);
+                ResolveOwnerConditionReferences();
+                Health health = ownerHealth;
+                PlayerCondition condition = ownerCondition;
+                // 붕대는 출혈, 부목은 골절, 구급상자는 전체 체력 회복만 담당합니다.
+                // 부위별 체력을 제거했으므로 구급상자가 별도 부위 상태를 회복하는 계산도 함께 삭제했습니다.
+                bool healed = entry.Item.HealthRestoreAmount > 0f && health != null && health.Heal(entry.Item.HealthRestoreAmount);
+                bool stoppedBleeding = entry.Item.TreatsBleeding && condition != null && condition.TreatBleeding();
+                bool treatedFracture = entry.Item.TreatsFracture && condition != null &&
+                                       condition.TreatFracture();
+                used = healed || stoppedBleeding || treatedFracture;
             }
             else if (entry.Item.Type == ItemType.Food)
             {
@@ -354,11 +521,30 @@ namespace ZombieSurvival.Inventory
                 PlayerSurvival survival = GetComponent<PlayerSurvival>();
                 used = survival != null && survival.RestoreSatiety(entry.Item.SatietyRestoreAmount);
             }
+            else if (entry.Item.Type == ItemType.BuffConsumable)
+            {
+                // 같은 그룹의 효과는 배율 숫자가 아니라 정의에 적힌 Priority로 교체 여부를 결정합니다.
+                // 낮거나 같은 우선순위의 다른 효과가 활성 중이면 false를 반환해 아이템 수량을 보존합니다.
+                if (ownerStatusEffects == null) ownerStatusEffects = GetComponent<PlayerStatusEffects>();
+                StatusEffectDefinition effect = entry.Item.StatusEffectDefinition;
+                StatusEffectApplyResult result = ownerStatusEffects != null
+                    ? ownerStatusEffects.TryApply(effect)
+                    : StatusEffectApplyResult.Invalid;
+                used = result == StatusEffectApplyResult.Applied ||
+                       result == StatusEffectApplyResult.Refreshed ||
+                       result == StatusEffectApplyResult.ReplacedWeakerEffect;
+            }
 
-            if (!used) return false;
+            if (!used)
+            {
+                SetItemUseMessage(GetUseFailureReason(grid, entry));
+                return false;
+            }
 
             entry.Consume(1);
             if (entry.Quantity == 0) grid.Entries.Remove(entry);
+            // 수량은 효과가 실제 적용된 완료 시점에만 감소합니다. 시작 직후 취소되거나 피격된 경우에는 이 코드에 도달하지 않습니다.
+            SetItemUseMessage($"{entry.Item.DisplayName} 사용 완료 · 아이템 1개를 소비했습니다.");
             InventoryChanged?.Invoke();
             return true;
         }
@@ -369,9 +555,15 @@ namespace ZombieSurvival.Inventory
         {
             if (!string.IsNullOrEmpty(GetUseFailureReason(grid, entry))) return false;
 
-            float duration = entry.Item.Type == ItemType.Healing ? healingUseDuration : foodUseDuration;
+            float duration = entry.Item.Type == ItemType.Healing
+                ? GetHealingUseDuration(entry.Item)
+                : entry.Item.Type == ItemType.BuffConsumable ? buffUseDuration : foodUseDuration;
+            // 실패한 사용 시도는 재장전을 끊지 않습니다. 위의 모든 사용 가능 검사를 통과한 뒤에만 시작 이벤트를 보냅니다.
+            // 이 이벤트를 먼저 보내야 사용 시간이 0인 아이템도 효과와 수량 변경 전에 재장전 상태를 정리할 수 있습니다.
+            ItemUseStarted?.Invoke();
             if (duration <= 0f) return TryUse(grid, entry);
 
+            LastItemUseMessage = string.Empty;
             CurrentItemUseName = entry.Item.DisplayName;
             ItemUseProgress = 0f;
             itemUseCoroutine = StartCoroutine(CompleteItemUseAfterDelay(grid, entry, duration));
@@ -389,10 +581,22 @@ namespace ZombieSurvival.Inventory
 
             if (entry.Item.Type == ItemType.Healing)
             {
-                Health health = GetComponent<Health>();
+                ResolveOwnerConditionReferences();
+                Health health = ownerHealth;
                 if (health == null) return "체력 시스템을 찾을 수 없습니다.";
                 if (health.IsDead) return "사망한 상태에서는 치료할 수 없습니다.";
-                if (health.MaxHealth - health.CurrentHealth < 1f) return "체력이 이미 충분합니다.";
+                PlayerCondition condition = ownerCondition;
+                bool canHeal = entry.Item.HealthRestoreAmount > 0f && health.MaxHealth - health.CurrentHealth >= 1f;
+                bool canStopBleeding = entry.Item.TreatsBleeding && condition != null && condition.IsBleeding;
+                bool canTreatFracture = entry.Item.TreatsFracture && condition != null && condition.HasFracture;
+                if (!canHeal && !canStopBleeding && !canTreatFracture)
+                {
+                    if (entry.Item.TreatsBleeding && !entry.Item.TreatsFracture && entry.Item.HealthRestoreAmount <= 0f)
+                        return "현재 출혈 상태가 아닙니다.";
+                    if (entry.Item.TreatsFracture && !entry.Item.TreatsBleeding && entry.Item.HealthRestoreAmount <= 0f)
+                        return "현재 골절 상태가 아닙니다.";
+                    return "체력이 충분하고 치료할 상태 이상이 없습니다.";
+                }
                 return string.Empty;
             }
 
@@ -404,17 +608,37 @@ namespace ZombieSurvival.Inventory
                 return string.Empty;
             }
 
+            if (entry.Item.Type == ItemType.BuffConsumable)
+            {
+                if (ownerStatusEffects == null) ownerStatusEffects = GetComponent<PlayerStatusEffects>();
+                if (ownerStatusEffects == null) return "상태 효과 시스템을 찾을 수 없습니다.";
+                StatusEffectDefinition effect = entry.Item.StatusEffectDefinition;
+                StatusEffectApplyResult preview = ownerStatusEffects.PreviewApply(effect, Time.time);
+                if (preview == StatusEffectApplyResult.Invalid) return "아이템에 유효한 버프 데이터가 없습니다.";
+                if (preview == StatusEffectApplyResult.RejectedLowerPriority)
+                    return "같은 계열의 더 강한 효과가 이미 적용 중입니다.";
+                if (preview == StatusEffectApplyResult.RejectedEqualPriority)
+                    return "같은 우선순위의 다른 효과가 이미 적용 중입니다.";
+                return string.Empty;
+            }
+
             return "이 아이템에는 사용할 수 있는 효과가 없습니다.";
         }
 
         // 인벤토리를 닫거나 레이드가 끝나면 진행 중인 사용을 취소해, 화면이 닫힌 뒤 뒤늦게 아이템 효과가 적용되지 않게 합니다.
         public bool CancelItemUse()
+            => CancelItemUse("아이템 사용이 취소되었습니다. 아이템은 소비되지 않았습니다.");
+
+        // 취소 원인을 화면에 남기되 코루틴만 멈추고 수량에는 손대지 않습니다.
+        // 이 규칙 덕분에 피격 직전 사용을 시작했거나 Tab으로 창을 닫아도 아이템이 사라지지 않습니다.
+        public bool CancelItemUse(string reason)
         {
             if (itemUseCoroutine == null) return false;
             StopCoroutine(itemUseCoroutine);
             itemUseCoroutine = null;
             ItemUseProgress = 0f;
             CurrentItemUseName = string.Empty;
+            if (!string.IsNullOrWhiteSpace(reason)) SetItemUseMessage(reason);
             ItemUseStateChanged?.Invoke();
             return true;
         }
@@ -435,6 +659,57 @@ namespace ZombieSurvival.Inventory
             CurrentItemUseName = string.Empty;
             TryUse(grid, entry);
             ItemUseStateChanged?.Invoke();
+        }
+
+        private float GetHealingUseDuration(ItemDefinition item)
+        {
+            if (item == null) return healingUseDuration;
+            if (item.TreatsFracture) return splintUseDuration;
+            if (item.TreatsBleeding) return bandageUseDuration;
+            return healingUseDuration;
+        }
+
+        private void ResolveOwnerConditionReferences()
+        {
+            if (ownerHealth == null) ownerHealth = GetComponent<Health>();
+            if (ownerCondition == null) ownerCondition = GetComponent<PlayerCondition>();
+        }
+
+        private static bool TryFindItemRecursive(
+            GridData source,
+            string itemId,
+            out GridData foundGrid,
+            out InventoryEntry foundEntry)
+        {
+            if (source != null && !string.IsNullOrWhiteSpace(itemId))
+            {
+                foreach (InventoryEntry candidate in source.Entries)
+                {
+                    if (candidate?.Item != null && candidate.Item.ItemId == itemId && candidate.Quantity > 0)
+                    {
+                        foundGrid = source;
+                        foundEntry = candidate;
+                        return true;
+                    }
+                    if (TryFindItemRecursive(candidate?.Contents, itemId, out foundGrid, out foundEntry))
+                        return true;
+                }
+            }
+            foundGrid = null;
+            foundEntry = null;
+            return false;
+        }
+
+        private void HandleOwnerDamage(DamageInfo damageInfo)
+        {
+            if (damageInfo.IsStatusDamage) return;
+            CancelItemUse("피해를 받아 치료가 취소되었습니다. 아이템은 소비되지 않았습니다.");
+        }
+
+        private void SetItemUseMessage(string message)
+        {
+            LastItemUseMessage = message ?? string.Empty;
+            itemUseMessageExpiresAt = Time.unscaledTime + 3.5f;
         }
 
         // 내용물이 든 컨테이너는 단순 월드 아이템으로 바꾸면 내부 데이터가 사라지므로 버리기를 거부합니다.
@@ -480,6 +755,23 @@ namespace ZombieSurvival.Inventory
             return false;
         }
 
+        private static bool TryFindDefinitionReturnSpace(
+            GridData grid,
+            InventoryEntry ignoredEntry,
+            ItemDefinition definition,
+            out Vector2Int position,
+            out bool rotated)
+        {
+            position = Vector2Int.zero;
+            rotated = false;
+            if (grid == null || definition == null) return false;
+
+            bool[,] occupied = InventoryGridUtility.BuildOccupancy(grid, ignoredEntry);
+            if (InventoryGridUtility.FindSpace(grid, definition, false, occupied, out position)) return true;
+            rotated = true;
+            return InventoryGridUtility.FindSpace(grid, definition, true, occupied, out position);
+        }
+
         // 플레이어가 사망해 레이드에 실패한 순간 현재 레이드에서 소유한 모든 아이템을 제거합니다.
         // 루트 목록에서 가방을 제거하면 그 가방이 소유한 Contents도 함께 더 이상 참조되지 않으므로 내부 아이템까지 전부 사라집니다.
         // 장착 장비 Dictionary도 별도로 비워야 손에 든 총기·방탄복·조끼·가방이 결과 화면 동안 남거나 다음 씬으로 전달되지 않습니다.
@@ -490,10 +782,20 @@ namespace ZombieSurvival.Inventory
             equipment.Clear();
 
             // PlayerCombat과 모든 인벤토리 UI가 빈 장비·빈 격자를 즉시 다시 읽도록 변경 이벤트는 마지막에 한 번만 보냅니다.
+            EquipmentChanged?.Invoke();
             InventoryChanged?.Invoke();
         }
 
-        private void OnDisable() => CancelItemUse();
+        private void OnDisable()
+        {
+            // 씬 종료나 컴포넌트 비활성화는 사용자가 볼 수 있는 취소 상황이 아니므로 새 안내 문구를 만들지 않습니다.
+            CancelItemUse(string.Empty);
+        }
+
+        private void OnDestroy()
+        {
+            if (ownerHealth != null) ownerHealth.DamageResolved -= HandleOwnerDamage;
+        }
 
         // HUD와 테스트가 같은 격자 판정을 사용할 수 있도록 순수 계산 유틸리티의 공개 진입점을 유지합니다.
         public bool CanPlace(

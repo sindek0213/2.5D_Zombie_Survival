@@ -13,8 +13,9 @@ namespace ZombieSurvival.UI
         [SerializeField] private Text titleText;
         [SerializeField] private Text detailText;
         [SerializeField] private Text timerText;
-        [SerializeField] private Color successColor = new Color(0.3f, 1f, 0.65f, 1f);
-        [SerializeField] private Color failureColor = new Color(1f, 0.35f, 0.3f, 1f);
+        // 결과 제목은 다른 HUD와 같은 성공·실패색을 사용해 화면마다 의미색이 달라지지 않게 합니다.
+        [SerializeField] private Color successColor = SurvivalUiTheme.Success;
+        [SerializeField] private Color failureColor = SurvivalUiTheme.Danger;
 
         public void SetSession(RaidSession value)
         {
@@ -66,11 +67,25 @@ namespace ZombieSurvival.UI
                     : $"손실 수량: {itemCount} (소지품·장착 장비 전부 분실)";
                 string reason = result.succeeded
                     ? "정상 탈출"
-                    : "플레이어 사망";
+                    : result.endReason == RaidEndReason.Abandoned
+                        ? "레이드 포기"
+                        : string.IsNullOrWhiteSpace(result.deathCause)
+                            ? "플레이어 사망"
+                            : result.deathCause;
                 string transition = raidSession.ReturnToHideoutFailed
                     ? "거점 이동 실패 - Build Settings의 Hideout 씬을 확인해 주세요."
                     : "거점으로 이동 중...";
-                detailText.text = $"종료 이유: {reason}\n진행 시간: {FormatTime(result.raidDurationSeconds)}\n좀비 처치: {result.zombieKills}\n{items}\n{transition}";
+                float accuracy = result.shotsFired > 0
+                    ? result.successfulShots * 100f / result.shotsFired
+                    : 0f;
+                int value = result.succeeded ? result.extractedItemValue : result.lostItemValue;
+                string valueLabel = result.succeeded ? "회수 가치" : "손실 가치";
+                detailText.text =
+                    $"종료 이유: {reason}\n" +
+                    $"진행 시간: {FormatTime(result.raidDurationSeconds)}\n" +
+                    $"좀비 처치: {result.zombieKills}  ·  명중률: {accuracy:0.#}% ({result.successfulShots}/{result.shotsFired})\n" +
+                    $"받은 피해: {result.damageTaken:0.#}  ·  {valueLabel}: {value} 크레딧\n" +
+                    $"{items}\n{transition}";
             }
         }
 

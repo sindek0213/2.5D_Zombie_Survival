@@ -43,6 +43,13 @@ namespace ZombieSurvival.Combat
             Reserve = Math.Max(0, reserveRounds);
         }
 
+        // 확장 탄창 부착·해제로 최대 탄수가 바뀐 경우 현재 무기 인스턴스와 표시 상태를 한 번에 다시 맞춥니다.
+        public void ResizeAndSynchronize(int magazineSize, int loadedRounds, int reserveRounds)
+        {
+            MagazineSize = Math.Max(1, magazineSize);
+            Synchronize(loadedRounds, reserveRounds);
+        }
+
         // 탄창의 빈 칸 required와 현재 Reserve 중 더 작은 값만 이동합니다.
         // 예를 들어 8발 탄창에 3발이 있고 예비탄이 2발이면 2발만 이동해 5/0 상태가 됩니다.
         // 반환값은 실제 이동량이라 재장전 애니메이션이나 효과 표시에도 사용할 수 있습니다.

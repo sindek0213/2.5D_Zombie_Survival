@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using ZombieSurvival.Combat;
@@ -99,6 +100,24 @@ namespace ZombieSurvival.Inventory
             {
                 if (entry.Item.ItemId == itemId) total += entry.Quantity;
                 total += CountItem(entry.Contents, itemId);
+            }
+            return total;
+        }
+
+        // 출격 점검처럼 ItemId가 아니라 종류·상태 조건으로 세야 하는 화면에서 재귀 순회를 재사용합니다.
+        // 조건에 맞는 묶음의 실제 수량을 더하며 includeContainers가 true이면 가방과 조끼 내부까지 확인합니다.
+        internal static int CountByPredicate(
+            PlayerInventory.GridData grid,
+            Func<InventoryEntry, bool> predicate,
+            bool includeContainers)
+        {
+            if (grid == null || predicate == null) return 0;
+            int total = 0;
+            foreach (InventoryEntry entry in grid.Entries)
+            {
+                if (entry == null) continue;
+                if (predicate(entry)) total += entry.Quantity;
+                if (includeContainers) total += CountByPredicate(entry.Contents, predicate, true);
             }
             return total;
         }

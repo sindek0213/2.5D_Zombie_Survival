@@ -1,9 +1,11 @@
 using UnityEngine;
 using UnityEngine.UI;
+using ZombieSurvival.AI;
 using ZombieSurvival.Art;
 using ZombieSurvival.Combat;
 using ZombieSurvival.Core;
 using ZombieSurvival.Items;
+using ZombieSurvival.Hideout;
 using ZombieSurvival.Player;
 
 namespace ZombieSurvival.UI
@@ -16,16 +18,37 @@ namespace ZombieSurvival.UI
         [SerializeField] private PlayerCombat combat;
         [SerializeField] private Health playerHealth;
         [SerializeField] private PlayerSurvival playerSurvival;
+        private PlayerCondition playerCondition;
         private ArmorProtection armorProtection;
         [SerializeField] private Text weaponText;
         [SerializeField] private Text ammoText;
         [SerializeField] private Text healthText;
         [SerializeField] private Text guideText;
         private RawImage generatedPortrait;
+        private string threatWarning = string.Empty;
+        private float threatWarningUntil;
 
         private void Awake()
         {
             EnsureGeneratedPortrait();
+        }
+
+        private void OnEnable()
+        {
+            ZombieNoiseSystem.ThreatWarning -= HandleThreatWarning;
+            ZombieNoiseSystem.ThreatWarning += HandleThreatWarning;
+        }
+
+        private void OnDisable()
+        {
+            ZombieNoiseSystem.ThreatWarning -= HandleThreatWarning;
+        }
+
+        // 특수 좀비의 울음은 화면의 기존 조작 안내 영역에 잠깐 표시해 별도 팝업이 전투 시야를 가리지 않게 합니다.
+        private void HandleThreatWarning(string message)
+        {
+            threatWarning = message ?? string.Empty;
+            threatWarningUntil = Time.unscaledTime + 3.5f;
         }
 
         // 씬 생성 코드가 플레이어의 전투 컴포넌트를 명시적으로 연결합니다.
@@ -41,6 +64,7 @@ namespace ZombieSurvival.UI
             playerHealth = value;
             // 체력과 포만감은 같은 Player 루트에 있으므로 씬 생성기가 참조를 두 번 전달하지 않아도 함께 찾을 수 있습니다.
             playerSurvival = value != null ? value.GetComponent<PlayerSurvival>() : null;
+            playerCondition = value != null ? value.GetComponent<PlayerCondition>() : null;
             // 방어구 참조도 플레이어가 연결될 때 한 번만 찾아 매 프레임 GetComponent를 반복하지 않습니다.
             armorProtection = value != null ? value.GetComponent<ArmorProtection>() : null;
             Refresh();
@@ -110,8 +134,20 @@ namespace ZombieSurvival.UI
                 string zone = playerHealth != null
                     ? RaidMapLayout.GetZoneDisplayName(playerHealth.transform.position)
                     : "위치 확인 중";
+                // 위험도는 같은 구역 판정 데이터에서 가져오므로 실제 스폰 난이도와 HUD 안내가 서로 다른 숫자를 표시하지 않습니다.
+                int dangerRating = playerHealth != null
+                    ? RaidMapLayout.GetZoneDangerRating(playerHealth.transform.position)
+                    : 0;
+                string danger = dangerRating > 0 ? $" · 위험 {dangerRating}" : string.Empty;
                 // 새 플레이어도 별도 설명서를 열지 않고 정밀 조준 입력을 알 수 있도록 항상 보이는 기본 조작 줄에 우클릭을 표시합니다.
-                guideText.text = $"[{zone}]  WASD 이동  |  Shift 달리기  |  좌클릭 발사  |  우클릭 조준  |  R 재장전  |  1·2 무기  |  Tab 인벤토리";
+                string warning = Time.unscaledTime < threatWarningUntil && !string.IsNullOrWhiteSpace(threatWarning)
+                    ? $"\n⚠ {threatWarning}"
+                    : string.Empty;
+                HideoutMissionDefinition activeMission = HideoutMissionStateStore.ActiveMissionDefinition;
+                string mission = activeMission != null
+                    ? $"\n임무 · {activeMission.BuildProgressDescription(HideoutMissionStateStore.ObjectiveProgress)}"
+                    : string.Empty;
+                guideText.text = $"[{zone}{danger}]  WASD 이동  |  Space 구르기  |  좌클릭 공격  |  우클릭 조준  |  R 재장전  |  B 단발·연사  |  휠 무기 교체  |  1~0 퀵슬롯  |  Tab 인벤토리{mission}{warning}";
             }
 
             if (combat == null)
@@ -121,12 +157,25 @@ namespace ZombieSurvival.UI
             }
             else
             {
-                if (weaponText != null) weaponText.text = BuildWeaponText(combat.ActiveWeaponSlot, combat.CurrentWeaponName);
+                if (weaponText != null)
+                    weaponText.text = BuildWeaponStatusText(
+                        combat.ActiveWeaponSlot,
+                        combat.CurrentWeaponName,
+                        combat.CurrentTriggerModeLabel,
+                        combat.CurrentWeaponDurability,
+                        combat.CurrentWeaponMaxDurability);
                 if (ammoText != null)
-                    ammoText.text = BuildAmmoText(
-                        combat.Ammo != null ? combat.Ammo.InMagazine : -1,
-                        combat.Ammo != null ? combat.Ammo.Reserve : -1,
-                        combat.IsReloading);
+                    ammoText.text = combat.CurrentWeaponDefinition == null
+                        ? (combat.CurrentMeleeWeaponDefinition != null
+                            ? "근접 무기 · 좌클릭 공격"
+                            : "맨손 · 좌클릭 근접 공격") + BuildStatusSuffix(combat.CombatStatusMessage)
+                        : BuildAmmoStatusText(
+                            combat.Ammo != null ? combat.Ammo.InMagazine : -1,
+                            combat.Ammo != null ? combat.Ammo.MagazineSize : -1,
+                            combat.Ammo != null ? combat.Ammo.Reserve : -1,
+                            combat.IsReloading,
+                            combat.IsCurrentWeaponBroken,
+                            combat.CombatStatusMessage);
             }
 
             if (healthText == null) return;
@@ -148,7 +197,12 @@ namespace ZombieSurvival.UI
                         playerSurvival.MaximumStamina,
                         playerSurvival.IsSprinting)
                     : string.Empty;
-                healthText.text = $"HP {Mathf.CeilToInt(playerHealth.CurrentHealth)} / {Mathf.CeilToInt(playerHealth.MaxHealth)}{armorText}{satietyText}{staminaText}";
+                // 출혈이나 골절이 있을 때만 상태 요약을 붙입니다. 부위별 손상 수치는 더 이상 존재하지 않습니다.
+                string conditionText = playerCondition != null &&
+                                       (playerCondition.IsBleeding || playerCondition.HasFracture)
+                    ? "  |  상태 " + playerCondition.BuildStatusSummary()
+                    : string.Empty;
+                healthText.text = $"HP {Mathf.CeilToInt(playerHealth.CurrentHealth)} / {Mathf.CeilToInt(playerHealth.MaxHealth)}{armorText}{satietyText}{staminaText}{conditionText}";
             }
         }
 
@@ -160,14 +214,50 @@ namespace ZombieSurvival.UI
             return isReloading ? "재장전 중..." : $"{magazine} / {reserve}";
         }
 
-        // 장비 슬롯을 사용자가 누르는 숫자와 같은 1·2 표기로 변환해 현재 무기 이름 앞에 붙입니다.
+        // 장전 수/탄창 용량/예비탄을 모두 분리해 보여 주고 파손·재장전·취소 안내를 같은 영역에 덧붙입니다.
+        // 기존 BuildAmmoText는 자동 테스트와 간단한 화면에서 계속 사용할 수 있도록 그대로 유지합니다.
+        public static string BuildAmmoStatusText(
+            int magazine,
+            int magazineSize,
+            int reserve,
+            bool isReloading,
+            bool isBroken,
+            string statusMessage)
+        {
+            if (magazine < 0 || magazineSize < 0 || reserve < 0) return "- / -";
+            string state = isBroken
+                ? "파손 · 거점 수리 필요"
+                : isReloading ? "재장전 중..." : $"장전 {magazine}/{magazineSize}  ·  예비 {reserve}";
+            return state + BuildStatusSuffix(statusMessage);
+        }
+
+        // 숫자 키가 퀵슬롯으로 바뀌었으므로 현재 무기 앞에는 단축키가 아니라 장비 위치를 표시합니다.
         public static string BuildWeaponText(EquipmentSlotType slot, string weaponName)
         {
             string slotLabel = slot == EquipmentSlotType.PrimaryWeapon
-                ? "1"
-                : slot == EquipmentSlotType.SecondaryWeapon ? "2" : "없음";
+                ? "주무기"
+                : slot == EquipmentSlotType.SecondaryWeapon ? "보조무기" : "없음";
             return $"[{slotLabel}] {weaponName}";
         }
+
+        // 총기 HUD에는 선택 슬롯과 이름뿐 아니라 현재 발사 방식과 내구도까지 항상 표시합니다.
+        // 최대 내구도가 0이면 무기가 없는 상태이므로 기존 짧은 표시만 반환합니다.
+        public static string BuildWeaponStatusText(
+            EquipmentSlotType slot,
+            string weaponName,
+            string triggerMode,
+            float durability,
+            float maximumDurability)
+        {
+            string basic = BuildWeaponText(slot, weaponName);
+            if (maximumDurability <= 0f) return basic;
+            float safeMaximum = Mathf.Max(1f, maximumDurability);
+            float safeCurrent = Mathf.Clamp(durability, 0f, safeMaximum);
+            return $"{basic}  ·  {triggerMode}  ·  내구도 {safeCurrent:0.#}/{safeMaximum:0.#}";
+        }
+
+        private static string BuildStatusSuffix(string message)
+            => string.IsNullOrWhiteSpace(message) ? string.Empty : "\n" + message;
 
         // 포만감이 정상 구간이면 현재/최대 수치만, 부족해 실제 이동 페널티가 생기면 적용 속도 비율도 함께 보여 줍니다.
         // 순수 문자열 함수라 실제 Canvas 없이도 경계값 표시를 자동 테스트할 수 있습니다.

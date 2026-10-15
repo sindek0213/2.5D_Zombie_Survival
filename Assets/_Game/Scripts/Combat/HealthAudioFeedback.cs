@@ -1,4 +1,5 @@
 using UnityEngine;
+using ZombieSurvival.Core;
 
 namespace ZombieSurvival.Combat
 {
@@ -62,7 +63,8 @@ namespace ZombieSurvival.Combat
             if (appliedDamage <= 0f || health.CurrentHealth <= 0f) return;
             if (audioSource == null || impactClip == null) CreateRuntimeAudio();
             audioSource.transform.position = hitPoint;
-            audioSource.PlayOneShot(impactClip, impactVolume);
+            // 플레이어와 좀비의 원래 크기 차이는 유지하면서 공용 효과음 설정을 마지막에 곱합니다.
+            audioSource.PlayOneShot(impactClip, GameSettings.ScaleEffectVolume(impactVolume));
         }
 
         private void HandleDied()
@@ -70,7 +72,7 @@ namespace ZombieSurvival.Combat
             if (deathClip == null) CreateRuntimeAudio();
 
             // Health는 이벤트 직후 캐릭터 루트를 제거하므로 PlayClipAtPoint를 사용해 독립된 임시 소스에서 끝까지 재생합니다.
-            AudioSource.PlayClipAtPoint(deathClip, transform.position, deathVolume);
+            AudioSource.PlayClipAtPoint(deathClip, transform.position, GameSettings.ScaleEffectVolume(deathVolume));
             Destroy(deathClip, deathClip.length + 0.1f);
             deathClip = null;
         }

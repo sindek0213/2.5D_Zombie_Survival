@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6db1279eadeabfd4ea4aff084a648d45, type: 3}
+  m_Name: medical_bandage
+  m_EditorClassIdentifier: 
+  itemId: medical_bandage
+  displayName: "\uBD95\uB300"
+  icon: {fileID: 0}
+  itemType: 1
+  rarity: 0
+  ammoType: 0
+  maxStack: 5
+  gridWidth: 1
+  gridHeight: 1
+  gridShape: 
+  equipmentSlot: 0
+  weaponDefinition: {fileID: 0}
+  meleeWeaponDefinition: {fileID: 0}
+  statusEffectDefinition: {fileID: 0}
+  weaponAttachmentDefinition: {fileID: 0}
+  armorDamageReduction: 0
+  armorMaxDurability: 0
+  armorClass: 1
+  quickSlotBonus: 0
+  containerWidth: 0
+  containerHeight: 0
+  healthRestoreAmount: 0
+  satietyRestoreAmount: 0
+  treatsBleeding: 1
+  treatsFracture: 0
+  usable: 1
+  baseValue: 35
+  description: "\uCD9C\uD608\uC744 \uBA48\uCD94\uB294 \uC77C\uD68C\uC6A9 \uBD95\uB300\uC785\uB2C8\uB2E4."

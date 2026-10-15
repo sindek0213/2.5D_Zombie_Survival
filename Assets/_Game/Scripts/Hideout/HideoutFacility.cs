@@ -10,6 +10,9 @@ namespace ZombieSurvival.Hideout
     {
         [SerializeField] private HideoutFacilityDefinition definition;
         [SerializeField] private HideoutWorldController worldController;
+        // 시설 모델의 가장 높은 지점보다 안내 문구를 조금 더 띄우는 거리입니다.
+        // 모델 크기가 서로 달라도 Renderer 또는 Collider 경계를 사용하므로 각 시설 위에 자연스럽게 표시됩니다.
+        [SerializeField, Min(0f)] private float promptHeightOffset = 0.45f;
 
         private Renderer facilityRenderer;
         private Color baseColor = Color.white;
@@ -22,6 +25,29 @@ namespace ZombieSurvival.Hideout
         public string InteractionPrompt => definition == null
             ? "설정되지 않은 거점 시설"
             : $"[E] {definition.DisplayName} 사용  (Lv.{CurrentLevel})";
+        public Vector3 PromptWorldPosition
+        {
+            get
+            {
+                // 보이는 모델이 있으면 그 모델의 상단 중앙을 우선 사용합니다.
+                // Renderer가 없는 트리거형 시설도 Collider 상단을 사용해 안내가 바닥에 붙지 않게 합니다.
+                if (facilityRenderer == null) facilityRenderer = GetComponent<Renderer>();
+                if (facilityRenderer != null)
+                {
+                    Bounds bounds = facilityRenderer.bounds;
+                    return new Vector3(bounds.center.x, bounds.max.y + promptHeightOffset, bounds.center.z);
+                }
+
+                Collider facilityCollider = GetComponent<Collider>();
+                if (facilityCollider != null)
+                {
+                    Bounds bounds = facilityCollider.bounds;
+                    return new Vector3(bounds.center.x, bounds.max.y + promptHeightOffset, bounds.center.z);
+                }
+
+                return transform.position + Vector3.up * promptHeightOffset;
+            }
+        }
 
         public void Configure(HideoutFacilityDefinition facilityDefinition, HideoutWorldController controller)
         {

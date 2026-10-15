@@ -87,6 +87,26 @@ namespace ZombieSurvival.Hideout
             return true;
         }
 
+        // 대기열 제작은 시작 순간 재료만 소비하고 결과는 시간이 끝난 뒤 별도 수령합니다.
+        // CanCraft의 임시 격자 검사를 먼저 사용하므로 재료 소비 뒤 결과를 영원히 놓을 수 없는 제작도 시작하지 않습니다.
+        public static bool TryConsumeForQueue(
+            PlayerInventory.GridData stash,
+            HideoutFacilityDefinition facility,
+            HideoutFacilityDefinition generator,
+            HideoutRecipeDefinition recipe,
+            out string resultMessage)
+        {
+            if (!CanCraft(stash, facility, generator, recipe, out resultMessage)) return false;
+            int discountPercent = GetGeneratorDiscount(generator);
+            if (!ConsumeIngredients(stash, recipe, discountPercent))
+            {
+                resultMessage = "제작 시작 직전에 창고 재료가 변경되었습니다.";
+                return false;
+            }
+            resultMessage = "제작 재료를 대기열에 투입했습니다.";
+            return true;
+        }
+
         public static int GetGeneratorDiscount(HideoutFacilityDefinition generator)
         {
             if (generator == null || generator.FacilityType != HideoutFacilityType.Generator) return 0;

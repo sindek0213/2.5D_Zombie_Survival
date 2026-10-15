@@ -19,8 +19,13 @@ MonoBehaviour:
     \uC9C4\uD589\uB3C4\uC5D0 \uD3EC\uD568\uB429\uB2C8\uB2E4."
   objectiveType: 1
   objectiveItem: {fileID: 11400000, guid: 1aaa2527bbec9c842a15c7524b1a5586, type: 2}
+  objectiveWeapon: {fileID: 0}
+  objectiveZoneId: 
   requiredAmount: 2
-  repeatable: 1
+  repeatable: 0
   itemRewards:
   - item: {fileID: 11400000, guid: 24bd518f8a78a084794a91f18883a77b, type: 2}
     quantity: 20
+  prerequisiteMissionId: school_recon
+  creditReward: 260
+  riskRating: 2

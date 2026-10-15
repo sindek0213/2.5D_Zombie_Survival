@@ -1,4 +1,6 @@
 using UnityEngine;
+using ZombieSurvival.Combat;
+using ZombieSurvival.Core;
 
 namespace ZombieSurvival.Player
 {
@@ -14,7 +16,10 @@ namespace ZombieSurvival.Player
         [SerializeField] private Transform aimOrigin;
         [SerializeField] private float groundHeight;
         [SerializeField, Min(0f)] private float weaponHeight = 1f;
+        // 1.0 감도에서 한 초에 회전할 수 있는 최대 각도입니다. 설정 감도는 이 값을 곱해 실제 회전 속도를 조절합니다.
+        [SerializeField, Min(1f)] private float baseTurnSpeedDegrees = 1080f;
         private PlayerSpriteAnimator spriteAnimator;
+        private PlayerCombat combat;
 
         // 다른 전투 시스템이 사용할 수 있는 현재 월드 조준 방향입니다.
         public Vector3 AimDirection { get; private set; } = Vector3.forward;
@@ -27,6 +32,8 @@ namespace ZombieSurvival.Player
             // 새 8방향 그림 애니메이터가 있으면 그 컴포넌트가 방향별 Sprite를 직접 고릅니다.
             // 참조를 한 번만 저장해 두고 아래 좌우 반전 방식과 동시에 적용되지 않게 구분합니다.
             spriteAnimator = GetComponent<PlayerSpriteAnimator>();
+            // 우클릭 정밀 조준 중에는 일반 주시 감도와 다른 설정값을 적용해야 하므로 같은 플레이어의 전투 상태를 읽습니다.
+            combat = GetComponent<PlayerCombat>();
         }
 
         // 매 프레임 현재 마우스 위치를 다시 읽어 조준점과 AimDirection을 즉시 갱신합니다.
@@ -53,7 +60,15 @@ namespace ZombieSurvival.Player
             Vector3 direction = weaponAimPoint - weaponOrigin;
             direction.y = 0f;
             if (direction.sqrMagnitude > 0.001f)
-                AimDirection = direction.normalized;
+            {
+                // 마우스는 월드의 절대 위치를 가리키므로 운영체제 커서 속도를 코드에서 다시 곱하면 조준점이 커서와 어긋납니다.
+                // 대신 현재 방향이 목표 방향을 따라가는 최대 회전 속도에 감도를 적용해, 낮은 값은 묵직하고 높은 값은 빠르게 반응하게 합니다.
+                float sensitivity = combat != null && combat.IsAiming
+                    ? GameSettings.AimSensitivity
+                    : GameSettings.MouseSensitivity;
+                float maximumRadians = baseTurnSpeedDegrees * sensitivity * Mathf.Deg2Rad * Time.unscaledDeltaTime;
+                AimDirection = Vector3.RotateTowards(AimDirection, direction.normalized, maximumRadians, 0f).normalized;
+            }
 
             // 조준점이 바닥과 겹쳐 깜빡이지 않도록 살짝 위에 표시합니다.
             if (aimMarker != null) aimMarker.position = groundPoint + Vector3.up * 0.03f;

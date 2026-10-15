@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace ZombieSurvival.Hideout
 {
@@ -10,6 +11,7 @@ namespace ZombieSurvival.Hideout
         [SerializeField] private HideoutController hideoutController;
         [SerializeField] private HideoutFacilityDefinition facilityDefinition;
         private int selectedIndex;
+        private readonly List<HideoutMissionDefinition> visibleMissions = new List<HideoutMissionDefinition>();
 
         public string LastOperationMessage { get; private set; }
 
@@ -19,15 +21,20 @@ namespace ZombieSurvival.Hideout
         {
             get
             {
-                int total = missions?.Length ?? 0;
-                if (facilityDefinition == null) return total;
-                int level = HideoutFacilityStateStore.GetLevel(facilityDefinition);
-                return Mathf.Clamp(facilityDefinition.GetEffectValue(level), 0, total);
+                RebuildVisibleMissions();
+                return visibleMissions.Count;
             }
         }
-        public HideoutMissionDefinition SelectedMission => MissionCount == 0
-            ? null
-            : missions[Mathf.Clamp(selectedIndex, 0, MissionCount - 1)];
+        public HideoutMissionDefinition SelectedMission
+        {
+            get
+            {
+                RebuildVisibleMissions();
+                return visibleMissions.Count == 0
+                    ? null
+                    : visibleMissions[Mathf.Clamp(selectedIndex, 0, visibleMissions.Count - 1)];
+            }
+        }
         public HideoutMissionDefinition ActiveMission
         {
             get
@@ -48,6 +55,28 @@ namespace ZombieSurvival.Hideout
             if (controller != null) hideoutController = controller;
             if (boardDefinition != null) facilityDefinition = boardDefinition;
             selectedIndex = 0;
+        }
+
+        // 완료되지 않은 선행 임무가 있는 항목을 제외한 뒤 임무 보드 레벨의 공개 개수만 앞에서부터 보여 줍니다.
+        // 임무 완료 직후 다시 호출하면 새 연속 임무가 자동으로 목록에 나타납니다.
+        private void RebuildVisibleMissions()
+        {
+            visibleMissions.Clear();
+            if (missions == null) return;
+            int maximumVisible = missions.Length;
+            if (facilityDefinition != null)
+            {
+                int level = HideoutFacilityStateStore.GetLevel(facilityDefinition);
+                maximumVisible = Mathf.Clamp(facilityDefinition.GetEffectValue(level), 0, missions.Length);
+            }
+
+            foreach (HideoutMissionDefinition mission in missions)
+            {
+                if (mission == null || !mission.IsUnlocked()) continue;
+                visibleMissions.Add(mission);
+                if (visibleMissions.Count >= maximumVisible) break;
+            }
+            selectedIndex = visibleMissions.Count == 0 ? 0 : Mathf.Clamp(selectedIndex, 0, visibleMissions.Count - 1);
         }
 
         public void SelectPrevious()

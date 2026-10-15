@@ -4,6 +4,14 @@ using ZombieSurvival.Combat;
 
 namespace ZombieSurvival.AI
 {
+    public enum ZombieBehaviorTrait
+    {
+        Standard,
+        Runner,
+        Brute,
+        Screamer
+    }
+
     // 좀비 한 종류의 밸런스와 전리품을 모아 두는 ScriptableObject 데이터입니다.
     // 일반·빠른·튼튼한 좀비를 새로 만들 때 코드를 복사하지 않고 이 에셋의 숫자만 다르게 설정할 수 있습니다.
     [CreateAssetMenu(menuName = "Zombie Survival/Zombie Archetype")]
@@ -17,6 +25,11 @@ namespace ZombieSurvival.AI
         [SerializeField, Min(0f)] private float movementSpeed = 2.35f;
         [SerializeField, Min(0f)] private float attackDamage = 12f;
         [SerializeField] private Color visualColor = new Color(0.48f, 0.72f, 0.36f, 1f);
+        [SerializeField] private ZombieBehaviorTrait behaviorTrait;
+        [SerializeField, Min(0f)] private float detectionRange = 9f;
+        [SerializeField, Min(0f)] private float hearingRange = 18f;
+        [SerializeField, Min(0f)] private float loseTargetRange = 13f;
+        [SerializeField, Min(0.1f)] private float investigationDuration = 4f;
         [SerializeField] private ZombieLootEntry[] lootEntries = Array.Empty<ZombieLootEntry>();
 
         public string DisplayName => string.IsNullOrWhiteSpace(displayName) ? name : displayName;
@@ -27,6 +40,11 @@ namespace ZombieSurvival.AI
         public float MovementSpeed => Mathf.Max(0f, movementSpeed);
         public float AttackDamage => Mathf.Max(0f, attackDamage);
         public Color VisualColor => visualColor;
+        public ZombieBehaviorTrait BehaviorTrait => behaviorTrait;
+        public float DetectionRange => Mathf.Max(0f, detectionRange);
+        public float HearingRange => Mathf.Max(0f, hearingRange);
+        public float LoseTargetRange => Mathf.Max(DetectionRange, loseTargetRange);
+        public float InvestigationDuration => Mathf.Max(0.1f, investigationDuration);
         public ZombieLootEntry[] LootEntries => lootEntries;
 
         // 레이드가 시작된 뒤 설정된 시간이 지나야 이 종류를 무작위 후보에 포함합니다.
@@ -60,6 +78,22 @@ namespace ZombieSurvival.AI
             lootEntries = newLootEntries ?? Array.Empty<ZombieLootEntry>();
         }
 
+        // 종류별 감지·청각과 특수 행동은 체력·속도 설정과 별도로 바꿀 수 있게 분리했습니다.
+        // 기존 생성 코드와 테스트는 원래 Configure만 사용해도 안전한 기본 감지값을 그대로 유지합니다.
+        public void ConfigureBehavior(
+            ZombieBehaviorTrait trait,
+            float newDetectionRange,
+            float newHearingRange,
+            float newLoseTargetRange,
+            float newInvestigationDuration)
+        {
+            behaviorTrait = trait;
+            detectionRange = Mathf.Max(0f, newDetectionRange);
+            hearingRange = Mathf.Max(0f, newHearingRange);
+            loseTargetRange = Mathf.Max(detectionRange, newLoseTargetRange);
+            investigationDuration = Mathf.Max(0.1f, newInvestigationDuration);
+        }
+
         // 공용 좀비 프리팹을 복제한 뒤 이 종류만의 체력, 이동 속도, 공격력과 전리품을 적용합니다.
         // 각 기능의 실제 실행은 기존 컴포넌트가 계속 담당하고, 이 데이터는 숫자를 전달하는 역할만 합니다.
         public bool ApplyTo(GameObject zombie)
@@ -78,7 +112,15 @@ namespace ZombieSurvival.AI
             health.ConfigureMaximumHealth(MaximumHealth, true);
             movement.ConfigureSpeed(MovementSpeed);
             attack.ConfigureDamage(AttackDamage);
-            lootDrop.Configure(lootEntries);
+            // 에셋 파일 이름(walker, runner 등)을 지역 몬스터 드랍 표의 sourceId로 전달합니다.
+            // 지역 프로필이 없는 씬에서는 두 번째 인자의 기존 lootEntries가 그대로 사용됩니다.
+            lootDrop.Configure(name, lootEntries);
+            brain.ConfigureSenses(
+                DetectionRange,
+                HearingRange,
+                LoseTargetRange,
+                InvestigationDuration,
+                BehaviorTrait);
 
             // 종류마다 다른 색을 적용하고 DamageFlash에도 새 기본색을 알려 피격 점멸 뒤 초록색으로 잘못 돌아가지 않게 합니다.
             DamageFlash damageFlash = zombie.GetComponent<DamageFlash>();
@@ -102,6 +144,10 @@ namespace ZombieSurvival.AI
             maximumHealth = Mathf.Max(1f, maximumHealth);
             movementSpeed = Mathf.Max(0f, movementSpeed);
             attackDamage = Mathf.Max(0f, attackDamage);
+            detectionRange = Mathf.Max(0f, detectionRange);
+            hearingRange = Mathf.Max(0f, hearingRange);
+            loseTargetRange = Mathf.Max(detectionRange, loseTargetRange);
+            investigationDuration = Mathf.Max(0.1f, investigationDuration);
             if (lootEntries == null) lootEntries = Array.Empty<ZombieLootEntry>();
         }
     }

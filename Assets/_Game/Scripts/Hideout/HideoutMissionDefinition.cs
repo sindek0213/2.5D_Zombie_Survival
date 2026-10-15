@@ -11,7 +11,11 @@ namespace ZombieSurvival.Hideout
     {
         ZombieKills,
         CollectedItem,
-        SuccessfulExtraction
+        SuccessfulExtraction,
+        VisitedZone,
+        WeaponKills,
+        NoDamageExtraction,
+        CollectedItemInZone
     }
 
     // 임무 완료 때 창고로 지급할 아이템 한 종류와 수량입니다.
@@ -45,19 +49,33 @@ namespace ZombieSurvival.Hideout
         [SerializeField] private HideoutMissionObjectiveType objectiveType;
         // 아이템 회수 임무만 이 참조를 사용합니다. 다른 목표 종류에서는 null이어도 정상입니다.
         [SerializeField] private ItemDefinition objectiveItem;
+        // 무기 처치 임무에서는 보상이나 회수품이 아니라 사용해야 할 무기 ItemId를 이 참조에서 읽습니다.
+        [SerializeField] private ItemDefinition objectiveWeapon;
+        // 장소 방문 임무는 씬 오브젝트 참조 대신 SchoolRaidMapLayout의 안정적인 구역 ID를 저장합니다.
+        [SerializeField] private string objectiveZoneId;
         [SerializeField, Min(1)] private int requiredAmount = 3;
         // false인 임무는 완료 기록이 한 번 생기면 다시 받을 수 없고, true인 임무는 반복해서 보상을 받을 수 있습니다.
         [SerializeField] private bool repeatable;
         [SerializeField] private HideoutMissionItemReward[] itemRewards = Array.Empty<HideoutMissionItemReward>();
+        [SerializeField] private string prerequisiteMissionId;
+        [SerializeField, Min(0)] private int creditReward;
+        [SerializeField, Range(1, 5)] private int riskRating = 1;
 
         public string MissionId => missionId;
         public string DisplayName => string.IsNullOrWhiteSpace(displayName) ? missionId : displayName;
         public string Description => description;
         public HideoutMissionObjectiveType ObjectiveType => objectiveType;
         public ItemDefinition ObjectiveItem => objectiveItem;
+        public ItemDefinition ObjectiveWeapon => objectiveWeapon;
+        public string ObjectiveZoneId => string.IsNullOrWhiteSpace(objectiveZoneId) ? string.Empty : objectiveZoneId.Trim();
         public int RequiredAmount => Mathf.Max(1, requiredAmount);
         public bool Repeatable => repeatable;
         public IReadOnlyList<HideoutMissionItemReward> ItemRewards => itemRewards ?? Array.Empty<HideoutMissionItemReward>();
+        public string PrerequisiteMissionId => string.IsNullOrWhiteSpace(prerequisiteMissionId)
+            ? string.Empty
+            : prerequisiteMissionId.Trim();
+        public int CreditReward => Mathf.Max(0, creditReward);
+        public int RiskRating => Mathf.Clamp(riskRating, 1, 5);
 
         // 이전 처치 임무 코드와 테스트가 바로 깨지지 않게 남겨 둔 호환용 이름입니다.
         // 새 코드는 목표 종류와 관계없이 RequiredAmount를 사용합니다.
@@ -96,11 +114,70 @@ namespace ZombieSurvival.Hideout
             displayName = string.IsNullOrWhiteSpace(name) ? missionId : name.Trim();
             description = missionDescription ?? string.Empty;
             objectiveType = type;
-            objectiveItem = type == HideoutMissionObjectiveType.CollectedItem ? targetItem : null;
+            objectiveItem = type == HideoutMissionObjectiveType.CollectedItem ||
+                            type == HideoutMissionObjectiveType.CollectedItemInZone
+                ? targetItem
+                : null;
+            objectiveWeapon = type == HideoutMissionObjectiveType.WeaponKills ? targetItem : null;
+            objectiveZoneId = string.Empty;
             requiredAmount = Mathf.Max(1, targetAmount);
             repeatable = canRepeat;
             itemRewards = rewards ?? Array.Empty<HideoutMissionItemReward>();
             NormalizeRewards();
+        }
+
+        // 장소 방문 임무는 아이템 참조 대신 구역 ID가 필요하므로 일반 Configure 뒤 전용 필드만 안전하게 채웁니다.
+        // 나머지 보상·반복·필요 횟수 규칙은 다른 임무와 같은 경로를 사용해 중복 구현을 만들지 않습니다.
+        public void ConfigureZoneVisit(
+            string id,
+            string name,
+            string missionDescription,
+            string zoneId,
+            int targetAmount,
+            bool canRepeat,
+            params HideoutMissionItemReward[] rewards)
+        {
+            Configure(
+                id,
+                name,
+                missionDescription,
+                HideoutMissionObjectiveType.VisitedZone,
+                null,
+                targetAmount,
+                canRepeat,
+                rewards);
+            objectiveZoneId = string.IsNullOrWhiteSpace(zoneId) ? string.Empty : zoneId.Trim();
+        }
+
+        // 특정 구역에서 아이템을 확보하는 임무는 구역 방문 기록과 성공 탈출 아이템을 모두 검사합니다.
+        public void ConfigureZoneItemRecovery(
+            string id,
+            string name,
+            string missionDescription,
+            string zoneId,
+            ItemDefinition targetItem,
+            int targetAmount,
+            bool canRepeat,
+            params HideoutMissionItemReward[] rewards)
+        {
+            Configure(id, name, missionDescription, HideoutMissionObjectiveType.CollectedItemInZone,
+                targetItem, targetAmount, canRepeat, rewards);
+            objectiveZoneId = string.IsNullOrWhiteSpace(zoneId) ? string.Empty : zoneId.Trim();
+        }
+
+        // 연속 임무와 화폐 보상은 기존 Configure 호출을 깨지 않도록 별도 메서드로 설정합니다.
+        // 선행 임무 ID가 비어 있으면 처음부터 공개되며, 완료 기록이 하나 이상 생기면 다음 임무가 해금됩니다.
+        public void ConfigureProgression(string prerequisiteId, int credits, int risk)
+        {
+            prerequisiteMissionId = string.IsNullOrWhiteSpace(prerequisiteId) ? string.Empty : prerequisiteId.Trim();
+            creditReward = Mathf.Max(0, credits);
+            riskRating = Mathf.Clamp(risk, 1, 5);
+        }
+
+        public bool IsUnlocked()
+        {
+            return string.IsNullOrEmpty(PrerequisiteMissionId) ||
+                   HideoutMissionStateStore.GetCompletionCount(PrerequisiteMissionId) > 0;
         }
 
         // 현재 진행도를 함께 받아 HUD에 그대로 넣을 수 있는 목표 문장을 만듭니다.
@@ -110,10 +187,21 @@ namespace ZombieSurvival.Hideout
             switch (objectiveType)
             {
                 case HideoutMissionObjectiveType.CollectedItem:
+                case HideoutMissionObjectiveType.CollectedItemInZone:
                     string itemName = objectiveItem != null ? objectiveItem.DisplayName : "설정되지 않은 아이템";
-                    return $"아이템 회수: {itemName} {safeProgress}/{RequiredAmount}";
+                    string zoneSuffix = objectiveType == HideoutMissionObjectiveType.CollectedItemInZone
+                        ? $" · 구역 {ObjectiveZoneId}"
+                        : string.Empty;
+                    return $"아이템 회수: {itemName} {safeProgress}/{RequiredAmount}{zoneSuffix}";
                 case HideoutMissionObjectiveType.SuccessfulExtraction:
                     return $"레이드 탈출: {safeProgress}/{RequiredAmount}";
+                case HideoutMissionObjectiveType.NoDamageExtraction:
+                    return $"무피해 탈출: {safeProgress}/{RequiredAmount}";
+                case HideoutMissionObjectiveType.VisitedZone:
+                    return $"지정 구역 방문: {safeProgress}/{RequiredAmount}";
+                case HideoutMissionObjectiveType.WeaponKills:
+                    string weaponName = objectiveWeapon != null ? objectiveWeapon.DisplayName : "설정되지 않은 무기";
+                    return $"{weaponName} 처치: {safeProgress}/{RequiredAmount}";
                 default:
                     return $"좀비 처치: {safeProgress}/{RequiredAmount}";
             }
@@ -122,22 +210,30 @@ namespace ZombieSurvival.Hideout
         // 보상 배열을 사람이 읽는 한 줄로 합칩니다. 실제 지급 데이터와 UI 문구가 서로 달라지는 문제를 막는 역할입니다.
         public string BuildRewardDescription()
         {
-            if (itemRewards == null || itemRewards.Length == 0) return "보상 없음";
-
             var parts = new List<string>();
-            foreach (HideoutMissionItemReward reward in itemRewards)
-            {
-                if (reward?.item == null || reward.quantity <= 0) continue;
-                parts.Add($"{reward.item.DisplayName} x{reward.quantity}");
-            }
-            return parts.Count > 0 ? string.Join(" · ", parts) : "보상 설정 오류";
+            if (itemRewards != null)
+                foreach (HideoutMissionItemReward reward in itemRewards)
+                {
+                    if (reward?.item == null || reward.quantity <= 0) continue;
+                    parts.Add($"{reward.item.DisplayName} x{reward.quantity}");
+                }
+            if (CreditReward > 0) parts.Add($"{CreditReward} 크레딧");
+            return parts.Count > 0 ? string.Join(" · ", parts) : "보상 없음";
         }
 
         // Inspector에서 잘못된 수량이나 아이템 없는 항목이 저장되지 않도록 에셋 자체를 정리합니다.
         private void OnValidate()
         {
             requiredAmount = Mathf.Max(1, requiredAmount);
-            if (objectiveType != HideoutMissionObjectiveType.CollectedItem) objectiveItem = null;
+            prerequisiteMissionId = string.IsNullOrWhiteSpace(prerequisiteMissionId) ? string.Empty : prerequisiteMissionId.Trim();
+            creditReward = Mathf.Max(0, creditReward);
+            riskRating = Mathf.Clamp(riskRating, 1, 5);
+            if (objectiveType != HideoutMissionObjectiveType.CollectedItem &&
+                objectiveType != HideoutMissionObjectiveType.CollectedItemInZone) objectiveItem = null;
+            if (objectiveType != HideoutMissionObjectiveType.WeaponKills) objectiveWeapon = null;
+            if (objectiveType != HideoutMissionObjectiveType.VisitedZone &&
+                objectiveType != HideoutMissionObjectiveType.CollectedItemInZone) objectiveZoneId = string.Empty;
+            else objectiveZoneId = string.IsNullOrWhiteSpace(objectiveZoneId) ? string.Empty : objectiveZoneId.Trim();
             NormalizeRewards();
         }
 

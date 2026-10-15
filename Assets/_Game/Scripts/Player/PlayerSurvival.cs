@@ -45,6 +45,8 @@ namespace ZombieSurvival.Player
         // 스태미나가 0이 된 직후 Shift를 계속 누르면 회복과 소모가 매 프레임 번갈아 일어날 수 있습니다.
         // exhausted는 최소 재개 수치까지 달리기를 잠가 짧게 덜컥거리는 움직임을 막는 내부 상태입니다.
         private bool exhausted;
+        private bool satietyDrainEnabled = true;
+        private float staminaRecoveryResumesAt;
 
         // HUD처럼 포만감이 바뀌는 순간만 갱신하고 싶은 화면이 사용할 수 있는 알림입니다.
         public event Action<float, float> SatietyChanged;
@@ -62,7 +64,7 @@ namespace ZombieSurvival.Player
         {
             // Time.deltaTime을 곱해 초당 감소량을 계산하므로 프레임 속도가 달라도 같은 시간 동안 같은 양이 줄어듭니다.
             // 인벤토리를 열면 조작만 잠기고 레이드 시간은 계속 흐르므로, 아이템을 정리하는 동안에도 포만감은 계속 감소합니다.
-            ConsumeSatiety(DrainPerSecond * Time.deltaTime);
+            if (satietyDrainEnabled) ConsumeSatiety(DrainPerSecond * Time.deltaTime);
 
             float previousStamina = CurrentStamina;
             CurrentStamina = CalculateStaminaAfterTick(
@@ -70,7 +72,7 @@ namespace ZombieSurvival.Player
                 MaximumStamina,
                 IsSprinting,
                 sprintDrainPerSecond,
-                staminaRecoveryPerSecond,
+                Time.time >= staminaRecoveryResumesAt ? staminaRecoveryPerSecond : 0f,
                 Time.deltaTime);
 
             // 완전히 고갈된 순간에는 달리기를 즉시 중지하고, 설정한 재개 수치까지 회복되기 전에는 다시 시작하지 않습니다.
@@ -94,6 +96,29 @@ namespace ZombieSurvival.Player
 
             IsSprinting = requested && !exhausted && CurrentStamina > 0f;
         }
+
+        // 거점에서는 포만감만 멈추고 달리기·구르기 스태미나의 소모와 회복은 계속 사용합니다.
+        // 컴포넌트 전체를 끄지 않으므로 거점과 레이드에서 Space 구르기 조작이 서로 다르게 느껴지지 않습니다.
+        public void SetSatietyDrainEnabled(bool value) => satietyDrainEnabled = value;
+
+        // 구르기처럼 한 번에 정해진 양을 쓰는 행동이 스태미나를 원자적으로 지불할 때 사용합니다.
+        // 부족하면 값을 전혀 바꾸지 않고 false를 반환합니다. recoveryDelay 동안은 기력 자동 회복만 미룹니다.
+        public bool TrySpendStamina(float amount, float recoveryDelay = 0f)
+        {
+            float cost = Mathf.Max(0f, amount);
+            if (cost <= 0f || CurrentStamina + 0.0001f < cost) return false;
+
+            CurrentStamina = Mathf.Max(0f, CurrentStamina - cost);
+            staminaRecoveryResumesAt = Mathf.Max(staminaRecoveryResumesAt, Time.time + Mathf.Max(0f, recoveryDelay));
+            IsSprinting = false;
+            if (CurrentStamina <= 0f) exhausted = true;
+            StaminaChanged?.Invoke(CurrentStamina, MaximumStamina);
+            return true;
+        }
+
+        // 25%는 0.25로 전달합니다. 최대 기력을 기준으로 계산하므로 현재 기력이 적다고 구르기 비용이 싸지지 않습니다.
+        public bool TrySpendStaminaFraction(float fraction, float recoveryDelay = 0f)
+            => TrySpendStamina(MaximumStamina * Mathf.Clamp01(fraction), recoveryDelay);
 
         // 실제로 회복될 양은 음식의 회복량과 현재 비어 있는 포만감 중 더 작은 값입니다.
         // HUD가 100으로 보이지만 시간 경과로 99.9처럼 아주 조금 줄어든 경우에는 1도 회복되지 않으므로

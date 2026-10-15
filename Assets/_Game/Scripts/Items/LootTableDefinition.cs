@@ -59,6 +59,14 @@ namespace ZombieSurvival.Items
         // null 아이템과 가중치 0인 항목을 제외하고 가중치 비율에 따라 한 후보의 배열 인덱스를 선택합니다.
         // 예를 들어 가중치가 1과 3이면 첫 후보는 25%, 두 번째 후보는 75% 범위를 차지합니다.
         public static int SelectWeightedEntryIndex(LootTableEntry[] candidates, float normalizedRoll)
+            => SelectWeightedEntryIndex(candidates, normalizedRoll, 1);
+
+        // 위험도 1은 에셋에 적힌 원래 확률을 그대로 사용합니다.
+        // 위험도가 높아질수록 희귀 등급의 유효 가중치만 늘려, 같은 상자 종류라도 위험한 구역에서 더 좋은 물건을 기대할 수 있습니다.
+        public static int SelectWeightedEntryIndex(
+            LootTableEntry[] candidates,
+            float normalizedRoll,
+            int dangerRating)
         {
             if (candidates == null || candidates.Length == 0) return -1;
 
@@ -68,7 +76,7 @@ namespace ZombieSurvival.Items
             {
                 LootTableEntry candidate = candidates[i];
                 if (candidate?.item == null || candidate.weight <= 0f) continue;
-                totalWeight += candidate.weight;
+                totalWeight += candidate.weight * GetDangerWeightMultiplier(candidate.item.Rarity, dangerRating);
                 lastValidIndex = i;
             }
             if (totalWeight <= 0f) return -1;
@@ -79,12 +87,25 @@ namespace ZombieSurvival.Items
             {
                 LootTableEntry candidate = candidates[i];
                 if (candidate?.item == null || candidate.weight <= 0f) continue;
-                accumulated += candidate.weight;
+                accumulated += candidate.weight * GetDangerWeightMultiplier(candidate.item.Rarity, dangerRating);
                 if (target < accumulated) return i;
             }
 
             // normalizedRoll이 정확히 1이면 target과 전체 가중치가 같으므로 마지막 유효 후보를 반환합니다.
             return lastValidIndex;
+        }
+
+        // Common은 어느 구역에서도 기준 확률을 유지하고 Uncommon·Rare만 단계적으로 증가시킵니다.
+        // Quest 아이템은 임무 진행을 운에 과도하게 맡기지 않도록 위험도 보정을 받지 않습니다.
+        public static float GetDangerWeightMultiplier(ItemRarity rarity, int dangerRating)
+        {
+            int extraDanger = Mathf.Max(0, dangerRating - 1);
+            switch (rarity)
+            {
+                case ItemRarity.Rare: return 1f + extraDanger * 0.45f;
+                case ItemRarity.Uncommon: return 1f + extraDanger * 0.2f;
+                default: return 1f;
+            }
         }
 
         // 선택된 후보의 0~1 난수를 최소~최대 정수 수량으로 변환합니다.

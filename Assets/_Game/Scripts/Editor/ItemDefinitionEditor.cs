@@ -18,8 +18,11 @@ namespace ZombieSurvival.EditorTools
         private SerializedProperty itemType;
         private SerializedProperty ammoType;
         private SerializedProperty weaponDefinition;
+        private SerializedProperty meleeWeaponDefinition;
+        private SerializedProperty statusEffectDefinition;
         private SerializedProperty armorDamageReduction;
         private SerializedProperty armorMaxDurability;
+        private SerializedProperty quickSlotBonus;
         private SerializedProperty healthRestoreAmount;
         private SerializedProperty satietyRestoreAmount;
 
@@ -33,8 +36,11 @@ namespace ZombieSurvival.EditorTools
             itemType = serializedObject.FindProperty("itemType");
             ammoType = serializedObject.FindProperty("ammoType");
             weaponDefinition = serializedObject.FindProperty("weaponDefinition");
+            meleeWeaponDefinition = serializedObject.FindProperty("meleeWeaponDefinition");
+            statusEffectDefinition = serializedObject.FindProperty("statusEffectDefinition");
             armorDamageReduction = serializedObject.FindProperty("armorDamageReduction");
             armorMaxDurability = serializedObject.FindProperty("armorMaxDurability");
+            quickSlotBonus = serializedObject.FindProperty("quickSlotBonus");
             healthRestoreAmount = serializedObject.FindProperty("healthRestoreAmount");
             satietyRestoreAmount = serializedObject.FindProperty("satietyRestoreAmount");
         }
@@ -56,19 +62,27 @@ namespace ZombieSurvival.EditorTools
                 "gridShape",
                 "ammoType",
                 "weaponDefinition",
+                "meleeWeaponDefinition",
+                "statusEffectDefinition",
                 "armorDamageReduction",
                 "armorMaxDurability",
+                "quickSlotBonus",
                 "healthRestoreAmount",
                 "satietyRestoreAmount");
 
-            // 무기가 아닌 아이템에는 불필요한 전투 데이터 입력칸을 숨기고 Weapon 종류에서만 연결 에셋을 보여 줍니다.
-            // 참조가 비어 있으면 장착해도 기본 무기의 전투 수치를 사용하게 되므로 즉시 알아볼 수 있는 경고도 함께 표시합니다.
+            // 무기가 아닌 아이템에는 불필요한 전투 데이터 입력칸을 숨기고 Weapon 종류에서만 총기·근접무기 연결 에셋을 보여 줍니다.
+            // 두 참조 중 정확히 하나만 연결해야 하므로 비어 있거나 둘 다 연결된 잘못된 설정을 즉시 경고합니다.
             if ((ItemType)itemType.enumValueIndex == ItemType.Weapon)
             {
                 EditorGUILayout.Space(6f);
-                EditorGUILayout.PropertyField(weaponDefinition, new GUIContent("무기 전투 데이터"));
-                if (weaponDefinition.objectReferenceValue == null)
-                    EditorGUILayout.HelpBox("무기 전투 데이터가 없으면 장착 무기로 선택할 수 없습니다.", MessageType.Warning);
+                EditorGUILayout.PropertyField(weaponDefinition, new GUIContent("총기 전투 데이터"));
+                EditorGUILayout.PropertyField(meleeWeaponDefinition, new GUIContent("근접무기 전투 데이터"));
+                bool hasFirearm = weaponDefinition.objectReferenceValue != null;
+                bool hasMelee = meleeWeaponDefinition.objectReferenceValue != null;
+                if (!hasFirearm && !hasMelee)
+                    EditorGUILayout.HelpBox("총기 또는 근접무기 전투 데이터 중 하나가 없으면 장착 무기로 선택할 수 없습니다.", MessageType.Warning);
+                else if (hasFirearm && hasMelee)
+                    EditorGUILayout.HelpBox("총기와 근접무기 데이터는 동시에 연결하지 말고 무기 종류에 맞는 하나만 남겨 주세요.", MessageType.Warning);
             }
             else if ((ItemType)itemType.enumValueIndex == ItemType.Ammo)
             {
@@ -84,6 +98,7 @@ namespace ZombieSurvival.EditorTools
                 EditorGUILayout.Space(6f);
                 EditorGUILayout.PropertyField(armorDamageReduction, new GUIContent("피해 감소율"));
                 EditorGUILayout.PropertyField(armorMaxDurability, new GUIContent("최대 내구도"));
+                EditorGUILayout.PropertyField(quickSlotBonus, new GUIContent("추가 퀵슬롯 수"));
                 if (armorDamageReduction.floatValue <= 0f || armorMaxDurability.floatValue <= 0f)
                     EditorGUILayout.HelpBox("감소율과 내구도가 0보다 커야 방탄 효과가 작동합니다.", MessageType.Warning);
             }
@@ -102,6 +117,14 @@ namespace ZombieSurvival.EditorTools
                 EditorGUILayout.PropertyField(satietyRestoreAmount, new GUIContent("포만감 회복량"));
                 if (satietyRestoreAmount.floatValue <= 0f)
                     EditorGUILayout.HelpBox("포만감 회복량이 0이면 사용해도 효과가 없어 아이템이 소비되지 않습니다.", MessageType.Warning);
+            }
+            else if ((ItemType)itemType.enumValueIndex == ItemType.BuffConsumable)
+            {
+                // 버프 소모품에서만 적용 효과 에셋을 노출해 일반 재료나 퀘스트 아이템에 불필요한 필드가 나타나지 않게 합니다.
+                EditorGUILayout.Space(6f);
+                EditorGUILayout.PropertyField(statusEffectDefinition, new GUIContent("시간제 효과 데이터"));
+                if (statusEffectDefinition.objectReferenceValue == null)
+                    EditorGUILayout.HelpBox("시간제 효과 데이터가 없으면 사용해도 효과를 적용할 수 없습니다.", MessageType.Warning);
             }
 
             EditorGUILayout.Space(12f);

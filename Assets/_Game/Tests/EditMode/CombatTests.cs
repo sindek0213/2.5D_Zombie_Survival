@@ -2,6 +2,8 @@ using System.Reflection;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 using ZombieSurvival.Combat;
 using ZombieSurvival.Extraction;
 using ZombieSurvival.Inventory;
@@ -68,6 +70,32 @@ public sealed class CombatTests
             Assert.That(receivedDamage, Is.EqualTo(25f));
             Assert.That(receivedPoint, Is.EqualTo(hitPoint));
             Assert.That(health.CurrentHealth, Is.EqualTo(75f));
+        }
+        finally
+        {
+            Object.DestroyImmediate(target);
+        }
+    }
+
+    // 돌진 무적이 활성화된 동안에는 체력, 피해 이벤트와 방어 후속 처리가 모두 발생하지 않아야 합니다.
+    [Test]
+    public void Invulnerability_IgnoresDamageUntilWindowEnds()
+    {
+        var target = new GameObject("DashInvulnerabilityTestTarget");
+        target.SetActive(false);
+        try
+        {
+            Health health = target.AddComponent<Health>();
+            InvokeAwake(health);
+            int damageEvents = 0;
+            health.Damaged += (_, __) => damageEvents++;
+
+            health.BeginInvulnerability(1f);
+            health.TakeDamage(40f, Vector3.zero);
+
+            Assert.That(health.IsInvulnerable, Is.True);
+            Assert.That(health.CurrentHealth, Is.EqualTo(100f));
+            Assert.That(damageEvents, Is.Zero);
         }
         finally
         {
@@ -163,10 +191,10 @@ public sealed class CombatTests
             Is.EqualTo(4f).Within(0.001f));
     }
 
-    // 산탄총은 일곱 번의 피해 Ray를 계산하더라도 쉘은 한 발만 소비하고 발사 피드백 이벤트도 한 번만 보내야 합니다.
+    // 산탄총은 다섯 번의 피해 Ray와 탄도선 이벤트를 계산하더라도 쉘은 한 발만 소비하고 총성용 Shot 이벤트는 한 번만 보내야 합니다.
     // 이 테스트는 충돌 LayerMask를 비워 실제 씬 Collider의 영향을 받지 않고 탄약과 이벤트 규칙만 고정합니다.
     [Test]
-    public void ShotgunFire_ConsumesOneShellAndRaisesOneShotEvent()
+    public void ShotgunFire_ConsumesOneShellAndRaisesFivePelletEvents()
     {
         var player = new GameObject("ShotgunFireTestPlayer");
         player.SetActive(false);
@@ -179,7 +207,7 @@ public sealed class CombatTests
             2.2f,
             5,
             AmmoType.TwelveGauge,
-            7,
+            5,
             18f);
         ItemDefinition shotgunItem = CreateWeaponItem(
             "shotgun_fire_test",
@@ -198,15 +226,18 @@ public sealed class CombatTests
             Assert.That(inventory.TryEquipRaidProvidedItem(shotgunItem), Is.True);
             Assert.That(combat.TrySelectWeaponSlot(EquipmentSlotType.PrimaryWeapon), Is.True);
 
-            int eventCount = 0;
-            combat.ShotResolved += (_, _, _) => eventCount++;
+            int shotEventCount = 0;
+            int pelletEventCount = 0;
+            combat.ShotResolved += (_, _, _) => shotEventCount++;
+            combat.PelletResolved += (_, _, _) => pelletEventCount++;
 
             Assert.That(combat.TryFire(), Is.True);
             Assert.That(combat.Ammo.InMagazine, Is.EqualTo(4));
-            Assert.That(eventCount, Is.EqualTo(1));
-            Assert.That(combat.CurrentPelletCount, Is.EqualTo(7));
+            Assert.That(shotEventCount, Is.EqualTo(1));
+            Assert.That(pelletEventCount, Is.EqualTo(5));
+            Assert.That(combat.CurrentPelletCount, Is.EqualTo(5));
             Assert.That(combat.CurrentSpreadAngle, Is.EqualTo(18f));
-            Assert.That(shotgun.PotentialDamagePerShot, Is.EqualTo(84f));
+            Assert.That(shotgun.PotentialDamagePerShot, Is.EqualTo(60f));
             Assert.That(ItemDetailFormatter.AmmoName(AmmoType.TwelveGauge), Is.EqualTo("12게이지"));
         }
         finally
@@ -427,6 +458,136 @@ public sealed class CombatTests
         }
     }
 
+    // 숫자키를 퀵슬롯 전용으로 비운 뒤에도 마우스 휠 입력 경로가 주무기와 보조무기를 순환하는지 검사합니다.
+    // 양수와 음수 휠 방향을 모두 확인해 어느 방향으로 굴려도 현재 슬롯의 반대쪽 장비로 정상 전환되는지 검증합니다.
+    [Test]
+    public void CycleEquippedWeapon_SwitchesBetweenPrimaryAndSecondarySlots()
+    {
+        var player = new GameObject("WeaponCycleTestPlayer");
+        player.SetActive(false);
+        WeaponDefinition rifle = CreateWeaponDefinition(
+            "휠 테스트 소총", WeaponTriggerMode.Automatic, 40f, 36f, 0.14f, 1.5f, 20, AmmoType.FiveFiveSix);
+        WeaponDefinition pistol = CreateWeaponDefinition(
+            "휠 테스트 권총", WeaponTriggerMode.SemiAutomatic, 24f, 22f, 0.3f, 1f, 8, AmmoType.NineMillimeter);
+        ItemDefinition rifleItem = CreateWeaponItem(
+            "weapon_cycle_rifle", "휠 테스트 소총", EquipmentSlotType.PrimaryWeapon, rifle);
+        ItemDefinition pistolItem = CreateWeaponItem(
+            "weapon_cycle_pistol", "휠 테스트 권총", EquipmentSlotType.SecondaryWeapon, pistol);
+
+        try
+        {
+            PlayerInventory inventory = player.AddComponent<PlayerInventory>();
+            PlayerCombat combat = player.AddComponent<PlayerCombat>();
+            InvokeAwake(combat);
+
+            var rifleEntry = new InventoryEntry(rifleItem, 1, Vector2Int.zero);
+            var pistolEntry = new InventoryEntry(pistolItem, 1, new Vector2Int(2, 0));
+            inventory.Root.Entries.Add(rifleEntry);
+            inventory.Root.Entries.Add(pistolEntry);
+            Assert.That(inventory.TryEquip(inventory.Root, rifleEntry), Is.True);
+            Assert.That(inventory.TryEquip(inventory.Root, pistolEntry), Is.True);
+
+            Assert.That(combat.TrySelectWeaponSlot(EquipmentSlotType.PrimaryWeapon), Is.True);
+            Assert.That(combat.ActiveWeaponSlot, Is.EqualTo(EquipmentSlotType.PrimaryWeapon));
+
+            Assert.That(combat.TryCycleEquippedWeapon(1f), Is.True);
+            Assert.That(combat.ActiveWeaponSlot, Is.EqualTo(EquipmentSlotType.SecondaryWeapon));
+            Assert.That(combat.ActiveWeaponEntry, Is.SameAs(pistolEntry));
+
+            Assert.That(combat.TryCycleEquippedWeapon(-1f), Is.True);
+            Assert.That(combat.ActiveWeaponSlot, Is.EqualTo(EquipmentSlotType.PrimaryWeapon));
+            Assert.That(combat.ActiveWeaponEntry, Is.SameAs(rifleEntry));
+        }
+        finally
+        {
+            Object.DestroyImmediate(player);
+            Object.DestroyImmediate(rifleItem);
+            Object.DestroyImmediate(pistolItem);
+            Object.DestroyImmediate(rifle);
+            Object.DestroyImmediate(pistol);
+        }
+    }
+
+    // 근접무기는 총기 탄창 상태를 만들지 않으면서도 장비 슬롯에서 정상 선택되고 에셋의 피해·사거리를 전투 상태에 전달해야 합니다.
+    [Test]
+    public void SelectEquippedMeleeWeapon_UsesMeleeStatsWithoutAmmunition()
+    {
+        var player = new GameObject("MeleeSelectionTestPlayer");
+        player.SetActive(false);
+        MeleeWeaponDefinition dagger = CreateMeleeWeaponDefinition(
+            "테스트 단검", MeleeAttackStyle.Stab, 32f, 1.55f, 0.24f, 0.38f, 1, 1.3f, 1, 2.5f);
+        ItemDefinition daggerItem = CreateMeleeWeaponItem(
+            "weapon_dagger_test", "테스트 단검", EquipmentSlotType.SecondaryWeapon, dagger);
+
+        try
+        {
+            PlayerInventory inventory = player.AddComponent<PlayerInventory>();
+            PlayerCombat combat = player.AddComponent<PlayerCombat>();
+            InvokeAwake(combat);
+
+            var entry = new InventoryEntry(daggerItem, 1, Vector2Int.zero);
+            inventory.Root.Entries.Add(entry);
+            Assert.That(inventory.TryEquip(inventory.Root, entry), Is.True);
+            Assert.That(combat.TrySelectWeaponSlot(EquipmentSlotType.SecondaryWeapon), Is.True);
+
+            Assert.That(combat.CurrentMeleeWeaponDefinition, Is.SameAs(dagger));
+            Assert.That(combat.CurrentWeaponDefinition, Is.Null);
+            Assert.That(combat.Ammo, Is.Null);
+            Assert.That(combat.CurrentDamage, Is.EqualTo(32f));
+            Assert.That(combat.CurrentRange, Is.EqualTo(1.55f));
+            Assert.That(combat.CurrentTriggerModeLabel, Is.EqualTo("근접"));
+            Assert.That(ItemDetailFormatter.Build(entry), Does.Contain("공격 방식: 찌르기"));
+            Assert.That(ItemDetailFormatter.Build(entry), Does.Contain("피해: 32"));
+        }
+        finally
+        {
+            Object.DestroyImmediate(player);
+            Object.DestroyImmediate(daggerItem);
+            Object.DestroyImmediate(dagger);
+        }
+    }
+
+    // 실제 SphereCast 경로를 사용해 근접무기의 설정 피해가 전방 대상에게 적용되는지 확인합니다.
+    // 이 테스트가 통과하면 단순 상세창 표시뿐 아니라 PlayerCombat의 공통 근접 공격 실행 경로까지 연결된 것입니다.
+    [Test]
+    public void MeleeAttack_DamagesForwardTargetWithDefinitionValue()
+    {
+        var player = new GameObject("MeleeAttackTestPlayer");
+        player.SetActive(false);
+        var target = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        target.name = "MeleeAttackTarget";
+        target.transform.position = new Vector3(0f, 1f, 1f);
+        Health health = target.AddComponent<Health>();
+        // EditMode에서는 Health.Awake가 자동 실행되지 않을 수 있으므로 실제 게임 시작과 같은 100 체력 상태를 명시적으로 준비합니다.
+        health.ConfigureMaximumHealth(100f, true);
+        MeleeWeaponDefinition dagger = CreateMeleeWeaponDefinition(
+            "테스트 단검", MeleeAttackStyle.Stab, 32f, 1.55f, 0.24f, 0.38f, 1, 1.3f, 1, 2.5f);
+        ItemDefinition daggerItem = CreateMeleeWeaponItem(
+            "weapon_dagger_test", "테스트 단검", EquipmentSlotType.SecondaryWeapon, dagger);
+
+        try
+        {
+            PlayerInventory inventory = player.AddComponent<PlayerInventory>();
+            PlayerCombat combat = player.AddComponent<PlayerCombat>();
+            InvokeAwake(combat);
+            var entry = new InventoryEntry(daggerItem, 1, Vector2Int.zero);
+            inventory.Root.Entries.Add(entry);
+            Assert.That(inventory.TryEquip(inventory.Root, entry), Is.True);
+            Assert.That(combat.TrySelectWeaponSlot(EquipmentSlotType.SecondaryWeapon), Is.True);
+
+            Physics.SyncTransforms();
+            Assert.That(combat.TryMelee(), Is.True);
+            Assert.That(health.CurrentHealth, Is.EqualTo(68f).Within(0.001f));
+        }
+        finally
+        {
+            Object.DestroyImmediate(player);
+            Object.DestroyImmediate(target);
+            Object.DestroyImmediate(daggerItem);
+            Object.DestroyImmediate(dagger);
+        }
+    }
+
     // 전투 데이터가 연결되지 않은 무기 아이템은 선택을 거부하고 현재 무장 해제 상태를 바꾸지 않는지 검사합니다.
     [Test]
     public void SelectWeaponWithoutDefinition_IsRejectedWithoutChangingFallback()
@@ -522,6 +683,128 @@ public sealed class CombatTests
     public void InventoryHud_EaseTransition_ClampsAndSmoothsProgress(float progress, float expected)
     {
         Assert.That(InventoryHud.EaseTransition(progress), Is.EqualTo(expected).Within(0.0001f));
+    }
+
+    // 짧은 소비품 설명은 작은 팝업, 긴 무기 정보는 큰 팝업이 되지만 화면을 과도하게 덮지 않도록 최소·최대 크기를 검사합니다.
+    [TestCase(100f, 30f, 280f, 76f)]
+    [TestCase(400f, 240f, 400f, 240f)]
+    [TestCase(900f, 900f, 520f, 620f)]
+    public void ItemDetailPopup_SizeFollowsContentWithinLimits(
+        float preferredWidth,
+        float preferredHeight,
+        float expectedWidth,
+        float expectedHeight)
+    {
+        Vector2 size = ItemDetailPopup.CalculatePopupSize(
+            preferredWidth,
+            preferredHeight,
+            new Vector2(280f, 76f),
+            new Vector2(520f, 620f));
+
+        Assert.That(size.x, Is.EqualTo(expectedWidth));
+        Assert.That(size.y, Is.EqualTo(expectedHeight));
+    }
+
+    // 화면 가장자리에서 길게 눌러도 팝업 전체가 1600×900 Canvas 안에 남는지 검사합니다.
+    [TestCase(1500f, 100f)]
+    [TestCase(20f, 880f)]
+    public void ItemDetailPopup_PositionStaysInsideCanvas(float pointerX, float pointerY)
+    {
+        Vector2 canvasSize = new Vector2(1600f, 900f);
+        Vector2 popupSize = new Vector2(520f, 400f);
+        Vector2 position = ItemDetailPopup.CalculateAnchoredPosition(
+            new Vector2(pointerX, pointerY),
+            canvasSize,
+            popupSize,
+            18f);
+
+        Assert.That(position.x, Is.InRange(0f, canvasSize.x - popupSize.x));
+        Assert.That(position.y, Is.InRange(popupSize.y, canvasSize.y));
+    }
+
+    // 팝업 제목을 화면 가장자리 밖으로 끌어도 전체 창이 Canvas 안에 남아 다시 잡을 수 있어야 합니다.
+    [TestCase(-500f, 1200f, 0f, 900f)]
+    [TestCase(1900f, -200f, 1080f, 400f)]
+    public void ItemDetailPopup_DragPositionIsClampedInsideCanvas(
+        float desiredX,
+        float desiredY,
+        float expectedX,
+        float expectedY)
+    {
+        Vector2 clamped = ItemDetailPopup.ClampAnchoredPosition(
+            new Vector2(desiredX, desiredY),
+            new Vector2(1600f, 900f),
+            new Vector2(520f, 400f));
+
+        Assert.That(clamped.x, Is.EqualTo(expectedX));
+        Assert.That(clamped.y, Is.EqualTo(expectedY));
+    }
+
+    // 기존 프리팹에 상세 본문만 있어도 Configure가 Inspector에서 편집 가능한 제목 바·닫기 버튼·바깥 클릭 영역을 만들어야 합니다.
+    // 팝업 내부 클릭은 유지되고 투명한 바깥 영역 클릭만 닫혀야 다른 인벤토리 조작이 실수로 실행되지 않습니다.
+    [Test]
+    public void ItemDetailPopup_CreatesEditableViewAndClosesOnlyFromOutside()
+    {
+        var root = new GameObject("ItemDetailPopupTestRoot", typeof(RectTransform), typeof(ItemDetailPopup));
+        var overlayObject = new GameObject("DragLayer", typeof(RectTransform));
+        var panelObject = new GameObject("ItemDetailPanel", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        var textObject = new GameObject("ItemDetailText", typeof(RectTransform), typeof(CanvasRenderer), typeof(Text));
+        var existingDismissObject = new GameObject(
+            "ItemDetailDismissArea",
+            typeof(RectTransform),
+            typeof(CanvasRenderer),
+            typeof(Image));
+        try
+        {
+            overlayObject.transform.SetParent(root.transform, false);
+            panelObject.transform.SetParent(overlayObject.transform, false);
+            textObject.transform.SetParent(panelObject.transform, false);
+            existingDismissObject.transform.SetParent(overlayObject.transform, false);
+            // 옛 프리팹에서 재사용된 바깥 클릭 영역이 불투명한 패널 색을 가진 실제 회귀 상황을 재현합니다.
+            existingDismissObject.GetComponent<Image>().color = new Color(0.05f, 0.06f, 0.05f, 0.97f);
+            RectTransform overlay = overlayObject.GetComponent<RectTransform>();
+            overlay.sizeDelta = new Vector2(1600f, 900f);
+
+            ItemDetailPopup popup = root.GetComponent<ItemDetailPopup>();
+            popup.Configure(
+                panelObject.GetComponent<RectTransform>(),
+                textObject.GetComponent<Text>(),
+                overlay);
+
+            Transform dismissArea = overlay.Find("ItemDetailDismissArea");
+            Transform header = panelObject.transform.Find("Header");
+            Assert.That(dismissArea, Is.Not.Null);
+            Assert.That(dismissArea.GetComponent<Image>().color.a, Is.Zero,
+                "바깥 클릭 영역은 입력만 받고 인벤토리 화면을 어둡게 그리면 안 됩니다.");
+            Assert.That(dismissArea.GetComponent<Image>().raycastTarget, Is.True);
+            Assert.That(header, Is.Not.Null);
+            Assert.That(header.Find("Title")?.GetComponent<Text>(), Is.Not.Null);
+            Assert.That(header.Find("CloseButton")?.GetComponent<Button>(), Is.Not.Null);
+
+            popup.Show("테스트 아이템", "설명", new Vector2(500f, 400f), null);
+            Assert.That(popup.IsVisible, Is.True);
+
+            var insideClick = new PointerEventData(null)
+            {
+                pointerPressRaycast = new RaycastResult { gameObject = textObject }
+            };
+            popup.OnPointerClick(insideClick);
+            Assert.That(popup.IsVisible, Is.True, "팝업 본문을 누른 동작은 바깥 클릭으로 처리하면 안 됩니다.");
+
+            int closedCount = 0;
+            popup.Closed += () => closedCount++;
+            var outsideClick = new PointerEventData(null)
+            {
+                pointerPressRaycast = new RaycastResult { gameObject = dismissArea.gameObject }
+            };
+            popup.OnPointerClick(outsideClick);
+            Assert.That(popup.IsVisible, Is.False);
+            Assert.That(closedCount, Is.EqualTo(1));
+        }
+        finally
+        {
+            Object.DestroyImmediate(root);
+        }
     }
 
     // 재장전 요청량이 탄창 빈자리와 인벤토리의 호환 탄약 중 더 적은 값을 정확히 선택하는지 검사합니다.
@@ -698,6 +981,55 @@ public sealed class CombatTests
         serialized.FindProperty("gridHeight").intValue = 1;
         serialized.FindProperty("equipmentSlot").enumValueIndex = (int)slot;
         serialized.FindProperty("weaponDefinition").objectReferenceValue = weaponDefinition;
+        serialized.ApplyModifiedPropertiesWithoutUndo();
+        return item;
+    }
+
+    // 테스트마다 프로젝트 에셋을 만들지 않고도 단검·도끼 수치를 독립적으로 구성합니다.
+    private static MeleeWeaponDefinition CreateMeleeWeaponDefinition(
+        string displayName,
+        MeleeAttackStyle attackStyle,
+        float damage,
+        float range,
+        float hitRadius,
+        float attackInterval,
+        int maximumTargets,
+        float knockbackForce,
+        int armorPenetration,
+        float noiseRadius)
+    {
+        MeleeWeaponDefinition definition = ScriptableObject.CreateInstance<MeleeWeaponDefinition>();
+        definition.Configure(
+            displayName,
+            attackStyle,
+            damage,
+            range,
+            hitRadius,
+            attackInterval,
+            maximumTargets,
+            knockbackForce,
+            armorPenetration,
+            noiseRadius);
+        return definition;
+    }
+
+    // 근접 전투 데이터를 장착 가능한 Weapon 아이템에 연결해 실제 인벤토리와 PlayerCombat 경로를 테스트합니다.
+    private static ItemDefinition CreateMeleeWeaponItem(
+        string itemId,
+        string displayName,
+        EquipmentSlotType slot,
+        MeleeWeaponDefinition meleeWeaponDefinition)
+    {
+        ItemDefinition item = ScriptableObject.CreateInstance<ItemDefinition>();
+        var serialized = new SerializedObject(item);
+        serialized.FindProperty("itemId").stringValue = itemId;
+        serialized.FindProperty("displayName").stringValue = displayName;
+        serialized.FindProperty("itemType").enumValueIndex = (int)ItemType.Weapon;
+        serialized.FindProperty("maxStack").intValue = 1;
+        serialized.FindProperty("gridWidth").intValue = 1;
+        serialized.FindProperty("gridHeight").intValue = 1;
+        serialized.FindProperty("equipmentSlot").enumValueIndex = (int)slot;
+        serialized.FindProperty("meleeWeaponDefinition").objectReferenceValue = meleeWeaponDefinition;
         serialized.ApplyModifiedPropertiesWithoutUndo();
         return item;
     }

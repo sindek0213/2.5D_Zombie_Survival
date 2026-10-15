@@ -5,7 +5,7 @@
 코드 자체는 `Assets/_Game/Scripts`에 있으며, 이 문서는 다음 내용을 정리합니다.
 
 - 현재 게임에 구현된 전체 흐름
-- 폴더와 코드 파일 79개의 역할
+- 폴더와 주요 코드 파일의 역할
 - 서로 연결되는 코드의 호출 순서
 - 초보자에게 맞춘 추천 학습 순서
 - 다른 채팅에 그대로 붙여 넣을 수 있는 시작 문장
@@ -15,30 +15,32 @@
 - Unity 버전: `2022.3.62f2`
 - 렌더 파이프라인: URP
 - 장르: 3D 월드 위에서 움직이는 2.5D 탑다운 좀비 익스트랙션
-- 시작 씬: `Assets/_Game/Scenes/Bootstrap.unity`
-- 주요 씬: `Bootstrap -> Hideout -> RaidPrototype -> Hideout`
+- 시작 씬: `Assets/_Game/Scenes/Title.unity`
+- 주요 씬: `Title -> Loading -> Hideout -> Loading -> RaidSchool -> Loading -> Hideout`
 - 런타임 코드: `Assets/_Game/Scripts`
 - EditMode 테스트: `Assets/_Game/Tests/EditMode`
-- 현재 컴파일 검증: Runtime, Editor, EditMode와 PlayMode 테스트 어셈블리 경고 0개·오류 0개
-- 2026-09-20 전체 Unity 검증: EditMode 테스트 200개와 PlayMode 테스트 3개 통과, 실패·건너뜀 0개
-- 현재 자동 테스트 구성: EditMode 200개·PlayMode 3개 시나리오
+- 2026-10-13 전체 Unity 검증: EditMode 테스트 249개와 PlayMode 테스트 4개 통과, 실패·건너뜀 0개
+- 이전 Windows Development 빌드와 15초 시작 검사는 통과했으며 이번 Loading 전환 뒤에는 사용량을 아끼기 위해 새 실행 파일을 만들지 않음
 
 현재 코드는 프로토타입 단계입니다. 시작 화면, 거점, 전투 정보, 피격, 탈출, 결과와 인벤토리는 모두 수정 가능한 uGUI `Canvas`와 프리팹 구조를 사용합니다. 총성과 피격음은 아직 외부 음원 없이 코드로 생성한 임시 효과음입니다.
 
 ### 게임 한 판의 전체 흐름
 
 ```text
-Bootstrap
-  -> 저장된 창고와 출격 준비 목록을 JSON에서 불러옴
-  -> Hideout 진입
+Title
+  -> 새 게임, 저장 불러오기, 설정 또는 종료 선택
+
+Loading
+  -> 공용 이미지와 현재 해금된 지역 이미지 중 한 장을 무작위로 전체 화면 표시
+  -> 저장 데이터를 준비하고 지정된 Hideout 또는 RaidSchool을 비동기로 불러오며 실제 진행률 표시
 
 Hideout
-  -> WASD로 물리 거점을 이동하고 E키로 창고 또는 임무 보드를 엶
-  -> 임무를 하나 선택하거나 12×10 창고와 10×6 출격 격자를 정리
-  -> 출격 버튼을 누름
-  -> RaidPrototype 진입
+  -> WASD로 물리 거점을 이동하고 E키로 시설을 사용
+  -> Tab 또는 창고에서 12×10 창고와 10×6 출격 격자를 정리
+  -> 별도 출격 터미널에서 학교 지역을 선택
+  -> RaidSchool 진입
 
-RaidPrototype
+RaidSchool
   -> 출격 준비 아이템을 플레이어 인벤토리에 복원
   -> 빈 생존 자리를 채우며 시간에 따라 빠른형·튼튼한형 좀비 해금
   -> 이동, 조준, 전투, 시체·필드 상자 루팅, 인벤토리 조작
@@ -108,7 +110,7 @@ Unity의 `ScriptableObject` 참조 대신 문자열 `itemId`를 저장합니다.
 
 ### 2.5 디스크 저장: HideoutSaveService
 
-`HideoutSaveService`는 창고, 출격 준비, 시설 레벨, 임무 진행도와 임무별 완료 횟수를 `hideout_save.json`에 저장하고 다시 불러옵니다. 기본 위치는 `Application.persistentDataPath` 아래입니다. 현재 저장 형식은 5번 버전이며, 컨테이너 계층을 `parentIndex`로 평탄화해 저장합니다. 이전 1·2·3·4번 파일도 계속 불러올 수 있습니다.
+`HideoutSaveService`는 창고, 출격 준비, 무기 내구도와 발사 모드, 시설 레벨, 임무 진행도, 임무별 완료 횟수, 크레딧과 튜토리얼 진행을 `hideout_save.json`에 저장하고 다시 불러옵니다. 기본 위치는 `Application.persistentDataPath` 아래입니다. 현재 저장 형식은 8번 버전이며, 컨테이너 계층을 `parentIndex`로 평탄화해 저장합니다. 지원 범위 안의 이전 버전 파일도 현재 구조로 옮겨 불러옵니다.
 
 ### 2.6 필드 전리품 정의: LootTableDefinition
 
@@ -170,6 +172,7 @@ InventoryHud가 마우스 입력을 받음
 ### 4.1 AI
 
 - [`ZombieBrain.cs`](Assets/_Game/Scripts/AI/ZombieBrain.cs): 좀비의 `Idle`, `Chase`, `Attack`, `Dead` 상태를 결정하고 이동과 공격 코드에 명령합니다. `Health.Died`를 받으면 죽은 상태로 바뀝니다.
+- [`ZombieNoiseSystem.cs`](Assets/_Game/Scripts/AI/ZombieNoiseSystem.cs): 총성과 비명처럼 일정 시간만 유지되는 소음 위치를 기록해 주변 좀비가 조사하도록 전달합니다.
 - [`RaidNavigationSurface.cs`](Assets/_Game/Scripts/AI/RaidNavigationSurface.cs): `RaidMap` 자식의 바닥·벽 Collider로 실행 시 NavMesh를 만듭니다. 랜덤 맵은 배치를 마친 뒤 공개 재생성 메서드를 호출할 수 있습니다.
 - [`ZombieMovement.cs`](Assets/_Game/Scripts/AI/ZombieMovement.cs): `NavMeshAgent`가 계산한 경로·다른 좀비 회피 방향에 중력과 총기 밀림을 더해 `CharacterController`로 실제 이동합니다. 상태 판단은 하지 않습니다.
 - [`ZombieAttack.cs`](Assets/_Game/Scripts/AI/ZombieAttack.cs): 공격 간격을 검사한 뒤 대상의 `IDamageable`에 근접 피해를 전달합니다.
@@ -181,16 +184,18 @@ InventoryHud가 마우스 입력을 받음
 ### 4.2 Camera
 
 - [`CameraFollow.cs`](Assets/_Game/Scripts/Camera/CameraFollow.cs): 플레이어 위치를 부드럽게 추적하고 우클릭 정밀 조준 중에는 카메라 FOV 또는 Orthographic Size를 줄여 확대합니다.
-- [`SpriteBillboard.cs`](Assets/_Game/Scripts/Camera/SpriteBillboard.cs): 2D 캐릭터 스프라이트가 3D 공간에서 항상 카메라를 바라보게 합니다.
+- [`SpriteBillboard.cs`](Assets/_Game/Scripts/Camera/SpriteBillboard.cs): 2D 캐릭터 스프라이트가 3D 공간에서 항상 카메라를 바라보게 합니다. 구르기 중에는 화면 안에서 그림만 회전시켜 물리 루트와 총구 방향에 영향을 주지 않습니다.
 
 ### 4.3 Combat
 
 - [`IDamageable.cs`](Assets/_Game/Scripts/Combat/IDamageable.cs): 피해를 받을 수 있는 객체와 체력 적용 전에 피해를 조정하는 객체가 따라야 하는 최소 약속입니다.
 - [`IKnockbackReceiver.cs`](Assets/_Game/Scripts/Combat/IKnockbackReceiver.cs): 총알이나 폭발에 밀릴 수 있는 대상이 외부 수평 속도를 받기 위한 약속입니다.
-- [`Health.cs`](Assets/_Game/Scripts/Combat/Health.cs): 최대 체력, 현재 체력, 피해, 회복과 사망을 담당하고 `Damaged`, `HealthChanged`, `Died` 이벤트를 보냅니다.
+- [`Health.cs`](Assets/_Game/Scripts/Combat/Health.cs): 최대 체력, 현재 체력, 피해, 회복과 사망을 담당합니다. `Damaged`는 직접 공격의 피격 연출, `DamageResolved`는 출혈을 포함한 모든 피해, `HealthChanged`는 체력 표시, `Died`는 사망 처리를 위한 이벤트입니다.
 - [`ArmorProtection.cs`](Assets/_Game/Scripts/Combat/ArmorProtection.cs): 장착 방탄복의 감소율만큼 피해를 내구도로 흡수하고 내구도가 0이면 방어 효과를 제거합니다.
 - [`AmmunitionState.cs`](Assets/_Game/Scripts/Combat/AmmunitionState.cs): 현재 무기의 탄창과 인벤토리 예비탄을 HUD에 보여 주기 위한 순수 C# 상태 객체입니다. 실제 탄창은 `InventoryEntry`, 실제 예비탄은 `PlayerInventory`가 소유하며 이 객체는 표시 동기화와 장전 수량 계산을 담당합니다.
 - [`WeaponDefinition.cs`](Assets/_Game/Scripts/Combat/WeaponDefinition.cs): 무기 이름, 발사 방식, 피해량, 사거리, 발사·재장전 시간, 탄창, 탄종, 산탄 확산, 명중 오차와 적 밀림을 저장하는 `ScriptableObject`입니다.
+- [`MeleeWeaponDefinition.cs`](Assets/_Game/Scripts/Combat/MeleeWeaponDefinition.cs): 단검·도끼의 공격 방식, 피해, 사거리, 판정 폭, 공격 간격, 최대 대상 수, 밀림, 관통력과 소음 반경을 저장합니다. 새 근접무기는 이 데이터 에셋과 `ItemDefinition` 연결만 추가하면 됩니다.
+- [`WeaponAttachmentDefinition.cs`](Assets/_Game/Scripts/Combat/WeaponAttachmentDefinition.cs): 조준경·총구·탄창 슬롯, 호환 탄종과 무기 능력치 보정값을 저장합니다.
 - [`HitscanRaycaster.cs`](Assets/_Game/Scripts/Combat/HitscanRaycaster.cs): 재사용 배열로 발사 선상의 충돌 후보를 모으고 플레이어 자신의 Collider를 제외한 가장 가까운 명중점을 찾는 일반 C# 도우미입니다. Player에 붙이는 컴포넌트는 아닙니다.
 - [`DamageFlash.cs`](Assets/_Game/Scripts/Combat/DamageFlash.cs): `Health.Damaged`를 구독해 피격된 스프라이트 색을 잠깐 바꿨다가 원래 색으로 되돌립니다.
 - [`WeaponFireFeedback.cs`](Assets/_Game/Scripts/Combat/WeaponFireFeedback.cs): `ShotResolved`를 구독해 총구 빛과 짧은 탄도선을 표시합니다.
@@ -200,13 +205,14 @@ InventoryHud가 마우스 입력을 받음
 
 ### 4.4 Player
 
-- [`PlayerMovement.cs`](Assets/_Game/Scripts/Player/PlayerMovement.cs): WASD 입력을 XZ 이동으로 바꾸고 대각선 속도를 정규화하며 Shift 달리기 요청과 중력을 적용합니다.
-- [`PlayerSurvival.cs`](Assets/_Game/Scripts/Player/PlayerSurvival.cs): 레이드별 포만감과 기력, 음식 회복, 낮은 포만감 이동 페널티, 달리기 소모·회복·탈진 규칙을 계산합니다.
+- [`PlayerMovement.cs`](Assets/_Game/Scripts/Player/PlayerMovement.cs): WASD 이동·Shift 달리기·중력과 Space 전방 구르기를 처리합니다. 구르기는 시작 방향을 고정하고 최대 기력 25%를 지불한 뒤 충돌체로 짧게 이동하며, 완료하거나 조작이 잠기면 무적과 그림 회전을 해제합니다.
+- [`PlayerSurvival.cs`](Assets/_Game/Scripts/Player/PlayerSurvival.cs): 레이드별 포만감과 기력, 음식 회복, 낮은 포만감 이동 페널티, 달리기 소모·회복·탈진 규칙을 계산합니다. 구르기는 최대 기력 기준 비율로 비용을 지불하고 동작 중 자연 회복을 잠시 미룹니다.
 - [`PlayerAim.cs`](Assets/_Game/Scripts/Player/PlayerAim.cs): 카메라에서 마우스 방향으로 광선을 쏘고 지면 또는 무기 높이 평면과 만나는 점을 구해 수평 조준 방향을 만듭니다.
 - [`PlayerSpriteAnimator.cs`](Assets/_Game/Scripts/Player/PlayerSpriteAnimator.cs): 레이드에서는 이동 방향보다 마우스 조준 방향을 우선해 8방향 캐릭터 그림을 고르고, 거점에서는 이동 방향을 사용합니다.
-- [`PlayerCombat.cs`](Assets/_Game/Scripts/Player/PlayerCombat.cs): 장착된 주무기·보조무기 선택, 무기별 탄창 소비, 인벤토리 탄약 재장전, 발사 간격과 산탄 펠릿 흐름을 담당합니다. 실제 물리 후보 검색은 `HitscanRaycaster`에 맡깁니다.
+- [`PlayerCombat.cs`](Assets/_Game/Scripts/Player/PlayerCombat.cs): 장착된 주무기·보조무기 선택, 총기 탄창 소비·재장전·산탄과 근접무기의 공통 SphereCast 공격을 담당합니다. 단검은 첫 대상, 도끼는 설정된 최대 대상까지 처리하고 벽에서는 판정을 멈춥니다.
 - [`PlayerInteraction.cs`](Assets/_Game/Scripts/Player/PlayerInteraction.cs): 플레이어 주변의 가장 가까운 `IInteractable`을 찾아 안내 문구를 표시하고 E키 입력을 전달합니다.
 - [`PlayerControlGate.cs`](Assets/_Game/Scripts/Player/PlayerControlGate.cs): 인벤토리 또는 레이드 종료처럼 여러 잠금 사유를 안전하게 합쳐 월드 조작을 켜고 끕니다.
+- [`PlayerCondition.cs`](Assets/_Game/Scripts/Player/PlayerCondition.cs): 플레이어의 부위별 손상 없이 출혈·골절만 관리합니다. 출혈은 초당 체력을 줄이며 붕대로 치료하고, 골절은 이동을 느리게 하고 조준 오차·재장전 시간을 늘리며 부목으로 치료합니다.
 
 ### 4.5 Items
 
@@ -235,11 +241,15 @@ InventoryHud가 마우스 입력을 받음
 
 ### 4.8 Core와 레이드 수명 주기
 
-- [`GameSceneNavigator.cs`](Assets/_Game/Scripts/Core/GameSceneNavigator.cs): 세 씬 이름을 한곳에 정의하고 Build Settings에 들어 있는 씬만 안전하게 불러오며, 이전 씬의 일시정지 시간 배율이 다음 씬으로 넘어가지 않게 복구합니다.
-- [`BootstrapController.cs`](Assets/_Game/Scripts/Core/BootstrapController.cs): 새 실행의 임시 레이드 결과를 비우고 저장 데이터를 불러온 다음 Hideout으로 이동합니다.
+- [`GameSceneNavigator.cs`](Assets/_Game/Scripts/Core/GameSceneNavigator.cs): 시작·거점·기능 테스트 레이드·학교 레이드 씬 이름을 한곳에 정의하고 Build Settings에 들어 있는 씬만 안전하게 불러오며, 이전 씬의 일시정지 시간 배율이 다음 씬으로 넘어가지 않게 복구합니다.
+- [`RaidRegionDefinition.cs`](Assets/_Game/Scripts/Core/RaidRegionDefinition.cs): 출격 화면에 표시할 지역 ID·이름·설명·위험도와 실제 씬 이름을 저장합니다. 현재는 학교만 연결하며 추가 지역은 사용자가 나중에 같은 구조로 확장할 수 있습니다.
+- [`LoadingScreenCatalog.cs`](Assets/_Game/Scripts/Core/LoadingScreenCatalog.cs): 모든 로딩에서 쓸 공용 이미지와 지역별 이미지를 관리하고, 해당 지역의 `Available`이 true일 때만 무작위 후보에 추가합니다.
+- [`LoadingSceneController.cs`](Assets/_Game/Scripts/Core/LoadingSceneController.cs): Navigator가 전달한 목적지 씬을 비동기로 불러오며 Unity의 0~0.9 진행률을 0~100%로 바꾸고 최소 표시 시간 뒤 활성화합니다.
 - [`RaidLoadoutApplier.cs`](Assets/_Game/Scripts/Core/RaidLoadoutApplier.cs): Hideout에서 선택한 출격 준비 스냅샷을 레이드 시작 시 실제 `InventoryEntry`로 복원합니다. 복원 실패 항목은 창고로 돌려보내고, 준비한 권총이 없으면 보조무기 슬롯에 테스트 권총을 실제 장착합니다.
 - [`RaidRules.cs`](Assets/_Game/Scripts/Core/RaidRules.cs): 요구 좀비 처치 수와 최소 탈출 시간을 맵과 분리된 에셋으로 저장합니다. 레이드 제한 시간은 없습니다.
-- [`RaidMapLayout.cs`](Assets/_Game/Scripts/Core/RaidMapLayout.cs): 36×36 레이드 맵의 경계, 시작·탈출 지점, 다섯 구역 중심·표시 이름과 좀비 스폰 좌표를 한곳에서 관리합니다.
+- [`RaidMapLayout.cs`](Assets/_Game/Scripts/Core/RaidMapLayout.cs): 36×36 기능 검증용 `RaidPrototype`의 경계, 시작·탈출 지점, 다섯 구역 중심·표시 이름과 좀비 스폰 좌표를 관리합니다. 학교 씬에서는 아래 학교 전용 배치 기준으로 연결합니다.
+- [`SchoolRaidMapLayout.cs`](Assets/_Game/Scripts/Core/SchoolRaidMapLayout.cs): 84×84 학교 부지의 시작·탈출 위치, 1·2층을 구분한 아홉 구역, 17개 좀비 스폰 위치·위험도·활성 시간과 HUD 구역 이름을 관리합니다.
+- [`RaidVisitTracker.cs`](Assets/_Game/Scripts/Core/RaidVisitTracker.cs): 플레이어가 실제로 들어간 학교 구역 ID를 중복 없이 기록하고 레이드 종료 결과에 전달합니다.
 - [`RaidSession.cs`](Assets/_Game/Scripts/Core/RaidSession.cs): 탈출과 사망을 감시하고 처치 수와 경과 시간을 계산하며 레이드가 단 한 번만 끝나도록 조정합니다. 결과 확정 뒤 플레이어와 좀비 행동을 멈추고, 사망했을 때 손실 수량을 기록한 직후 모든 레이드 아이템을 비웁니다.
 - [`RaidResult.cs`](Assets/_Game/Scripts/Core/RaidResult.cs): 정상 탈출과 플레이어 사망 종료 이유, 아이템·격자·장비 스냅샷 자료형 및 결과를 씬 사이 전달하는 `RaidResultStore`를 정의합니다.
 - [`RaidResultFactory.cs`](Assets/_Game/Scripts/Core/RaidResultFactory.cs): 탈출 성공이면 현재 인벤토리·장비를 깊게 복사하고, 사망이면 분실 수량만 기록한 `RaidResult`를 만듭니다.
@@ -248,46 +258,58 @@ InventoryHud가 마우스 입력을 받음
 ### 4.9 Hideout과 저장
 
 - [`HideoutStateStore.cs`](Assets/_Game/Scripts/Hideout/HideoutStateStore.cs): 창고와 출격 준비 목록을 메모리에 보관합니다. 성공 결과를 한 번만 창고에 반영하고 두 목록 사이 이동을 처리합니다.
-- [`HideoutSaveService.cs`](Assets/_Game/Scripts/Hideout/HideoutSaveService.cs): 버전 5 평탄화 JSON을 임시 파일에 먼저 쓴 뒤 교체하고, 1·2·3·4번 파일도 호환해서 읽습니다. 시설 레벨, 공통 임무 진행도와 완료 횟수도 함께 보존합니다.
-- [`HideoutController.cs`](Assets/_Game/Scripts/Hideout/HideoutController.cs): 두 거점 격자를 복원하고 임의의 두 격자 사이 이동·분할·보상·시설 강화·제작과 저장을 조정합니다. 이 공통 이동 입구 덕분에 창고와 출격 준비뿐 아니라 가방·조끼 내부도 같은 규칙으로 다룹니다. 창고 확장과 제작법 해금도 시설 레벨에 맞춰 적용합니다.
+- [`HideoutSaveService.cs`](Assets/_Game/Scripts/Hideout/HideoutSaveService.cs): 버전 10 평탄화 JSON을 임시 파일에 먼저 쓴 뒤 교체하고 직전 정상 파일을 `.bak`으로 보존합니다. 상인 평판·재고와 제작 대기열·발전기 연료까지 이전 저장과 호환해 읽습니다.
+- [`HideoutController.cs`](Assets/_Game/Scripts/Hideout/HideoutController.cs): 두 거점 격자를 복원하고 이동·분할·보상·시설 강화·제작·거래와 저장을 조정합니다. 창고와 출격 준비뿐 아니라 가방·조끼 내부도 같은 규칙으로 다룹니다.
+- [`HideoutEconomyStateStore.cs`](Assets/_Game/Scripts/Hideout/HideoutEconomyStateStore.cs): 상인과 임무가 공유하는 크레딧 잔액을 보관합니다.
+- [`HideoutTradeService.cs`](Assets/_Game/Scripts/Hideout/HideoutTradeService.cs): 구매 가격, 판매 가격, 창고 공간과 화폐를 검사한 뒤 거래를 원자적으로 적용합니다.
 - [`HideoutFacilityDefinition.cs`](Assets/_Game/Scripts/Hideout/HideoutFacilityDefinition.cs): 시설 이름·종류·레벨 효과와 단계별 실제 아이템 강화 비용을 정의하고, 실행 중 레벨 저장소를 함께 제공합니다.
 - [`HideoutFacility.cs`](Assets/_Game/Scripts/Hideout/HideoutFacility.cs): 모든 월드 시설을 공통 E키 대상으로 만들고 강화 레벨에 따라 색과 높이를 갱신합니다.
-- [`HideoutWorldController.cs`](Assets/_Game/Scripts/Hideout/HideoutWorldController.cs): 거점 카메라를 따라가게 하고 시설별 Canvas를 하나씩 열며, 화면이 열린 동안 플레이어 조작을 잠급니다.
-- [`HideoutMissionDefinition.cs`](Assets/_Game/Scripts/Hideout/HideoutMissionDefinition.cs): 처치·아이템 회수·성공 탈출 목표, 반복 가능 여부와 실제 아이템 보상을 정의합니다.
+- [`HideoutWorldController.cs`](Assets/_Game/Scripts/Hideout/HideoutWorldController.cs): 거점 카메라를 따라가게 하고 시설별 Canvas를 하나씩 열며, 화면이 열린 동안 플레이어 조작을 잠급니다. 시설이 닫힌 상태에서는 Tab으로 실제 창고·출격 격자를 바로 엽니다.
+- [`HideoutMissionDefinition.cs`](Assets/_Game/Scripts/Hideout/HideoutMissionDefinition.cs): 처치·아이템 회수·성공 탈출·학교 구역 방문 목표, 선행 임무, 위험도, 반복 가능 여부와 실제 아이템·크레딧 보상을 정의합니다.
 - [`HideoutMissionStateStore.cs`](Assets/_Game/Scripts/Hideout/HideoutMissionStateStore.cs): 현재 임무의 공통 진행도와 임무별 완료 횟수를 보관하고 레이드 결과를 목표 종류에 맞게 계산합니다.
 - [`HideoutMissionRewardService.cs`](Assets/_Game/Scripts/Hideout/HideoutMissionRewardService.cs): 모든 보상이 들어갈 공간을 임시 격자에서 먼저 검사한 뒤 실제 창고에 전량 지급합니다.
 - [`HideoutMissionBoard.cs`](Assets/_Game/Scripts/Hideout/HideoutMissionBoard.cs): 보드 레벨에 맞는 임무 선택·수락·보상 수령·포기를 처리하고 변경 직후 저장합니다.
 - [`HideoutRecipeDefinition.cs`](Assets/_Game/Scripts/Hideout/HideoutRecipeDefinition.cs): 시설 종류·해금 레벨·재료·결과 아이템을 가진 제작법 데이터입니다.
 - [`HideoutCraftingService.cs`](Assets/_Game/Scripts/Hideout/HideoutCraftingService.cs): 발전기 할인, 재료 전량 소비와 결과 아이템 공간을 시뮬레이션한 뒤 제작을 적용합니다.
+- [`HideoutCraftQueueStateStore.cs`](Assets/_Game/Scripts/Hideout/HideoutCraftQueueStateStore.cs): 제작 작업의 남은 시간·완료·수령 상태와 발전기 켜짐·연료를 저장합니다.
 
 ### 4.10 UI
 
 모든 런타임 화면은 uGUI `Canvas`를 사용합니다. 각 HUD는 게임 상태를 직접 바꾸지 않고 연결된 컨트롤러의 상태를 읽거나 버튼 명령만 전달하므로, 프리팹의 이미지·글꼴·배치를 바꿔도 인벤토리·전투·탈출 규칙은 그대로 유지됩니다.
 
-- [`BootstrapHud.cs`](Assets/_Game/Scripts/UI/BootstrapHud.cs): 저장 불러오기 상태와 Hideout 자동 진입 안내를 표시합니다.
-- [`HideoutResultHud.cs`](Assets/_Game/Scripts/UI/HideoutResultHud.cs): 직전 결과와 두 격자를 표시하고 드래그·회전·Ctrl 빠른 이동·Shift 분할·자동 정리·출격 명령을 전달합니다. 가방이나 조끼를 열면 부모 격자와 내부 격자를 나란히 관리하며, 거점에서는 우클릭 빠른 이동을 사용하지 않습니다.
+- [`TitleMenuHud.cs`](Assets/_Game/Scripts/UI/TitleMenuHud.cs): 별도 Title 씬에서 게임 시작·로드·설정·종료를 처리합니다. 저장 파일이 없으면 로드를 잠그고, 기존 기록을 지우는 새 게임은 확인창을 거칩니다.
+- [`LoadingScreenHud.cs`](Assets/_Game/Scripts/UI/LoadingScreenHud.cs): 해금된 후보 중 직전 그림과의 연속 중복을 줄여 한 장을 고르고, 원본 비율을 유지한 전체 화면 배경·상태 문구·백분율·진행 막대를 표시합니다.
+- [`HideoutResultHud.cs`](Assets/_Game/Scripts/UI/HideoutResultHud.cs): 직전 결과와 창고·출격 두 격자를 표시하고 드래그·회전·Ctrl 빠른 이동·Shift 분할·자동 정리 명령을 전달합니다. 가방이나 조끼를 열면 부모 격자와 내부 격자를 나란히 관리하며, 아이템 길게 누르기 팝업의 거점 무기 비교 대상을 찾습니다. 실제 출발 명령은 별도 화면이 담당합니다.
+- [`HideoutDeploymentHud.cs`](Assets/_Game/Scripts/UI/HideoutDeploymentHud.cs): 지역 에셋의 설명·위험도와 준비 아이템 수량을 보여 주고, 선택한 씬 이름을 `HideoutController.StartRaid`에 전달합니다.
 - [`HideoutMissionBoardHud.cs`](Assets/_Game/Scripts/UI/HideoutMissionBoardHud.cs): 선택 임무, 목표, 누적 진행도와 수락·포기 버튼을 표시합니다.
 - [`HideoutFacilityUpgradeHud.cs`](Assets/_Game/Scripts/UI/HideoutFacilityUpgradeHud.cs): 현재 시설 효과, 보유/필요 강화 재료와 공개 제작법을 표시하고 강화·제작 명령을 전달합니다.
+- [`HideoutTraderHud.cs`](Assets/_Game/Scripts/UI/HideoutTraderHud.cs): 크레딧, 판매 상품과 창고 아이템을 표시하고 구매·판매 명령을 전달합니다.
+- [`TutorialHud.cs`](Assets/_Game/Scripts/UI/TutorialHud.cs): 현재 플레이 단계에 필요한 안내를 보여 주고 F1로 다시 열 수 있게 합니다.
 - [`HideoutWorldHud.cs`](Assets/_Game/Scripts/UI/HideoutWorldHud.cs): 거점 이동 안내와 현재 가까운 시설의 E키 사용 문구를 표시합니다.
 - [`AmmoHud.cs`](Assets/_Game/Scripts/UI/AmmoHud.cs): 현재 구역, 탄창, 예비탄, 재장전, 체력·방탄·포만감·기력과 이동 페널티를 표시합니다.
-- [`InventoryHud.cs`](Assets/_Game/Scripts/UI/InventoryHud.cs): Canvas 인벤토리의 Tab 열기, 선택, 드래그, R 회전, Shift 분할, Ctrl 빠른 이동, 우클릭 사용·장착, 장비 슬롯 교환, 두 번 확인하는 Delete 버리기와 자동 정리를 조정합니다. 사용 진행률과 모든 주요 실패 이유를 보여 주고, 열린 동안 월드 조작을 잠그며 페이드·크기 전환을 재생합니다.
+- [`InventoryHud.cs`](Assets/_Game/Scripts/UI/InventoryHud.cs): Canvas 인벤토리의 Tab 열기, 선택, 드래그, R 회전, Shift 분할, Ctrl 빠른 이동, 우클릭 사용·장착, 장비 슬롯 교환, 두 번 확인하는 Delete 버리기와 자동 정리를 조정합니다. 아이템을 길게 누르면 팝업에 상세 정보와 장착 무기 비교를 전달하고, 사용 진행률과 주요 실패 이유는 작은 상태 영역에 별도로 보여 줍니다. 열린 동안 월드 조작을 잠그며 페이드·크기 전환도 재생합니다.
 - 시체나 아이템 상자를 E키로 수색하면 `PlayerInteraction.LootContainerOpened` 이벤트를 받아 보조 격자에 외부 전리품을 표시합니다. 레이드에서는 전리품·가방·조끼 탭을 눌러 필요한 보조 격자를 언제든 다시 선택할 수 있습니다.
 - [`IInventoryGridViewOwner.cs`](Assets/_Game/Scripts/UI/IInventoryGridViewOwner.cs): 레이드 인벤토리와 거점이 같은 격자 프리팹의 클릭·드래그 명령을 받을 수 있게 하는 공통 약속입니다.
 - [`InventoryDragSession.cs`](Assets/_Game/Scripts/UI/InventoryDragSession.cs): 레이드와 거점 HUD가 공유하는 드래그 시작·미리보기·드롭 좌표·취소 상태입니다. Canvas에 붙이지 않는 일반 C# 객체이며 실제 이동 가능 여부는 판단하지 않습니다.
 - [`InventoryGridView.cs`](Assets/_Game/Scripts/UI/InventoryGridView.cs): 플레이어·가방·조끼·전리품·거점의 `GridData`를 빈 칸과 아이템 프리팹으로 다시 그리고 화면 좌표를 격자 좌표로 변환합니다. 드래그 중 이동은 초록색, 중첩은 청록색, 교환은 노란색, 불가능은 빨간색 반투명 칸으로 그립니다.
-- [`InventoryItemView.cs`](Assets/_Game/Scripts/UI/InventoryItemView.cs): 실제 점유 모양만 Image로 만들며 Ctrl·Shift 상태가 포함된 클릭과 드래그 이벤트를 현재 격자 화면 소유자에게 전달합니다.
+- [`InventoryItemView.cs`](Assets/_Game/Scripts/UI/InventoryItemView.cs): 실제 점유 모양만 Image로 만들며 Ctrl·Shift 상태가 포함된 클릭과 드래그 이벤트를 현재 격자 화면 소유자에게 전달합니다. 왼쪽 버튼을 0.45초간 움직이지 않고 누르면 정보 팝업을 요청하고, 길게 누르기 뒤의 클릭은 소비해 아이템 사용이나 컨테이너 열기가 함께 실행되지 않게 합니다.
+- [`ItemDetailPopup.cs`](Assets/_Game/Scripts/UI/ItemDetailPopup.cs): 기존 고정 설명 패널을 재사용해 길게 누르는 동안만 커서 옆에 표시합니다. 짧은 설명과 긴 무기 정보의 가로·세로 크기를 따로 계산하고 화면 가장자리에서는 팝업 방향을 뒤집어 전체 내용이 Canvas 안에 남게 합니다.
 - [`ItemDetailFormatter.cs`](Assets/_Game/Scripts/UI/ItemDetailFormatter.cs): 아이템 상세, 방탄복 상태와 같은 슬롯 무기의 좋음·나쁨 수치 비교 문구를 만듭니다.
 - [`EquipmentSlotView.cs`](Assets/_Game/Scripts/UI/EquipmentSlotView.cs): 장비 슬롯 한 칸의 이름, 장착 아이템, 현재 사용 무기와 테스트 지급 여부를 표시합니다. 장착 아이템을 격자로 드래그해 해제하거나 격자 아이템을 슬롯에 놓아 안전하게 교환하는 입력도 전달합니다.
 - [`ExtractionHud.cs`](Assets/_Game/Scripts/UI/ExtractionHud.cs): 탈출 조건, 활성화 여부, 남은 시간과 성공 상태를 표시합니다.
-- [`PlayerDamageHud.cs`](Assets/_Game/Scripts/UI/PlayerDamageHud.cs): 플레이어가 피해를 받으면 붉은 화면 오버레이를 잠깐 표시합니다.
-- [`RaidResultHud.cs`](Assets/_Game/Scripts/UI/RaidResultHud.cs): 레이드 경과 시간·처치 조건을 실시간 표시하고 탈출과 사망 결과를 구분합니다.
+- [`PlayerDamageHud.cs`](Assets/_Game/Scripts/UI/PlayerDamageHud.cs): 플레이어가 직접 공격을 받으면 붉은 화면 오버레이를 잠깐 표시합니다. 출혈 피해는 이 연출을 반복하지 않습니다.
+- [`PlayerConditionHud.cs`](Assets/_Game/Scripts/UI/PlayerConditionHud.cs): 출혈·골절과 현재 이동·조준·재장전 불이익을 표시하고, 출혈 중에는 조준을 가리지 않는 붉은 화면 테두리를 점멸시킵니다.
+- [`RaidResultHud.cs`](Assets/_Game/Scripts/UI/RaidResultHud.cs): 레이드 경과 시간·처치 조건을 실시간 표시하고 탈출 결과와 구체적인 사망 원인을 구분합니다.
 
 ### 4.11 Editor 전용 도구
 
 이 폴더 코드는 빌드된 게임에서 실행되는 게임 규칙이 아니라 Unity 에디터 안에서 개발을 돕는 도구입니다.
 
 - [`ItemDefinitionEditor.cs`](Assets/_Game/Scripts/Editor/ItemDefinitionEditor.cs): `ItemDefinition` 인스펙터에 최대 7×7 셀 편집기를 추가합니다. 셀을 눌러 실제 점유 모양을 직접 그릴 수 있습니다.
-- [`PrototypeContentBuilder.cs`](Assets/_Game/Scripts/Editor/PrototypeContentBuilder.cs): 아이템 정의, 카탈로그, 모든 Canvas UI 프리팹, 36×36 다섯 구역 레이드 맵, 세 씬과 Build Settings를 한꺼번에 초기 상태로 되돌리는 수동 에디터 도구입니다. 누락 검사를 자동 실행하지 않으며 전체 테스트 콘텐츠를 다시 만들 때만 사용합니다.
+- [`PrototypeContentBuilder.cs`](Assets/_Game/Scripts/Editor/PrototypeContentBuilder.cs): 아이템 정의, 카탈로그, Canvas UI 프리팹, 거점과 학교 씬 및 Build Settings를 같은 규칙으로 다시 만드는 에디터 도구입니다. 거점 전용과 학교 전용 재생성 메뉴도 제공합니다.
+- [`SchoolRaidContentLayout.cs`](Assets/_Game/Scripts/Editor/SchoolRaidContentLayout.cs): 학교의 바닥 아이템과 전리품 상자 위치를 `ItemId` 기반 표로 분리해 생성 순서가 바뀌어도 다른 아이템이 놓이지 않게 합니다.
+- [`SurvivalUiThemeApplicator.cs`](Assets/_Game/Scripts/Editor/SurvivalUiThemeApplicator.cs): 기존 Canvas 연결과 배치를 유지한 채 공용 색상·테두리·패널 질감을 UI 프리팹에 적용합니다.
+- [`PlayablePrototypeUpgradeApplicator.cs`](Assets/_Game/Scripts/Editor/PlayablePrototypeUpgradeApplicator.cs): 이번 학교·임무·UI 변경을 새 코드가 임포트된 뒤 프로젝트에 한 번만 반영하며, 필요하면 메뉴에서 다시 실행할 수 있습니다.
 
 ### 4.12 어셈블리 정의
 
@@ -344,7 +366,7 @@ Health.TakeDamage
   -> 체력이 0이면 Died: AI 사망, 레이드 종료 또는 사망음
 ```
 
-장비 슬롯에 유효한 무기가 없으면 `Ammo`가 만들어지지 않아 발사와 재장전이 모두 거부됩니다. 실제 테스트 레이드는 `RaidLoadoutApplier`가 보조무기 슬롯에 권총 `InventoryEntry`를 장착해 시작합니다. 탄창은 각 무기의 `InventoryEntry`에 저장되므로 두 발을 사용한 소총에서 권총으로 바꿨다가 돌아와도 소총 탄창이 다시 가득 차지 않습니다.
+총기를 장착하면 `Ammo`가 만들어지고, 근접무기를 장착하면 탄창 없이 `MeleeWeaponDefinition`의 수치로 공격합니다. 아무 무기도 없을 때는 맨손 기본 수치를 사용합니다. 실제 테스트 레이드는 `RaidLoadoutApplier`가 보조무기 슬롯에 권총 `InventoryEntry`를 장착해 시작합니다. 탄창은 각 총기의 `InventoryEntry`에 저장되므로 두 발을 사용한 소총에서 다른 무기로 바꿨다가 돌아와도 소총 탄창이 다시 가득 차지 않습니다.
 
 ```text
 R키 재장전
@@ -414,9 +436,10 @@ InventoryHud의 자동 정리 버튼
 ```text
 소모품 우클릭
   -> PlayerInventory.GetUseFailureReason으로 체력·포만감과 소유 상태 확인
-  -> 치료 1.5초 또는 음식 1.2초 진행률 표시
+  -> 붕대 2.2초, 부목 3.5초, 구급상자 4초 또는 음식 1.2초 진행률 표시
+  -> 붕대는 출혈, 부목은 골절, 구급상자는 전체 체력만 치료
   -> 완료 시에만 실제 효과 적용과 수량 1개 소비
-  -> 창을 닫으면 진행 중 사용 취소
+  -> 직접 피격되거나 창을 닫으면 진행 중 사용 취소, 수량은 그대로 유지
 
 Tab 입력
   -> InventoryHud.SetOpen(true)
@@ -612,8 +635,10 @@ HideoutController
 10. [`HideoutResultHud.cs`](Assets/_Game/Scripts/UI/HideoutResultHud.cs)
 11. [`HideoutMissionBoardHud.cs`](Assets/_Game/Scripts/UI/HideoutMissionBoardHud.cs)
 12. [`HideoutWorldHud.cs`](Assets/_Game/Scripts/UI/HideoutWorldHud.cs)
-13. [`BootstrapController.cs`](Assets/_Game/Scripts/Core/BootstrapController.cs)
-14. [`GameSceneNavigator.cs`](Assets/_Game/Scripts/Core/GameSceneNavigator.cs)
+13. [`LoadingScreenCatalog.cs`](Assets/_Game/Scripts/Core/LoadingScreenCatalog.cs)
+14. [`LoadingSceneController.cs`](Assets/_Game/Scripts/Core/LoadingSceneController.cs)
+15. [`LoadingScreenHud.cs`](Assets/_Game/Scripts/UI/LoadingScreenHud.cs)
+16. [`GameSceneNavigator.cs`](Assets/_Game/Scripts/Core/GameSceneNavigator.cs)
 
 목표: 메모리 상태, 씬 이동, 디스크 저장과 한 번만 적용되는 결과 처리의 차이를 이해합니다.
 
@@ -623,27 +648,30 @@ HideoutController
 
 1. [`ItemDefinitionEditor.cs`](Assets/_Game/Scripts/Editor/ItemDefinitionEditor.cs)
 2. [`PrototypeContentBuilder.cs`](Assets/_Game/Scripts/Editor/PrototypeContentBuilder.cs)
-3. `Assets/_Game/Tests/EditMode` 아래 테스트 파일
+3. [`SchoolRaidContentLayout.cs`](Assets/_Game/Scripts/Editor/SchoolRaidContentLayout.cs)
+4. [`SurvivalUiThemeApplicator.cs`](Assets/_Game/Scripts/Editor/SurvivalUiThemeApplicator.cs)
+5. `Assets/_Game/Tests/EditMode` 아래 테스트 파일
 
 목표: 실제 게임 코드와 개발 도구를 분리하는 법, 버그 재발을 테스트로 막는 법을 이해합니다.
 
 
 ## 7. 테스트 파일 지도
 
-- [`CombatTests.cs`](Assets/_Game/Tests/EditMode/CombatTests.cs): 탄약, 발사 조건, 무장 해제 발사 차단, 장착 무기 수치 적용, 무기 전환 후 탄창 유지, 탄종별 소비, 산탄 확산 각도와 한 쉘 소비, 부족한 탄약의 부분 재장전, 잘못된 무기 데이터 거부, 피해 이벤트, 발사 결과, 다중 조작 잠금과 파괴된 잠금 소유자 정리, 인벤토리 잠금과 Canvas 드롭 좌표, 임시 음원, 상호작용·탄약·탈출 표시 문구와 인벤토리 전환 곡선을 검사합니다.
+- [`CombatTests.cs`](Assets/_Game/Tests/EditMode/CombatTests.cs): 탄약, 발사 조건, 총기·근접무기 장착 수치, 단검의 실제 전방 피해, 무기 전환 후 탄창 유지, 탄종별 소비, 산탄 확산과 한 쉘 소비, 재장전, 피해 이벤트, 조작 잠금, HUD 표시 문구를 검사합니다.
 - [`MovementAndAimTests.cs`](Assets/_Game/Tests/EditMode/MovementAndAimTests.cs): 대각선 이동 정규화와 Ray의 지면·무기 높이 평면 투영을 검사합니다.
 - [`SurvivalTests.cs`](Assets/_Game/Tests/EditMode/SurvivalTests.cs): 포만감 이동 속도, 기력 소모·회복, 소모품 효과·소비 방지·실패 이유와 HUD 문구를 검사합니다.
-- [`RaidMapLayoutTests.cs`](Assets/_Game/Tests/EditMode/RaidMapLayoutTests.cs): 시작·탈출·구역·스폰 위치와 대표 좌표의 현재 구역 표시 이름을 검사합니다.
+- [`RaidMapLayoutTests.cs`](Assets/_Game/Tests/EditMode/RaidMapLayoutTests.cs): 기능 검증 맵과 84×84 학교의 시작·탈출 거리, 구역·스폰 위치와 대표 좌표의 현재 구역 표시 이름을 검사합니다.
 - [`ZombieAITests.cs`](Assets/_Game/Tests/EditMode/ZombieAITests.cs): NavMesh 목적지 갱신 간격·이동 임계값·회피 우선순위, 상태 전환과 스폰 난이도·생존 제한·생성 간격·해금·가중치 선택을 검사합니다.
 - [`InventoryTests.cs`](Assets/_Game/Tests/EditMode/InventoryTests.cs): 중첩, 공간 부족 롤백, 회전, 장착, 분할, 사용자 정의 모양, 소총·탄약 교환, 다중 겹침, 자동 정리, 미리보기와 실제 계획 일치, 상태를 보존하는 장비 교환, 자기 컨테이너 이동 금지와 버리기 실패 이유를 검사합니다.
 - [`ExtractionTests.cs`](Assets/_Game/Tests/EditMode/ExtractionTests.cs): 요구 수량의 경계값과 카운트다운 진행·취소를 검사합니다.
 - [`RaidResultTests.cs`](Assets/_Game/Tests/EditMode/RaidResultTests.cs): 성공 결과의 인벤토리 보존, 사망 결과의 보상 차단, 루트·장비·컨테이너 내부 전체 제거와 테스트 지급 권총의 보상·손실 제외를 검사합니다.
-- [`HideoutTests.cs`](Assets/_Game/Tests/EditMode/HideoutTests.cs): 보상 1회 지급, 창고·출격 이동, 컨테이너 복원, 임무 세 목표·완료 기록·보상 공간 검사, 시설 효과·제작 할인과 버전 5 저장을 검사합니다.
-- [`RoadmapFeatureTests.cs`](Assets/_Game/Tests/EditMode/RoadmapFeatureTests.cs): 방어구, 좀비 드롭, 필드 전리품 추첨과 중복 생성 방지, 레이드 조건, 두 격자 이동 롤백, 현재 버전 5 저장과 버전 1·2·3 호환, 상세 설명 문구를 검사합니다.
+- [`HideoutTests.cs`](Assets/_Game/Tests/EditMode/HideoutTests.cs): 보상 1회 지급, 창고·출격 이동, 컨테이너 복원, 임무 목표·완료 기록·보상 공간 검사, 시설 효과·제작 할인, 컨테이너 내부 제작 재료와 현재 버전 저장을 검사합니다.
+- [`RoadmapFeatureTests.cs`](Assets/_Game/Tests/EditMode/RoadmapFeatureTests.cs): 방어구, 좀비 드롭, 필드 전리품 추첨과 중복 생성 방지, 레이드 조건, 두 격자 이동 롤백, 현재 버전 저장과 구버전 호환, 상세 설명 문구를 검사합니다.
+- [`PrototypeExpansionTests.cs`](Assets/_Game/Tests/EditMode/PrototypeExpansionTests.cs): 상인·화폐, 부착물, 출혈·골절 판정과 화면 테두리, 전투 명중 위치, 연속 임무, 튜토리얼과 소음 이벤트를 검사합니다.
 - [`ItemRarityTests.cs`](Assets/_Game/Tests/EditMode/ItemRarityTests.cs): 네 희귀도의 한글 이름과 인벤토리 아이템 색상 구분을 검사합니다.
-- [`RoadmapPlayModeTests.cs`](Assets/_Game/Tests/PlayMode/RoadmapPlayModeTests.cs): 실제 방어구 피해 적용, 좀비 사망 드롭과 세 게임 씬의 핵심 시스템 연결을 실행 중에 검사합니다.
+- [`RoadmapPlayModeTests.cs`](Assets/_Game/Tests/PlayMode/RoadmapPlayModeTests.cs): 실제 방어구 피해 적용, 출혈 테두리와 의료품 치료·소비, 전방 구르기의 이동 거리·벽 충돌·기력 비용·무적 해제, 좀비 사망 드롭과 게임 씬 연결을 실행 중에 검사합니다.
 
-Unity에서 `Window > General > Test Runner`를 열고 EditMode와 PlayMode 탭의 테스트를 실행할 수 있습니다. 2026-09-20 기준 EditMode 200개와 PlayMode 3개가 모두 통과했으며 실패하거나 건너뛴 테스트는 없습니다. 플레이어 테스트 빌드는 사용량을 아끼고 최종 이미지 리소스를 반영한 화면까지 함께 확인하기 위해 마지막 안정화 단계로 미뤘습니다.
+Unity에서 `Window > General > Test Runner`를 열고 EditMode와 PlayMode 탭의 테스트를 실행할 수 있습니다. 2026-10-14 구르기 변경 검증에서는 EditMode 258개와 PlayMode 7개가 모두 통과했으며 실패하거나 건너뛴 테스트는 없습니다. 이번 변경으로 실행 파일 빌드를 새로 만들지는 않았습니다. 실제 조작감과 화면 효과 강도는 사람이 확인하는 별도 단계입니다.
 
 ## 8. 새 채팅에서 설명받을 때 지켜 달라고 할 규칙
 

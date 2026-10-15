@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -7,10 +8,23 @@ using ZombieSurvival.Items;
 
 namespace ZombieSurvival.UI
 {
+    // 장비 슬롯 View가 레이드 인벤토리와 거점 인벤토리 중 어느 화면에 놓여도 같은 입력을 전달하기 위한 공용 계약입니다.
+    // View가 특정 HUD 클래스에 직접 의존하지 않으므로 장비 슬롯 프리팹 하나를 두 화면에서 그대로 재사용할 수 있습니다.
+    public interface IEquipmentSlotViewOwner
+    {
+        void HandleEquipmentClick(EquipmentSlotType slot, PointerEventData.InputButton button);
+        void BeginEquipmentDrag(EquipmentSlotView view, EquipmentSlotType slot, PointerEventData eventData);
+        void UpdateEquipmentDrag(PointerEventData eventData);
+        void EndEquipmentDrag(PointerEventData eventData);
+        void ShowItemDetailPopup(InventoryEntry entry, Vector2 screenPosition, Camera eventCamera);
+        void HideItemDetailPopup(InventoryEntry entry);
+    }
+
     // 주무기, 보조무기, 방탄복, 조끼와 가방 중 한 장비 슬롯을 표현하는 재사용 UI 프리팹입니다.
     // 슬롯 종류만 다르게 지정하면 같은 배경 이미지와 글자 디자인을 모든 장비 칸에 일관되게 사용할 수 있습니다.
     public sealed class EquipmentSlotView : MonoBehaviour,
-        IPointerClickHandler, IBeginDragHandler, IDragHandler, IEndDragHandler
+        IPointerClickHandler, IPointerDownHandler, IPointerUpHandler, IPointerExitHandler,
+        IBeginDragHandler, IDragHandler, IEndDragHandler
     {
         [SerializeField] private EquipmentSlotType slot;
         [SerializeField] private Image background;
@@ -18,12 +32,16 @@ namespace ZombieSurvival.UI
         // 배경 색으로 현재 사용 무기를 강조해도 아이콘 고유 색상은 바뀌지 않습니다.
         [SerializeField] private Image iconImage;
         [SerializeField] private Text labelText;
-        [SerializeField] private Color normalColor = new Color(0.13f, 0.16f, 0.18f, 0.96f);
-        [SerializeField] private Color occupiedColor = new Color(0.22f, 0.34f, 0.27f, 0.96f);
-        [SerializeField] private Color activeWeaponColor = new Color(0.18f, 0.55f, 0.48f, 0.98f);
+        // 장비 상태색을 공용 팔레트에서 가져와 인벤토리와 거점 장비창이 같은 시각 규칙을 사용하게 합니다.
+        [SerializeField] private Color normalColor = SurvivalUiTheme.EquipmentEmpty;
+        [SerializeField] private Color occupiedColor = SurvivalUiTheme.EquipmentOccupied;
+        [SerializeField] private Color activeWeaponColor = SurvivalUiTheme.EquipmentActive;
 
         private InventoryEntry entry;
-        private InventoryHud owner;
+        private IEquipmentSlotViewOwner owner;
+        private Coroutine detailHoldRoutine;
+        private bool detailPopupShown;
+        private bool suppressNextClick;
 
         public EquipmentSlotType Slot => slot;
 
@@ -47,7 +65,7 @@ namespace ZombieSurvival.UI
             if (iconImage != null) iconImage.raycastTarget = false;
         }
 
-        public void Bind(InventoryEntry value, bool isActiveWeapon, InventoryHud hud)
+        public void Bind(InventoryEntry value, bool isActiveWeapon, IEquipmentSlotViewOwner hud)
         {
             entry = value;
             owner = hud;
@@ -76,7 +94,7 @@ namespace ZombieSurvival.UI
             string stateSuffix = entry != null && entry.HasArmorState
                 ? $"  {entry.ArmorDurability:0}/{entry.Item.ArmorMaxDurability:0}"
                 : entry != null && entry.HasMagazineState
-                    ? $"  {entry.MagazineRounds}/{entry.Item.WeaponDefinition.MagazineSize}"
+                    ? $"  {entry.MagazineRounds}/{entry.EffectiveMagazineSize}"
                     : string.Empty;
             labelText.text = entry == null
                 ? SlotName(slot) + "\n-"
@@ -85,7 +103,32 @@ namespace ZombieSurvival.UI
 
         public void OnPointerClick(PointerEventData eventData)
         {
+            if (suppressNextClick)
+            {
+                suppressNextClick = false;
+                return;
+            }
             if (entry != null) owner?.HandleEquipmentClick(slot, eventData.button);
+        }
+
+        public void OnPointerDown(PointerEventData eventData)
+        {
+            if (eventData.button != PointerEventData.InputButton.Left || entry == null || owner == null) return;
+            CancelDetailHold(true);
+            suppressNextClick = false;
+            detailHoldRoutine = StartCoroutine(WaitForDetailHold(eventData.position, eventData.pressEventCamera));
+        }
+
+        public void OnPointerUp(PointerEventData eventData)
+        {
+            // 장비 정보창도 일반 격자 아이템과 같이 손을 뗀 뒤 유지합니다.
+            if (eventData.button == PointerEventData.InputButton.Left) CancelDetailHold(false);
+        }
+
+        public void OnPointerExit(PointerEventData eventData)
+        {
+            // 열기 전 대기만 취소하고 이미 표시된 팝업은 바깥 클릭을 기다립니다.
+            CancelDetailHold(false);
         }
 
         // 장비 슬롯에서 격자로 직접 끌어 해제할 수 있도록 왼쪽 버튼 드래그 시작을 InventoryHud에 전달합니다.
@@ -93,6 +136,7 @@ namespace ZombieSurvival.UI
         public void OnBeginDrag(PointerEventData eventData)
         {
             if (eventData.button != PointerEventData.InputButton.Left || entry == null || owner == null) return;
+            CancelDetailHold(true);
             owner.BeginEquipmentDrag(this, slot, eventData);
         }
 
@@ -116,6 +160,36 @@ namespace ZombieSurvival.UI
                 case EquipmentSlotType.Rig: return "전술 조끼";
                 case EquipmentSlotType.Backpack: return "가방";
                 default: return "장비";
+            }
+        }
+
+        private IEnumerator WaitForDetailHold(Vector2 screenPosition, Camera eventCamera)
+        {
+            float elapsed = 0f;
+            while (elapsed < InventoryItemView.DetailHoldDuration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                yield return null;
+            }
+
+            detailHoldRoutine = null;
+            detailPopupShown = true;
+            suppressNextClick = true;
+            owner?.ShowItemDetailPopup(entry, screenPosition, eventCamera);
+        }
+
+        private void CancelDetailHold(bool hidePopup)
+        {
+            if (detailHoldRoutine != null)
+            {
+                StopCoroutine(detailHoldRoutine);
+                detailHoldRoutine = null;
+            }
+
+            if (hidePopup && detailPopupShown)
+            {
+                owner?.HideItemDetailPopup(entry);
+                detailPopupShown = false;
             }
         }
 
@@ -153,6 +227,11 @@ namespace ZombieSurvival.UI
                 labelText.alignment = TextAnchor.MiddleLeft;
                 labelText.transform.SetAsLastSibling();
             }
+        }
+
+        private void OnDisable()
+        {
+            CancelDetailHold(true);
         }
     }
 }

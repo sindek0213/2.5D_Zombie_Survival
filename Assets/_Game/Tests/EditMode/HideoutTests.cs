@@ -10,6 +10,7 @@ using ZombieSurvival.Core;
 using ZombieSurvival.Hideout;
 using ZombieSurvival.Inventory;
 using ZombieSurvival.Items;
+using ZombieSurvival.UI;
 
 public sealed class HideoutTests
 {
@@ -286,21 +287,33 @@ public sealed class HideoutTests
     {
         WeaponDefinition weapon = ScriptableObject.CreateInstance<WeaponDefinition>();
         ItemDefinition pistol = CreateDefinition("weapon_pistol", 2, 1, 1, 0, 0);
+        ItemDefinition ammo = CreateDefinition("ammo_9mm", 1, 1, 60, 0, 0);
         ItemCatalog catalog = ScriptableObject.CreateInstance<ItemCatalog>();
         GameObject player = new GameObject("ProvidedPistolTestPlayer");
         GameObject applierObject = new GameObject("ProvidedPistolTestApplier");
         try
         {
+            var weaponData = new SerializedObject(weapon);
+            weaponData.FindProperty("ammoType").enumValueIndex = (int)AmmoType.NineMillimeter;
+            weaponData.FindProperty("magazineSize").intValue = 10;
+            weaponData.ApplyModifiedPropertiesWithoutUndo();
+
             var pistolData = new SerializedObject(pistol);
             pistolData.FindProperty("itemType").enumValueIndex = (int)ItemType.Weapon;
             pistolData.FindProperty("equipmentSlot").enumValueIndex = (int)EquipmentSlotType.SecondaryWeapon;
             pistolData.FindProperty("weaponDefinition").objectReferenceValue = weapon;
             pistolData.ApplyModifiedPropertiesWithoutUndo();
 
+            var ammoData = new SerializedObject(ammo);
+            ammoData.FindProperty("itemType").enumValueIndex = (int)ItemType.Ammo;
+            ammoData.FindProperty("ammoType").enumValueIndex = (int)AmmoType.NineMillimeter;
+            ammoData.ApplyModifiedPropertiesWithoutUndo();
+
             var catalogData = new SerializedObject(catalog);
             SerializedProperty definitions = catalogData.FindProperty("definitions");
-            definitions.arraySize = 1;
+            definitions.arraySize = 2;
             definitions.GetArrayElementAtIndex(0).objectReferenceValue = pistol;
+            definitions.GetArrayElementAtIndex(1).objectReferenceValue = ammo;
             catalogData.ApplyModifiedPropertiesWithoutUndo();
 
             PlayerInventory inventory = player.AddComponent<PlayerInventory>();
@@ -312,6 +325,14 @@ public sealed class HideoutTests
             Assert.That(inventory.Equipment.Count, Is.EqualTo(1));
             Assert.That(inventory.Equipment[EquipmentSlotType.SecondaryWeapon].Item, Is.SameAs(pistol));
             Assert.That(inventory.Equipment[EquipmentSlotType.SecondaryWeapon].IsRaidProvided, Is.True);
+            Assert.That(applier.ProvidedTestAmmoCount, Is.EqualTo(30));
+            Assert.That(inventory.CountAmmo(AmmoType.NineMillimeter), Is.EqualTo(30));
+            Assert.That(inventory.Root.Entries, Has.Exactly(1).Matches<InventoryEntry>(entry =>
+                entry.Item == ammo && entry.Quantity == 30 && entry.IsRaidProvided));
+
+            // 지급 탄약은 전투 중 재장전에 사용되지만 탈출 보상에는 포함되지 않아 거점에서 무한 복제되지 않아야 합니다.
+            RaidResult extracted = RaidResultFactory.Create(inventory, RaidEndReason.Extracted, 0);
+            Assert.That(extracted.inventory.items, Is.Empty);
 
             // 같은 초기화 컴포넌트를 다시 호출해도 두 번째 권총이나 추가 장비 엔트리가 생기면 안 됩니다.
             applier.ApplyPreparedLoadout();
@@ -323,6 +344,7 @@ public sealed class HideoutTests
             Object.DestroyImmediate(player);
             Object.DestroyImmediate(catalog);
             Object.DestroyImmediate(pistol);
+            Object.DestroyImmediate(ammo);
             Object.DestroyImmediate(weapon);
         }
     }
@@ -414,7 +436,7 @@ public sealed class HideoutTests
         Assert.That(HideoutStateStore.StashItems[0].itemId, Is.EqualTo("quest_radio"));
     }
 
-    // Bootstrap과 Hideout이 같은 손상 파일을 연속 확인해도 최초 실패 결과가 성공으로 바뀌지 않는지 검사합니다.
+    // Loading과 Hideout이 같은 손상 파일을 연속 확인해도 최초 실패 결과가 성공으로 바뀌지 않는지 검사합니다.
     [Test]
     public void InvalidDefaultSave_RepeatedLoadKeepsFailureResult()
     {
@@ -467,9 +489,9 @@ public sealed class HideoutTests
         }
     }
 
-    // Bootstrap 초기화가 디스크 창고를 복원하고 새 게임 실행에 남으면 안 되는 직전 RaidResult만 제거하는지 통합 검사합니다.
+    // 타이틀에서 Loading으로 넘어가기 전 준비 순서가 직전 RaidResult를 지우고 디스크 창고를 한 번만 복원하는지 검사합니다.
     [Test]
-    public void BootstrapInitialization_LoadsPersistentStateAndClearsTransientResult()
+    public void LoadingPreparation_LoadsPersistentStateAndClearsTransientResult()
     {
         var savedResult = new RaidResult { succeeded = true, inventory = new RaidGridSnapshot() };
         savedResult.inventory.items.Add(new RaidItemSnapshot { itemId = "medkit_small", quantity = 2 });
@@ -482,25 +504,15 @@ public sealed class HideoutTests
         HideoutSaveService.SetDefaultPathForTests(temporarySavePath);
         RaidResultStore.Set(new RaidResult { succeeded = false, lostItemCount = 99 });
 
-        var bootstrapObject = new GameObject("BootstrapInitializationTest");
-        bootstrapObject.SetActive(false);
-        try
-        {
-            BootstrapController controller = bootstrapObject.AddComponent<BootstrapController>();
-            Assert.That(controller.Initialize(), Is.True);
-            Assert.That(controller.IsInitialized, Is.True);
-            Assert.That(controller.StashStackCount, Is.EqualTo(1));
-            Assert.That(HideoutStateStore.StashItems[0].itemId, Is.EqualTo("medkit_small"));
-            Assert.That(RaidResultStore.PendingResult, Is.Null);
+        RaidResultStore.Clear();
+        Assert.That(HideoutSaveService.LoadDefaultIfNeeded(), Is.True);
+        Assert.That(HideoutStateStore.StashItems.Count, Is.EqualTo(1));
+        Assert.That(HideoutStateStore.StashItems[0].itemId, Is.EqualTo("medkit_small"));
+        Assert.That(RaidResultStore.PendingResult, Is.Null);
 
-            // 두 번째 호출은 이미 복원된 목록을 다시 더하지 않고 같은 결과만 반환해야 합니다.
-            Assert.That(controller.Initialize(), Is.True);
-            Assert.That(controller.StashStackCount, Is.EqualTo(1));
-        }
-        finally
-        {
-            Object.DestroyImmediate(bootstrapObject);
-        }
+        // 두 번째 호출은 이미 복원된 목록을 다시 더하지 않고 같은 결과만 반환해야 합니다.
+        Assert.That(HideoutSaveService.LoadDefaultIfNeeded(), Is.True);
+        Assert.That(HideoutStateStore.StashItems.Count, Is.EqualTo(1));
     }
 
     // 출격 직전 저장이 실패하면 씬을 바꾸지 않고 거점에 남아야 이전 저장의 출격품이 다시 나타나는 복제 가능성을 막을 수 있습니다.
@@ -581,9 +593,10 @@ public sealed class HideoutTests
         }
     }
 
-    // 버전 5 JSON은 아이템뿐 아니라 시설 레벨, 공통 임무 진행도와 완료 기록까지 저장하고 같은 값으로 복원해야 합니다.
+    // 현재 JSON은 아이템뿐 아니라 시설 레벨, 공통 임무 진행도와 완료 기록까지 저장하고 같은 값으로 복원해야 합니다.
+    // 버전 숫자를 직접 적지 않고 저장 서비스 상수를 사용해 다음 저장 형식 확장 때 테스트 이름과 기대값이 뒤처지지 않게 합니다.
     [Test]
-    public void VersionFiveSave_RoundTripPreservesFacilityAndMissionProgress()
+    public void CurrentSave_RoundTripPreservesFacilityAndMissionProgress()
     {
         HideoutFacilityDefinition facility = ScriptableObject.CreateInstance<HideoutFacilityDefinition>();
         HideoutMissionDefinition mission = ScriptableObject.CreateInstance<HideoutMissionDefinition>();
@@ -597,7 +610,9 @@ public sealed class HideoutTests
             HideoutMissionStateStore.ApplyRaidResult(new RaidResult { zombieKills = 4 });
 
             Assert.That(HideoutSaveService.SaveDefault(), Is.True);
-            Assert.That(File.ReadAllText(temporarySavePath), Does.Contain("\"version\": 5"));
+            Assert.That(
+                File.ReadAllText(temporarySavePath),
+                Does.Contain($"\"version\": {HideoutSaveService.CurrentVersion}"));
 
             HideoutStateStore.ResetForTests();
             Assert.That(HideoutSaveService.LoadFromPath(temporarySavePath), Is.True);
@@ -610,6 +625,28 @@ public sealed class HideoutTests
             Object.DestroyImmediate(facility);
             Object.DestroyImmediate(mission);
         }
+    }
+
+    // 거점에서 장착한 가방은 일반 출격 격자 항목과 구분해 슬롯 이름과 내부 아이템을 함께 왕복 저장해야 합니다.
+    [Test]
+    public void CurrentSave_RoundTripPreservesEquippedLoadoutContainer()
+    {
+        File.WriteAllText(
+            temporarySavePath,
+            $"{{\"version\":{HideoutSaveService.CurrentVersion},\"stashItems\":[],\"loadoutItems\":[" +
+            "{\"itemId\":\"backpack_small\",\"quantity\":1,\"gridX\":0,\"gridY\":0,\"parentIndex\":-1,\"equipmentSlot\":\"Backpack\"}," +
+            "{\"itemId\":\"ammo_9mm\",\"quantity\":12,\"gridX\":0,\"gridY\":0,\"parentIndex\":0}]}");
+
+        Assert.That(HideoutSaveService.LoadFromPath(temporarySavePath), Is.True);
+        Assert.That(HideoutStateStore.LoadoutItems, Is.Empty);
+        Assert.That(HideoutStateStore.LoadoutEquipment.Count, Is.EqualTo(1));
+        Assert.That(HideoutStateStore.LoadoutEquipment[0].slot, Is.EqualTo("Backpack"));
+        Assert.That(HideoutStateStore.LoadoutEquipment[0].item.contents[0].quantity, Is.EqualTo(12));
+
+        Assert.That(HideoutSaveService.SaveDefault(), Is.True);
+        HideoutStateStore.ResetForTests();
+        Assert.That(HideoutSaveService.LoadFromPath(temporarySavePath), Is.True);
+        Assert.That(HideoutStateStore.LoadoutEquipment[0].item.contents[0].itemId, Is.EqualTo("ammo_9mm"));
     }
 
     // 버전 4의 좀비 처치 전용 진행도는 버전 5의 공통 진행도로 옮겨지고 완료 기록은 빈 목록으로 시작해야 합니다.
@@ -803,6 +840,82 @@ public sealed class HideoutTests
         }
     }
 
+    // 강화·제작 화면이 사용하는 HideoutController 조회가 루트 창고뿐 아니라 창고 안 가방의 재료도 세는지 검사합니다.
+    // 이 테스트가 통과하면 화면의 보유 수량, 제작 가능 버튼과 실제 재료 소비가 모두 같은 StashGrid 규칙을 사용합니다.
+    [Test]
+    public void CraftingController_CountsAndConsumesMaterialsInsideStashContainer()
+    {
+        ItemDefinition scrap = CreateDefinition("nested_craft_scrap", 1, 1, 20, 0, 0);
+        ItemDefinition backpack = CreateDefinition("nested_craft_bag", 2, 2, 1, 3, 3);
+        ItemDefinition output = CreateDefinition("nested_craft_output", 1, 1, 10, 0, 0);
+        HideoutFacilityDefinition benchDefinition = ScriptableObject.CreateInstance<HideoutFacilityDefinition>();
+        HideoutRecipeDefinition recipe = ScriptableObject.CreateInstance<HideoutRecipeDefinition>();
+        ItemCatalog catalog = ScriptableObject.CreateInstance<ItemCatalog>();
+        GameObject controllerObject = new GameObject("CraftingControllerTest");
+        GameObject facilityObject = new GameObject("CraftingFacilityTest");
+
+        try
+        {
+            benchDefinition.Configure(
+                "nested_bench",
+                "제작대",
+                "컨테이너 재료 계산 테스트",
+                HideoutFacilityType.CraftingBench,
+                1,
+                1);
+            recipe.Configure(
+                "nested_recipe",
+                "가방 재료 제작",
+                HideoutFacilityType.CraftingBench,
+                1,
+                output,
+                1,
+                0,
+                new HideoutFacilityItemCost(scrap, 3));
+
+            typeof(ItemCatalog)
+                .GetField("definitions", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                ?.SetValue(catalog, new System.Collections.Generic.List<ItemDefinition> { scrap, backpack, output });
+            HideoutController controller = controllerObject.AddComponent<HideoutController>();
+            controller.Configure(catalog, null, new[] { benchDefinition }, new[] { recipe });
+            // EditMode에서는 일반 MonoBehaviour의 Awake가 자동 실행되지 않으므로 런타임과 같은 창고 복원 단계를 직접 호출합니다.
+            typeof(HideoutController)
+                .GetMethod("Awake", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                ?.Invoke(controller, null);
+            // 실제 거점 시설과 동일하게 상호작용 범위를 제공해야 RequireComponent가 HideoutFacility 추가를 허용합니다.
+            facilityObject.AddComponent<BoxCollider>();
+            HideoutFacility facility = facilityObject.AddComponent<HideoutFacility>();
+            facility.Configure(benchDefinition, null);
+
+            var bagEntry = new InventoryEntry(backpack, 1, Vector2Int.zero);
+            bagEntry.Contents.Entries.Add(new InventoryEntry(scrap, 5, Vector2Int.zero));
+            controller.StashGrid.Entries.Add(bagEntry);
+
+            Assert.That(controller.CountStashItem(scrap.ItemId), Is.EqualTo(5));
+            Assert.That(controller.CanCraft(facility, recipe, out string reason), Is.True, reason);
+            Assert.That(controller.TryCraft(facility, recipe), Is.True);
+            Assert.That(controller.CountStashItem(scrap.ItemId), Is.EqualTo(2));
+            Assert.That(controller.CountStashItem(output.ItemId), Is.EqualTo(0));
+            // 제작 시간 완료 뒤 같은 제작 버튼을 다시 누르면 완성품을 창고에 수령합니다.
+            HideoutCraftQueueStateStore.Tick(recipe.GetCraftDuration(1) + 0.1f);
+            Assert.That(controller.TryCraft(facility, recipe), Is.True);
+            Assert.That(controller.CountStashItem(output.ItemId), Is.EqualTo(1));
+        }
+        finally
+        {
+            Object.DestroyImmediate(facilityObject);
+            Object.DestroyImmediate(controllerObject);
+            Object.DestroyImmediate(recipe);
+            Object.DestroyImmediate(catalog);
+            Object.DestroyImmediate(benchDefinition);
+            Object.DestroyImmediate(output);
+            Object.DestroyImmediate(backpack);
+            Object.DestroyImmediate(scrap);
+            HideoutFacilityStateStore.ResetForTests();
+            HideoutCraftQueueStateStore.ResetForTests();
+        }
+    }
+
     // 시설 정의는 현재 레벨에 해당하는 비용과 효과만 반환하고 최대 레벨을 넘겨 강화되지 않아야 합니다.
     [Test]
     public void FacilityDefinition_ProvidesLevelCostsAndScaledEffects()
@@ -837,6 +950,46 @@ public sealed class HideoutTests
             Object.DestroyImmediate(scrap);
             Object.DestroyImmediate(facility);
         }
+    }
+
+    [Test]
+    public void MissionJournalText_WhenMissionIsActive_ShowsObjectiveRewardAndRisk()
+    {
+        HideoutMissionDefinition mission = ScriptableObject.CreateInstance<HideoutMissionDefinition>();
+        try
+        {
+            // 임무수첩이 보드용 내부 데이터가 아니라 플레이어가 이해할 수 있는 목표·보상·위험도 문장을 만드는지 확인합니다.
+            mission.Configure(
+                "journal_test",
+                "복도 정리",
+                "학교 복도의 좀비를 정리합니다.",
+                HideoutMissionObjectiveType.ZombieKills,
+                null,
+                5,
+                true,
+                Array.Empty<HideoutMissionItemReward>());
+            mission.ConfigureProgression(string.Empty, 120, 3);
+
+            string text = HideoutWorldHud.BuildMissionJournalText(mission, mission.MissionId, 2);
+
+            Assert.That(text, Does.Contain("복도 정리"));
+            Assert.That(text, Does.Contain("2/5"));
+            Assert.That(text, Does.Contain("120 크레딧"));
+            Assert.That(text, Does.Contain("3 / 5"));
+        }
+        finally
+        {
+            Object.DestroyImmediate(mission);
+        }
+    }
+
+    [Test]
+    public void MissionJournalText_WhenNoMissionIsActive_ShowsMissionBoardGuide()
+    {
+        // 받은 임무가 없을 때 빈 패널이 아니라 어디에서 임무를 받을 수 있는지 안내해야 합니다.
+        string text = HideoutWorldHud.BuildMissionJournalText(null, string.Empty, 0);
+        Assert.That(text, Does.Contain("수주한 임무가 없습니다"));
+        Assert.That(text, Does.Contain("임무 보드"));
     }
 
     // 테스트에서 사용할 ItemDefinition의 ID, 격자 크기, 중첩과 선택적 컨테이너 크기를 메모리에 설정합니다.

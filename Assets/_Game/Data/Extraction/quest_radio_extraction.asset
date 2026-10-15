@@ -15,3 +15,4 @@ MonoBehaviour:
   requiredItemId: quest_radio
   displayName: "\uACE0\uC7A5 \uB09C \uBB34\uC804\uAE30"
   requiredQuantity: 1
+  requirementType: 0

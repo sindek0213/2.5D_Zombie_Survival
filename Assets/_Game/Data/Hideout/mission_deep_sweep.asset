@@ -14,13 +14,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   missionId: deep_sweep
   displayName: "\uB300\uB300\uC801\uC778 \uC18C\uD0D5"
-  description: "\uC5EC\uB7EC \uCC28\uB840 \uCD9C\uACA9\uD574 \uC880\uBE44 8\uB9C8\uB9AC\uB97C
-    \uCC98\uCE58\uD558\uC138\uC694. \uCC98\uCE58 \uC218\uB294 \uB808\uC774\uB4DC
-    \uC0AC\uC774\uC5D0\uB3C4 \uB204\uC801\uB429\uB2C8\uB2E4."
-  objectiveType: 0
+  description: "\uC5EC\uB7EC \uCC28\uB840 \uCD9C\uACA9\uD574 \uAD8C\uCD1D\uC73C\uB85C
+    \uC880\uBE44 8\uB9C8\uB9AC\uB97C \uCC98\uCE58\uD558\uC138\uC694. \uCC98\uCE58
+    \uC218\uB294 \uB808\uC774\uB4DC \uC0AC\uC774\uC5D0\uB3C4 \uB204\uC801\uB429\uB2C8\uB2E4."
+  objectiveType: 4
   objectiveItem: {fileID: 0}
+  objectiveWeapon: {fileID: 11400000, guid: 7a241cc8fbfd6f442b5808c62236a27d, type: 2}
+  objectiveZoneId: 
   requiredAmount: 8
   repeatable: 1
   itemRewards:
   - item: {fileID: 11400000, guid: 7ec0e42290ebbb54dadc6adb5717b920, type: 2}
     quantity: 20
+  prerequisiteMissionId: safe_return
+  creditReward: 550
+  riskRating: 4

@@ -20,6 +20,11 @@ MonoBehaviour:
   movementSpeed: 1.65
   attackDamage: 22
   visualColor: {r: 0.58, g: 0.24, b: 0.18, a: 1}
+  behaviorTrait: 2
+  detectionRange: 8
+  hearingRange: 20
+  loseTargetRange: 13
+  investigationDuration: 5
   lootEntries:
   - item: {fileID: 11400000, guid: 7ec0e42290ebbb54dadc6adb5717b920, type: 2}
     dropChance: 0.7

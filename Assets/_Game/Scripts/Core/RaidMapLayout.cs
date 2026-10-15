@@ -1,9 +1,10 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace ZombieSurvival.Core
 {
-    // RaidPrototype 맵에서 여러 시스템이 함께 사용하는 핵심 위치와 경계 크기를 한곳에 모읍니다.
-    // 맵 생성 코드, 좀비 스폰 코드와 자동 테스트가 같은 값을 읽으므로 한쪽 좌표만 바뀌어 서로 어긋나는 문제를 막습니다.
+    // 작은 RaidPrototype 기능 테스트 맵이 사용하는 핵심 위치와 경계 크기를 한곳에 모읍니다.
+    // 더 큰 학교 맵은 SchoolRaidMapLayout을 사용해 이 테스트 맵의 좌표와 자동 검사를 바꾸지 않습니다.
     public static class RaidMapLayout
     {
         // 맵 중심에서 외곽 벽 중심까지의 거리입니다. 실제 이동 가능한 공간은 벽 두께 때문에 이 값보다 약간 작습니다.
@@ -55,12 +56,30 @@ namespace ZombieSurvival.Core
         // 남·북 구역을 먼저 판정하고 가운데 세로 범위에서만 X좌표로 서쪽·동쪽을 나누므로 모서리의 이름이 자주 바뀌지 않습니다.
         public static string GetZoneDisplayName(Vector3 position)
         {
+            // AmmoHud는 기존부터 이 공용 메서드를 호출하므로 학교 씬일 때만 학교 전용 크기와 구역 판정으로 위임합니다.
+            // 이 분기를 일반 맵 외곽 검사보다 먼저 실행해야 18m 밖의 넓어진 학교 좌표를 잘못 "맵 외부"로 표시하지 않습니다.
+            if (SceneManager.GetActiveScene().name == GameSceneNavigator.SchoolRaidSceneName)
+                return SchoolRaidMapLayout.GetZoneDisplayName(position);
+
             if (!IsInsidePlayableArea(position)) return "맵 외부";
             if (position.z <= -8f) return "남부 캠프";
             if (position.z >= 10f) return "북부 탈출로";
             if (position.x <= -6f) return "서부 주거지";
             if (position.x >= 6f) return "동부 창고";
             return "중앙 검문소";
+        }
+
+        // HUD가 맵 종류를 직접 구분하지 않고 현재 구역의 위험도를 표시할 수 있게 공용 진입점을 제공합니다.
+        // 작은 프로토타입 맵은 단순한 1~3단계 규칙을 유지하고 실제 학교 씬에서는 학교 전용 세부 등급으로 위임합니다.
+        public static int GetZoneDangerRating(Vector3 position)
+        {
+            if (SceneManager.GetActiveScene().name == GameSceneNavigator.SchoolRaidSceneName)
+                return SchoolRaidMapLayout.GetZoneDangerRating(position);
+
+            if (!IsInsidePlayableArea(position)) return 0;
+            if (position.z <= -8f) return 1;
+            if (position.z >= 10f) return 3;
+            return position.x <= -6f || position.x >= 6f ? 2 : 3;
         }
     }
 }

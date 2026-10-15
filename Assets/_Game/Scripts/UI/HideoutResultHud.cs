@@ -1,6 +1,8 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using ZombieSurvival.Art;
+using ZombieSurvival.Combat;
 using ZombieSurvival.Core;
 using ZombieSurvival.Hideout;
 using ZombieSurvival.Inventory;
@@ -10,7 +12,7 @@ namespace ZombieSurvival.UI
 {
     // Hideout의 창고와 출격 준비를 목록이 아닌 두 개의 실제 격자로 표시하고 드래그 명령을 컨트롤러에 전달합니다.
     // 격자 프리팹은 레이드 인벤토리와 공유하지만 저장·출격 규칙은 HideoutController가 담당해 화면 코드에 섞이지 않습니다.
-    public sealed class HideoutResultHud : MonoBehaviour, IInventoryGridViewOwner
+    public sealed class HideoutResultHud : MonoBehaviour, IInventoryGridViewOwner, IEquipmentSlotViewOwner
     {
         [SerializeField] private HideoutController controller;
         [SerializeField] private Text resultSummaryText;
@@ -18,11 +20,12 @@ namespace ZombieSurvival.UI
         [SerializeField] private Text loadoutTitleText;
         [SerializeField] private InventoryGridView stashGridView;
         [SerializeField] private InventoryGridView loadoutGridView;
+        [SerializeField] private EquipmentSlotView[] equipmentSlotViews;
         [SerializeField] private RectTransform dragLayer;
         [SerializeField] private Text itemDetailText;
+        [SerializeField] private ItemDetailPopup itemDetailPopup;
         [SerializeField] private Text operationStatusText;
-        [SerializeField] private Button launchButton;
-        [SerializeField] private Text launchButtonText;
+        [SerializeField] private WeaponManagementPanel weaponManagementPanel;
 
         private InventoryEntry selected;
         private PlayerInventory.GridData selectedGrid;
@@ -33,6 +36,11 @@ namespace ZombieSurvival.UI
         private InventoryGridView previewGridView;
         private string localStatusMessage = string.Empty;
         private float localStatusExpiresAt;
+        private InventoryEntry popupEntry;
+        private PlayerInventory playerInventory;
+        private EquipmentSlotType equipmentDragSlot = EquipmentSlotType.None;
+        private InventoryEntry equipmentDragEntry;
+        private Image equipmentDragGhost;
 
         public void Configure(HideoutController value)
         {
@@ -40,11 +48,29 @@ namespace ZombieSurvival.UI
             dragSession.Cancel();
             UnsubscribeController();
             controller = value;
+            playerInventory = controller != null ? controller.PlayerInventory : null;
             SubscribeController();
             Refresh();
         }
 
-        // 생성기가 두 격자, 드래그 레이어, 상세 설명과 출격 버튼을 한 번에 연결합니다.
+        // 거점 창고 프리팹 아래쪽에 배치한 장비 슬롯 View를 연결합니다.
+        // 기존 ConfigureViews 시그니처를 유지해 이전 테스트와 수동 프리팹도 장비 슬롯 없이 계속 열릴 수 있게 합니다.
+        public void ConfigureEquipmentViews(EquipmentSlotView[] slotViews)
+        {
+            equipmentSlotViews = slotViews;
+            Refresh();
+        }
+
+        // 창고 프리팹의 전용 무기 관리 패널을 연결합니다.
+        // 별도 메서드로 둬 기존 ConfigureViews를 호출하는 테스트와 이전 프리팹의 호환성을 유지합니다.
+        public void ConfigureWeaponManagementPanel(WeaponManagementPanel panel)
+        {
+            weaponManagementPanel = panel;
+            Refresh();
+        }
+
+        // 생성기가 두 격자, 드래그 레이어와 상세 설명을 한 번에 연결합니다.
+        // 실제 출격은 별도 출격 터미널 화면이 담당하므로 이 창고 화면에는 씬 전환 버튼을 두지 않습니다.
         public void ConfigureViews(
             Text summary,
             Text stashTitle,
@@ -53,9 +79,7 @@ namespace ZombieSurvival.UI
             InventoryGridView loadoutGrid,
             RectTransform dragRoot,
             Text detail,
-            Text operationStatus,
-            Button launch,
-            Text launchLabel)
+            Text operationStatus)
         {
             resultSummaryText = summary;
             stashTitleText = stashTitle;
@@ -65,16 +89,17 @@ namespace ZombieSurvival.UI
             dragLayer = dragRoot;
             itemDetailText = detail;
             operationStatusText = operationStatus;
-            launchButton = launch;
-            launchButtonText = launchLabel;
-            ConfigureLaunchButton();
+            EnsureItemDetailPopup();
             Refresh();
         }
 
         private void Awake()
         {
             if (controller == null) controller = FindObjectOfType<HideoutController>();
-            ConfigureLaunchButton();
+            if (playerInventory == null) playerInventory = controller != null
+                ? controller.PlayerInventory
+                : FindObjectOfType<PlayerInventory>();
+            EnsureItemDetailPopup();
         }
 
         private void OnEnable()
@@ -130,7 +155,24 @@ namespace ZombieSurvival.UI
 
             if (button == PointerEventData.InputButton.Right)
             {
-                if (entry.Contents != null) ToggleContainer(entry, grid);
+                // 장비 아이템은 우클릭으로 즉시 해당 슬롯에 착용합니다. 가방 내부를 보려면 좌클릭을 사용합니다.
+                if (entry.Item.EquipmentSlot != EquipmentSlotType.None && playerInventory != null)
+                {
+                    if (!playerInventory.TryEquipOrSwap(grid, entry, entry.Item.EquipmentSlot, out string failure))
+                        ShowLocalStatus(failure);
+                    else
+                        ShowLocalStatus($"{entry.Item.DisplayName}을 장착했습니다.");
+                }
+                else if (entry.Item.Type == ItemType.Weapon && entry.InstalledAttachments.Count > 0)
+                {
+                    ItemDefinition lastAttachment = entry.InstalledAttachments[entry.InstalledAttachments.Count - 1];
+                    controller.TryDetachAttachment(
+                        grid,
+                        entry,
+                        lastAttachment.WeaponAttachmentDefinition.Slot,
+                        grid);
+                    ShowLocalStatus(controller.OperationStatus);
+                }
                 else ShowLocalStatus("거점 우클릭 빠른 이동은 제거되었습니다. Ctrl+좌클릭을 사용하세요.");
                 return;
             }
@@ -171,6 +213,26 @@ namespace ZombieSurvival.UI
         {
             if (!dragSession.IsActive) return;
 
+            GameObject hit = eventData != null ? eventData.pointerCurrentRaycast.gameObject : null;
+            EquipmentSlotView targetSlot = hit != null ? hit.GetComponentInParent<EquipmentSlotView>() : null;
+            if (targetSlot != null && playerInventory != null)
+            {
+                InventoryEntry dragged = dragSession.Entry;
+                if (!playerInventory.TryEquipOrSwap(
+                        dragSession.SourceGrid,
+                        dragged,
+                        targetSlot.Slot,
+                        out string equipFailure))
+                    ShowLocalStatus(equipFailure);
+                else
+                    ShowLocalStatus($"{dragged.Item.DisplayName}을 장착했습니다.");
+
+                ClearPlacementPreview();
+                dragSession.Cancel();
+                Refresh();
+                return;
+            }
+
             if (controller != null &&
                 dragSession.TryGetDrop(
                     eventData,
@@ -178,6 +240,21 @@ namespace ZombieSurvival.UI
                     out PlayerInventory.GridData targetGrid,
                     out Vector2Int position))
             {
+                InventoryEntry targetWeapon = FindEntryAt(targetGrid, position, dragSession.Entry);
+                if (dragSession.Entry.Item.Type == ItemType.Attachment && targetWeapon?.Item.Type == ItemType.Weapon)
+                {
+                    controller.TryInstallAttachment(
+                        dragSession.SourceGrid,
+                        dragSession.Entry,
+                        targetGrid,
+                        targetWeapon);
+                    ShowLocalStatus(controller.OperationStatus);
+                    ClearPlacementPreview();
+                    dragSession.Cancel();
+                    Refresh();
+                    return;
+                }
+
                 string failure = InventoryGridOperations.GetMoveFailureReason(
                     dragSession.SourceGrid,
                     targetGrid,
@@ -196,53 +273,208 @@ namespace ZombieSurvival.UI
             Refresh();
         }
 
+        // 거점 창고도 레이드 인벤토리와 같은 길게 누르기 후 고정 팝업 규칙을 사용합니다.
+        // 무기 비교 대상은 거점의 창고와 출격 인벤토리에서 찾아야 하므로 이 HUD가 상세 문자열을 완성합니다.
+        public void ShowItemDetailPopup(InventoryEntry entry, Vector2 screenPosition, Camera eventCamera)
+        {
+            if (entry == null) return;
+            EnsureItemDetailPopup();
+            popupEntry = entry;
+            itemDetailPopup?.Show(
+                entry.Item.DisplayName,
+                ItemDetailFormatter.Build(entry, FindWeaponComparison(entry)),
+                screenPosition,
+                eventCamera);
+        }
+
+        public void HideItemDetailPopup(InventoryEntry entry)
+        {
+            if (popupEntry != null && entry != null && popupEntry != entry) return;
+            itemDetailPopup?.Hide();
+            popupEntry = null;
+        }
+
+        // 장착 슬롯은 좌클릭으로 가방·조끼 내부를 열고, 우클릭으로 플레이어 인벤토리에 해제합니다.
+        // 해제할 공간이 없으면 PlayerInventory가 장비 Dictionary를 바꾸지 않으므로 아이템이 사라지지 않습니다.
+        public void HandleEquipmentClick(EquipmentSlotType slot, PointerEventData.InputButton button)
+        {
+            if (playerInventory == null ||
+                !playerInventory.Equipment.TryGetValue(slot, out InventoryEntry entry)) return;
+
+            selected = entry;
+            selectedGrid = null;
+            if (button == PointerEventData.InputButton.Right)
+            {
+                if (!playerInventory.TryUnequip(slot))
+                    ShowLocalStatus("장비를 내 인벤토리에 돌려놓을 공간이 없습니다.");
+                else
+                    ShowLocalStatus($"{entry.Item.DisplayName}을 해제했습니다.");
+            }
+            else if (button == PointerEventData.InputButton.Left && entry.Contents != null)
+            {
+                ToggleContainer(entry, null);
+            }
+            Refresh();
+        }
+
+        // 장비 슬롯에서 격자로 끌 때 실제 장비는 드롭 성공 전까지 슬롯에 남겨 둡니다.
+        // 화면에는 별도 유령 이미지만 움직여 실패하거나 창 밖에 놓아도 원본 장비가 안전하게 유지됩니다.
+        public void BeginEquipmentDrag(
+            EquipmentSlotView view,
+            EquipmentSlotType slot,
+            PointerEventData eventData)
+        {
+            if (playerInventory == null || dragSession.IsActive || equipmentDragEntry != null ||
+                !playerInventory.Equipment.TryGetValue(slot, out InventoryEntry entry)) return;
+
+            equipmentDragSlot = slot;
+            equipmentDragEntry = entry;
+            selected = entry;
+            selectedGrid = null;
+            CreateEquipmentDragGhost(entry, eventData != null ? eventData.position : Vector2.zero);
+        }
+
+        public void UpdateEquipmentDrag(PointerEventData eventData)
+        {
+            if (equipmentDragEntry == null || eventData == null) return;
+            if (equipmentDragGhost != null) equipmentDragGhost.rectTransform.position = eventData.position;
+
+            if (!TryGetTargetGrid(eventData, out InventoryGridView targetView, out PlayerInventory.GridData target, out Vector2Int position))
+            {
+                ClearPlacementPreview();
+                return;
+            }
+
+            if (previewGridView != targetView) ClearPlacementPreview();
+            previewGridView = targetView;
+            bool canPlace = !InventoryGridOperations.IsGridOwnedByEntry(equipmentDragEntry, target) &&
+                            playerInventory.CanPlace(target, equipmentDragEntry, position, equipmentDragEntry.Rotated, null);
+            targetView.ShowPlacementPreview(
+                equipmentDragEntry,
+                position,
+                canPlace ? InventoryPlacementPreview.Move : InventoryPlacementPreview.Invalid);
+        }
+
+        public void EndEquipmentDrag(PointerEventData eventData)
+        {
+            if (equipmentDragEntry == null) return;
+            if (!TryGetTargetGrid(eventData, out _, out PlayerInventory.GridData target, out Vector2Int position))
+            {
+                ShowLocalStatus("장비를 놓을 대상 격자가 없습니다.");
+            }
+            else if (!playerInventory.TryUnequipTo(equipmentDragSlot, target, position, out string failure))
+            {
+                ShowLocalStatus(failure);
+            }
+            else
+            {
+                ShowLocalStatus("장비를 격자로 해제했습니다.");
+            }
+
+            CancelEquipmentDrag();
+            ClearPlacementPreview();
+            Refresh();
+        }
+
         private void Refresh()
         {
             if (controller == null || controller.StashGrid == null || controller.LoadoutGrid == null)
             {
                 if (resultSummaryText != null) resultSummaryText.text = "HideoutController 또는 아이템 카탈로그가 연결되지 않았습니다.";
-                if (launchButton != null) launchButton.interactable = false;
                 return;
             }
 
+            if (playerInventory == null) playerInventory = controller.PlayerInventory;
             NormalizeSelection();
             NormalizeOpenedContainer();
             if (openedContainer != null && openedContainerParent != null)
             {
-                string parentTitle = openedContainerParent == controller.StashGrid ? "창고" : "출격 인벤토리";
-                stashGridView?.Bind(openedContainerParent, this, parentTitle, selected);
+                // 왼쪽은 항상 플레이어 인벤토리로 유지하고, 오른쪽만 선택한 가방·조끼 내부로 잠시 전환합니다.
+                // 같은 컨테이너를 다시 클릭하면 오른쪽이 창고로 돌아옵니다.
+                stashGridView?.Bind(controller.LoadoutGrid, this, "내 인벤토리", selected);
                 loadoutGridView?.Bind(openedContainer.Contents, this, openedContainer.Item.DisplayName + " 내부", selected);
             }
             else
             {
-                stashGridView?.Bind(controller.StashGrid, this, "창고", selected);
-                loadoutGridView?.Bind(controller.LoadoutGrid, this, "출격 인벤토리", selected);
+                stashGridView?.Bind(controller.LoadoutGrid, this, "내 인벤토리", selected);
+                loadoutGridView?.Bind(controller.StashGrid, this, "창고", selected);
             }
+
+            if (equipmentSlotViews != null && playerInventory != null)
+                foreach (EquipmentSlotView slotView in equipmentSlotViews)
+                {
+                    if (slotView == null) continue;
+                    playerInventory.Equipment.TryGetValue(slotView.Slot, out InventoryEntry equipped);
+                    slotView.Bind(equipped, false, this);
+                }
 
             int stashQuantity = CountGrid(controller.StashGrid);
             int loadoutQuantity = CountGrid(controller.LoadoutGrid);
             if (stashTitleText != null)
                 stashTitleText.text = openedContainer != null
-                    ? (openedContainerParent == controller.StashGrid ? "창고" : "출격 인벤토리") + "  (컨테이너를 다시 클릭하면 닫기)"
-                    : $"창고  ({controller.StashGrid.Entries.Count}묶음 / {stashQuantity}개)";
+                    ? "내 인벤토리  (장비와 가방을 함께 관리)"
+                    : $"내 인벤토리  ({controller.LoadoutGrid.Entries.Count}묶음 / {loadoutQuantity}개)";
             if (loadoutTitleText != null)
                 loadoutTitleText.text = openedContainer != null
-                    ? openedContainer.Item.DisplayName + " 내부"
-                    : $"출격 인벤토리  ({controller.LoadoutGrid.Entries.Count}묶음 / {loadoutQuantity}개)";
+                    ? openedContainer.Item.DisplayName + " 내부  (다시 클릭하면 창고로 복귀)"
+                    : $"창고  ({controller.StashGrid.Entries.Count}묶음 / {stashQuantity}개)";
             if (resultSummaryText != null) resultSummaryText.text = BuildResultSummary(controller.ProcessedResult, controller.PersistenceStatus);
             if (operationStatusText != null)
                 operationStatusText.text = !string.IsNullOrEmpty(localStatusMessage) && Time.unscaledTime < localStatusExpiresAt
                     ? localStatusMessage
                     : string.IsNullOrWhiteSpace(controller.OperationStatus)
-                        ? "좌클릭 선택/드래그 · Ctrl+좌클릭 빠른 이동 · Shift+좌클릭 절반 분할 · R 회전"
+                        ? "좌클릭 선택/드래그 · 길게 누르기 정보 · Ctrl+좌클릭 빠른 이동 · Shift+좌클릭 절반 분할 · R 회전"
                         : controller.OperationStatus;
-            if (itemDetailText != null)
-                itemDetailText.text = ItemDetailFormatter.Build(selected, FindWeaponComparison(selected));
-            if (launchButtonText != null)
-                launchButtonText.text = loadoutQuantity > 0
-                    ? $"레이드 출격  (준비 수량 {loadoutQuantity})"
-                    : "빈손으로 레이드 출격";
-            if (launchButton != null) launchButton.interactable = true;
+            // 거점 패널은 부착물 해제와 함께 크레딧을 사용하는 완전 수리 버튼도 활성화합니다.
+            // 선택 무기가 바뀔 때마다 다시 Bind해 수리 후 내구도·비용·버튼 상태가 즉시 갱신됩니다.
+            weaponManagementPanel?.Bind(
+                selected,
+                FindWeaponComparison(selected),
+                true,
+                HandleWeaponPanelDetach,
+                HandleWeaponPanelRepair);
+            // 창고 상태가 갱신되어 수량·탄창·내구도가 바뀌면 열려 있는 팝업만 가볍게 다시 그립니다.
+            if (itemDetailPopup?.IsVisible == true && popupEntry != null)
+                itemDetailPopup.SetContent(ItemDetailFormatter.Build(popupEntry, FindWeaponComparison(popupEntry)));
+        }
+
+        private void HandleWeaponPanelDetach(WeaponAttachmentSlot slot)
+        {
+            if (playerInventory == null || controller == null || selected?.Item.Type != ItemType.Weapon) return;
+            PlayerInventory.GridData target = selectedGrid ?? controller.LoadoutGrid;
+            ItemDefinition installed = selected.GetAttachment(slot);
+            if (!playerInventory.TryDetachAttachment(selected, slot, target, out string failure))
+                ShowLocalStatus(failure);
+            else
+                ShowLocalStatus($"{installed.DisplayName}을 무기에서 해제했습니다.");
+            Refresh();
+        }
+
+        private void HandleWeaponPanelRepair()
+        {
+            if (controller == null || selected?.Item.Type != ItemType.Weapon) return;
+            controller.TryRepairWeapon(selected);
+            ShowLocalStatus(controller.OperationStatus);
+            Refresh();
+        }
+
+        private void EnsureItemDetailPopup()
+        {
+            if (itemDetailText == null || dragLayer == null) return;
+            RectTransform panel = itemDetailText.transform.parent as RectTransform;
+            if (panel == null) return;
+
+            if (itemDetailPopup == null) itemDetailPopup = GetComponent<ItemDetailPopup>();
+            if (itemDetailPopup == null) itemDetailPopup = gameObject.AddComponent<ItemDetailPopup>();
+            itemDetailPopup.Configure(panel, itemDetailText, dragLayer);
+            itemDetailPopup.Closed -= HandleItemDetailPopupClosed;
+            itemDetailPopup.Closed += HandleItemDetailPopupClosed;
+        }
+
+        private void HandleItemDetailPopupClosed()
+        {
+            // 팝업 스스로 닫힌 경로에서도 현재 표시 항목을 비워 이후 Refresh가 숨은 창을 다시 계산하지 않게 합니다.
+            popupEntry = null;
         }
 
         public static string BuildResultSummary(RaidResult result, string persistenceStatus)
@@ -258,7 +490,10 @@ namespace ZombieSurvival.UI
             }
             else
             {
-                message = $"직전 레이드 실패: 플레이어 사망 · 소지품과 장착 장비 전부 분실 ({result.lostItemCount}개) · 보상 없음";
+                string failure = result.endReason == RaidEndReason.Abandoned
+                    ? "레이드 포기"
+                    : string.IsNullOrWhiteSpace(result.deathCause) ? "플레이어 사망" : result.deathCause;
+                message = $"직전 레이드 실패: {failure} · 소지품과 장착 장비 전부 분실 ({result.lostItemCount}개) · 보상 없음";
             }
 
             if (!string.IsNullOrWhiteSpace(persistenceStatus)) message += "\n" + persistenceStatus;
@@ -284,6 +519,8 @@ namespace ZombieSurvival.UI
             else if (controller.LoadoutGrid.Entries.Contains(selected)) selectedGrid = controller.LoadoutGrid;
             else if (openedContainer?.Contents != null && openedContainer.Contents.Entries.Contains(selected))
                 selectedGrid = openedContainer.Contents;
+            else if (IsEquipped(selected))
+                selectedGrid = null;
             else
             {
                 selected = null;
@@ -293,7 +530,7 @@ namespace ZombieSurvival.UI
 
         private void ToggleContainer(InventoryEntry entry, PlayerInventory.GridData parent)
         {
-            if (entry?.Contents == null || parent == null) return;
+            if (entry?.Contents == null) return;
             if (openedContainer == entry)
             {
                 openedContainer = null;
@@ -323,20 +560,84 @@ namespace ZombieSurvival.UI
                 openedContainerParent = controller.LoadoutGrid;
                 return;
             }
+            if (IsEquipped(openedContainer))
+            {
+                // 장착 가방과 조끼에는 부모 GridData가 없지만 열린 상태를 유지하기 위한 표시 값으로 플레이어 루트를 사용합니다.
+                openedContainerParent = controller.LoadoutGrid;
+                return;
+            }
             openedContainer = null;
             openedContainerParent = null;
+        }
+
+        private bool TryGetTargetGrid(
+            PointerEventData eventData,
+            out InventoryGridView targetView,
+            out PlayerInventory.GridData targetGrid,
+            out Vector2Int position)
+        {
+            targetView = null;
+            targetGrid = null;
+            position = default;
+            GameObject hit = eventData != null ? eventData.pointerCurrentRaycast.gameObject : null;
+            targetView = hit != null ? hit.GetComponentInParent<InventoryGridView>() : null;
+            if (targetView == null || targetView.Data == null) return false;
+            if (!targetView.TryGetDropPosition(eventData.position, Vector2.zero, eventData.pressEventCamera, out position))
+                return false;
+            targetGrid = targetView.Data;
+            return true;
+        }
+
+        private bool IsEquipped(InventoryEntry entry)
+        {
+            if (playerInventory == null || entry == null) return false;
+            foreach (InventoryEntry equipped in playerInventory.Equipment.Values)
+                if (equipped == entry) return true;
+            return false;
+        }
+
+        private void CreateEquipmentDragGhost(InventoryEntry entry, Vector2 screenPosition)
+        {
+            if (dragLayer == null || entry == null) return;
+            var ghostObject = new GameObject(
+                "EquipmentDragGhost",
+                typeof(RectTransform),
+                typeof(CanvasRenderer),
+                typeof(Image));
+            ghostObject.transform.SetParent(dragLayer, false);
+            equipmentDragGhost = ghostObject.GetComponent<Image>();
+            Sprite generated = GeneratedArtResources.GetItemIcon(entry.Item.ItemId);
+            equipmentDragGhost.sprite = generated != null ? generated : entry.Item.Icon;
+            equipmentDragGhost.color = new Color(1f, 1f, 1f, 0.76f);
+            equipmentDragGhost.preserveAspect = true;
+            equipmentDragGhost.raycastTarget = false;
+            equipmentDragGhost.rectTransform.sizeDelta = new Vector2(84f, 84f);
+            equipmentDragGhost.rectTransform.position = screenPosition;
+            ghostObject.transform.SetAsLastSibling();
+        }
+
+        private void CancelEquipmentDrag()
+        {
+            if (equipmentDragGhost != null)
+            {
+                if (Application.isPlaying) Destroy(equipmentDragGhost.gameObject);
+                else DestroyImmediate(equipmentDragGhost.gameObject);
+            }
+            equipmentDragGhost = null;
+            equipmentDragEntry = null;
+            equipmentDragSlot = EquipmentSlotType.None;
         }
 
         private PlayerInventory.GridData GetQuickTransferTarget(PlayerInventory.GridData source)
         {
             if (openedContainer != null && openedContainerParent != null)
             {
-                if (source == openedContainerParent) return openedContainer.Contents;
-                if (source == openedContainer.Contents) return openedContainerParent;
+                if (source == controller.LoadoutGrid) return openedContainer.Contents;
+                if (source == openedContainer.Contents) return controller.LoadoutGrid;
                 return null;
             }
-            if (source == controller.StashGrid) return controller.LoadoutGrid;
             if (source == controller.LoadoutGrid) return controller.StashGrid;
+            if (source == controller.StashGrid) return controller.LoadoutGrid;
             return null;
         }
 
@@ -354,6 +655,18 @@ namespace ZombieSurvival.UI
 
             if (previewGridView != targetView) ClearPlacementPreview();
             previewGridView = targetView;
+            InventoryEntry targetWeapon = FindEntryAt(targetGrid, position, dragSession.Entry);
+            if (dragSession.Entry.Item.Type == ItemType.Attachment && targetWeapon?.Item.Type == ItemType.Weapon)
+            {
+                InventoryPlacementPreview attachmentPreview = targetWeapon.CanInstallAttachment(dragSession.Entry.Item)
+                    ? InventoryPlacementPreview.Swap
+                    : InventoryPlacementPreview.Invalid;
+                targetView.ShowPlacementPreview(dragSession.Entry, position, attachmentPreview);
+                ShowLocalStatus(attachmentPreview == InventoryPlacementPreview.Swap
+                    ? $"{targetWeapon.Item.DisplayName}에 부착물을 설치할 수 있습니다."
+                    : "이 무기와 부착물은 호환되지 않습니다.");
+                return;
+            }
             InventoryPlacementPreview preview = InventoryGridOperations.GetPlacementPreview(
                 dragSession.SourceGrid,
                 targetGrid,
@@ -361,6 +674,18 @@ namespace ZombieSurvival.UI
                 position);
             targetView.ShowPlacementPreview(dragSession.Entry, position, preview);
             ShowLocalStatus(PreviewMessage(preview));
+        }
+
+        private static InventoryEntry FindEntryAt(
+            PlayerInventory.GridData grid,
+            Vector2Int position,
+            InventoryEntry ignored)
+        {
+            if (grid == null) return null;
+            foreach (InventoryEntry candidate in grid.Entries)
+                if (candidate != null && candidate != ignored &&
+                    candidate.OccupiesGridCell(position.x, position.y)) return candidate;
+            return null;
         }
 
         private static string PreviewMessage(InventoryPlacementPreview preview)
@@ -400,15 +725,6 @@ namespace ZombieSurvival.UI
             return $"{total / 60:00}:{total % 60:00}";
         }
 
-        private void ConfigureLaunchButton()
-        {
-            if (launchButton == null) return;
-            launchButton.onClick.RemoveListener(StartRaid);
-            launchButton.onClick.AddListener(StartRaid);
-        }
-
-        private void StartRaid() => controller?.StartRaid();
-
         private void SubscribeController()
         {
             if (controller == null) return;
@@ -426,15 +742,16 @@ namespace ZombieSurvival.UI
             UnsubscribeController();
             ClearPlacementPreview();
             dragSession.Cancel();
+            CancelEquipmentDrag();
             openedContainer = null;
             openedContainerParent = null;
             localStatusMessage = string.Empty;
+            HideItemDetailPopup(popupEntry);
         }
 
         private void OnDestroy()
         {
             UnsubscribeController();
-            if (launchButton != null) launchButton.onClick.RemoveListener(StartRaid);
         }
     }
 }

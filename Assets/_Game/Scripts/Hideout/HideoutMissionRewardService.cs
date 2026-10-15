@@ -29,7 +29,7 @@ namespace ZombieSurvival.Hideout
 
         private static bool HasValidRewards(HideoutMissionDefinition mission)
         {
-            if (mission.ItemRewards == null || mission.ItemRewards.Count == 0) return false;
+            if ((mission.ItemRewards == null || mission.ItemRewards.Count == 0) && mission.CreditReward <= 0) return false;
             foreach (HideoutMissionItemReward reward in mission.ItemRewards)
                 if (reward?.item == null || reward.quantity <= 0) return false;
             return true;

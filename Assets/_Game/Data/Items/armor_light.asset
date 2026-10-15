@@ -24,13 +24,21 @@ MonoBehaviour:
   gridShape: 010101010101010101
   equipmentSlot: 3
   weaponDefinition: {fileID: 0}
+  meleeWeaponDefinition: {fileID: 0}
+  statusEffectDefinition: {fileID: 0}
+  weaponAttachmentDefinition: {fileID: 0}
   armorDamageReduction: 0.4
   armorMaxDurability: 100
+  armorClass: 1
+  quickSlotBonus: 2
   containerWidth: 0
   containerHeight: 0
   healthRestoreAmount: 0
   satietyRestoreAmount: 0
+  treatsBleeding: 0
+  treatsFracture: 0
   usable: 0
   baseValue: 600
-  description: "\uD53C\uD574\uC758 40%\uB97C \uB0B4\uAD6C\uB3C4\uB85C \uD761\uC218\uD558\uB294
-    \uD76C\uADC0 \uBC29\uD0C4\uBCF5\uC785\uB2C8\uB2E4."
+  description: "\uD53C\uD574\uC758 40%\uB97C \uB0B4\uAD6C\uB3C4\uB85C \uD761\uC218\uD558\uACE0
+    \uD035\uC2AC\uB86F \uB450 \uCE78\uC744 \uCD94\uAC00\uD558\uB294 \uD76C\uADC0
+    \uBC29\uD0C4\uBCF5\uC785\uB2C8\uB2E4."

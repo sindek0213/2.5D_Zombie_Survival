@@ -186,11 +186,20 @@ namespace ZombieSurvival.UI
         {
             switch (preview)
             {
-                case InventoryPlacementPreview.Move: return new Color(0.18f, 0.90f, 0.36f, 0.58f);
-                case InventoryPlacementPreview.Merge: return new Color(0.10f, 0.78f, 0.92f, 0.62f);
-                case InventoryPlacementPreview.Swap: return new Color(1f, 0.72f, 0.12f, 0.62f);
-                default: return new Color(1f, 0.20f, 0.18f, 0.62f);
+                // 이동 가능은 녹색, 합치기는 정보색, 교환은 주황색, 불가능은 적색으로 기능 의미를 그대로 유지합니다.
+                // 공용 테마색의 알파만 낮춰 아이템 원화와 격자 위치를 함께 확인할 수 있게 합니다.
+                case InventoryPlacementPreview.Move: return WithAlpha(SurvivalUiTheme.Success, 0.58f);
+                case InventoryPlacementPreview.Merge: return WithAlpha(SurvivalUiTheme.Info, 0.62f);
+                case InventoryPlacementPreview.Swap: return WithAlpha(SurvivalUiTheme.Accent, 0.62f);
+                default: return WithAlpha(SurvivalUiTheme.Danger, 0.62f);
             }
+        }
+
+        // 정해 둔 RGB 의미색은 유지하고, 드래그 미리보기에서 필요한 투명도만 바꾸는 작은 보조 함수입니다.
+        private static Color WithAlpha(Color color, float alpha)
+        {
+            color.a = alpha;
+            return color;
         }
 
         private void ClearGeneratedObjects()

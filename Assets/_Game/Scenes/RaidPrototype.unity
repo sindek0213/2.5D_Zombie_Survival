@@ -1838,6 +1838,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: ef32029f4493ce94a8bcb18ef5e8cff0, type: 2}
   - {fileID: 11400000, guid: 7efbdc33eaefd4345b56ae3f5a1af217, type: 2}
   - {fileID: 11400000, guid: 4e10099a654df414d895f2d0e1e0f587, type: 2}
+  - {fileID: 11400000, guid: a39bf00c5cf41a048ad20b992295bbab, type: 2}
   spawnPoints:
   - {fileID: 1095918576}
   - {fileID: 229479690}
@@ -1946,6 +1947,8 @@ MonoBehaviour:
   playerInventory: {fileID: 106777765}
   itemCatalog: {fileID: 11400000, guid: bd9068cec010d934daab0b2afb052d25, type: 2}
   testSidearmItemId: weapon_pistol
+  testSidearmAmmoItemId: ammo_9mm
+  testSidearmReserveRounds: 30
   hideoutSceneName: Hideout
 --- !u!4 &161306855
 Transform:

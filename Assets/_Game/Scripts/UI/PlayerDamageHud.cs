@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using ZombieSurvival.Combat;
 using ZombieSurvival.Player;
+using ZombieSurvival.Core;
 
 namespace ZombieSurvival.UI
 {
@@ -13,7 +14,8 @@ namespace ZombieSurvival.UI
         [SerializeField] private Image damageOverlay;
         [SerializeField, Range(0.05f, 0.8f)] private float peakAlpha = 0.28f;
         [SerializeField, Min(0.05f)] private float fadeDuration = 0.45f;
-        [SerializeField] private Color damageColor = new Color(0.75f, 0.02f, 0.01f, 1f);
+        // 피해 오버레이도 공용 실패색을 기준으로 하되 실제 알파 변화는 기존 피격 연출 코드가 계속 담당합니다.
+        [SerializeField] private Color damageColor = SurvivalUiTheme.Danger;
 
         private float currentAlpha;
         private bool subscribed;
@@ -65,7 +67,7 @@ namespace ZombieSurvival.UI
         private void HandleDamaged(float appliedDamage, Vector3 hitPoint)
         {
             if (appliedDamage <= 0f) return;
-            currentAlpha = peakAlpha;
+            currentAlpha = peakAlpha * GameSettings.DamageEffectIntensity;
             ApplyOverlay();
         }
 

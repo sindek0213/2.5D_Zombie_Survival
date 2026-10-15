@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed54f930d51f04a4f94e9723fa801882, type: 3}
+  m_Name: mission_school_radio_recovery
+  m_EditorClassIdentifier: 
+  missionId: school_radio_recovery
+  displayName: "\uBC29\uC1A1 \uC7A5\uBE44 \uD68C\uC218"
+  description: "\uD559\uAD50 \uD2B9\uBCC4\uC2E4\xB7\uBC29\uC1A1 \uAD6C\uC5ED\uC5D0\uC11C
+    \uD734\uB300\uC6A9 \uBB34\uC804\uAE30\uB97C \uCC3E\uC544 \uC18C\uC9C0\uD55C \uCC44
+    \uD0C8\uCD9C\uD558\uC138\uC694."
+  objectiveType: 6
+  objectiveItem: {fileID: 11400000, guid: 9f66314435deee74681361b56c70f0f1, type: 2}
+  objectiveWeapon: {fileID: 0}
+  objectiveZoneId: school_special_class
+  requiredAmount: 1
+  repeatable: 0
+  itemRewards:
+  - item: {fileID: 11400000, guid: 07f80b697df7df04bbda0befa58b27ad, type: 2}
+    quantity: 4
+  - item: {fileID: 11400000, guid: 7ec0e42290ebbb54dadc6adb5717b920, type: 2}
+    quantity: 15
+  prerequisiteMissionId: supply_recovery
+  creditReward: 340
+  riskRating: 3

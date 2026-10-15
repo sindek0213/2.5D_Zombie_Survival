@@ -14,7 +14,12 @@ namespace ZombieSurvival.Items
         Armor,
         Container,
         // 시설 강화와 제작에 사용하는 자원입니다. 기존 저장의 enum 숫자를 유지하기 위해 마지막에 추가했습니다.
-        Material
+        Material,
+        // 무기 한 자루의 조준경·총구·탄창 슬롯에 장착하는 개별 부품입니다.
+        // 기존 저장 enum 숫자를 유지하기 위해 항상 마지막에 추가합니다.
+        Attachment,
+        // 일정 시간 버프를 적용하고 한 개 소비되는 아이템입니다. 기존 저장 enum 숫자를 유지하기 위해 항상 마지막에 추가합니다.
+        BuffConsumable
     }
 
     // 파밍 아이템의 가치와 발견 난이도를 네 단계로 구분합니다.
@@ -66,19 +71,30 @@ namespace ZombieSurvival.Items
         [SerializeField, HideInInspector] private bool[] gridShape = new bool[0];
         [SerializeField] private EquipmentSlotType equipmentSlot;
 
-        // Weapon 아이템이 장착됐을 때 적용할 피해량, 연사 속도와 탄창 수치는 별도 WeaponDefinition 에셋에서 읽습니다.
-        // 인벤토리 모양과 전투 밸런스를 서로 다른 에셋에 나누면 한쪽을 수정할 때 다른 규칙을 실수로 건드리지 않습니다.
+        // Weapon 아이템이 총기라면 WeaponDefinition, 근접무기라면 MeleeWeaponDefinition에서 전투 수치를 읽습니다.
+        // 두 참조 중 하나만 연결하는 방식이므로 새 근접무기를 추가해도 기존 총기 탄창·부착물 코드를 건드리지 않습니다.
         [SerializeField] private WeaponDefinition weaponDefinition;
+        [SerializeField] private MeleeWeaponDefinition meleeWeaponDefinition;
+        // BuffConsumable 아이템이 사용 완료 시 적용할 시간제 효과 정의입니다.
+        [SerializeField] private StatusEffectDefinition statusEffectDefinition;
+        // Attachment 아이템일 때 실제 호환 탄종과 능력치 보정을 제공하는 데이터입니다.
+        [SerializeField] private WeaponAttachmentDefinition weaponAttachmentDefinition;
         // Armor 아이템이 막아 주는 피해 비율과 새 방탄복의 최대 내구도입니다.
         // 예를 들어 감소율 0.4는 들어온 피해의 40%를 내구도가 허용하는 범위에서 흡수한다는 뜻입니다.
         [SerializeField, Range(0f, 1f)] private float armorDamageReduction;
         [SerializeField, Min(0f)] private float armorMaxDurability;
+        [SerializeField] private ArmorClass armorClass = ArmorClass.Soft;
+        // 방탄복의 주머니·파우치가 기본 퀵슬롯 두 칸에 추가로 열어 주는 칸 수입니다.
+        // 최대 열 칸을 넘는 값은 PlayerQuickSlots에서 잘라 내지만 에셋도 0~8 범위로 저장해 Inspector 실수를 줄입니다.
+        [SerializeField, Range(0, 8)] private int quickSlotBonus;
         [SerializeField, Min(0)] private int containerWidth;
         [SerializeField, Min(0)] private int containerHeight;
         // 소비 효과를 코드에 고정하지 않고 아이템 에셋마다 조절할 수 있도록 실제 회복량을 정의에 저장합니다.
         // 의료품은 healthRestoreAmount, 음식은 satietyRestoreAmount만 사용하며 다른 종류에서는 0으로 읽힙니다.
         [SerializeField, Min(0f)] private float healthRestoreAmount;
         [SerializeField, Min(0f)] private float satietyRestoreAmount;
+        [SerializeField] private bool treatsBleeding;
+        [SerializeField] private bool treatsFracture;
         [SerializeField] private bool usable;
         // 상점과 밸런스 표가 한 개당 기본 가치를 계산할 때 사용하는 정수 값입니다.
         // 실제 판매 시설이 추가되기 전에도 드롭·제작 비용의 상대 가치를 비교할 수 있습니다.
@@ -93,18 +109,31 @@ namespace ZombieSurvival.Items
         public AmmoType Caliber => itemType == ItemType.Ammo ? ammoType : AmmoType.None;
         // 탄창, 방탄 내구도 또는 내부 격자를 가진 아이템은 각 InventoryEntry마다 서로 다른 실행 상태를 보존해야 합니다.
         // 이런 아이템을 한 묶음으로 합치면 어느 탄창·내구도·내용물을 남길지 결정할 수 없으므로 코드에서도 중첩을 금지합니다.
-        public bool CanStack => itemType != ItemType.Weapon && itemType != ItemType.Armor && !IsContainer;
+        public bool CanStack => itemType != ItemType.Weapon && itemType != ItemType.Armor &&
+                                itemType != ItemType.Attachment && !IsContainer;
         public int MaxStack => CanStack ? Mathf.Max(1, maxStack) : 1;
         public int GridWidth => Mathf.Clamp(gridWidth, 1, MaximumGridSize);
         public int GridHeight => Mathf.Clamp(gridHeight, 1, MaximumGridSize);
         public EquipmentSlotType EquipmentSlot => equipmentSlot;
         public WeaponDefinition WeaponDefinition => itemType == ItemType.Weapon ? weaponDefinition : null;
+        public MeleeWeaponDefinition MeleeWeaponDefinition => itemType == ItemType.Weapon ? meleeWeaponDefinition : null;
+        public StatusEffectDefinition StatusEffectDefinition
+            => itemType == ItemType.BuffConsumable ? statusEffectDefinition : null;
+        // 총기 또는 근접무기 데이터 중 하나라도 연결된 Weapon 아이템만 실제 전투 무기로 선택할 수 있습니다.
+        public bool IsCombatWeapon => itemType == ItemType.Weapon &&
+                                      (weaponDefinition != null || meleeWeaponDefinition != null);
+        public WeaponAttachmentDefinition WeaponAttachmentDefinition
+            => itemType == ItemType.Attachment ? weaponAttachmentDefinition : null;
         public float ArmorDamageReduction => itemType == ItemType.Armor ? Mathf.Clamp01(armorDamageReduction) : 0f;
         public float ArmorMaxDurability => itemType == ItemType.Armor ? Mathf.Max(0f, armorMaxDurability) : 0f;
+        public ArmorClass ArmorClass => itemType == ItemType.Armor ? armorClass : ArmorClass.None;
+        public int QuickSlotBonus => itemType == ItemType.Armor ? Mathf.Clamp(quickSlotBonus, 0, 8) : 0;
         public int ContainerWidth => Mathf.Max(0, containerWidth);
         public int ContainerHeight => Mathf.Max(0, containerHeight);
         public float HealthRestoreAmount => itemType == ItemType.Healing ? Mathf.Max(0f, healthRestoreAmount) : 0f;
         public float SatietyRestoreAmount => itemType == ItemType.Food ? Mathf.Max(0f, satietyRestoreAmount) : 0f;
+        public bool TreatsBleeding => itemType == ItemType.Healing && treatsBleeding;
+        public bool TreatsFracture => itemType == ItemType.Healing && treatsFracture;
         public bool IsContainer => ContainerWidth > 0 && ContainerHeight > 0;
         public bool Usable => usable;
         public int BaseValue => Mathf.Max(0, baseValue);
@@ -147,10 +176,12 @@ namespace ZombieSurvival.Items
             // 일반 탄약·의료품·식량은 입력한 maxStack을 그대로 사용하되 최소 한 개는 보장합니다.
             bool hasIndividualState = itemType == ItemType.Weapon ||
                                       itemType == ItemType.Armor ||
+                                      itemType == ItemType.Attachment ||
                                       (containerWidth > 0 && containerHeight > 0);
             maxStack = hasIndividualState ? 1 : Mathf.Max(1, maxStack);
             armorDamageReduction = Mathf.Clamp01(armorDamageReduction);
             armorMaxDurability = Mathf.Max(0f, armorMaxDurability);
+            quickSlotBonus = itemType == ItemType.Armor ? Mathf.Clamp(quickSlotBonus, 0, 8) : 0;
             healthRestoreAmount = Mathf.Max(0f, healthRestoreAmount);
             satietyRestoreAmount = Mathf.Max(0f, satietyRestoreAmount);
             baseValue = Mathf.Max(0, baseValue);

@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using ZombieSurvival.Combat;
 using ZombieSurvival.Core;
+using ZombieSurvival.Items;
 
 namespace ZombieSurvival.Hideout
 {
@@ -18,9 +20,17 @@ namespace ZombieSurvival.Hideout
         public bool rotated;
         public bool hasMagazineState;
         public int magazineRounds;
+        public bool hasWeaponDurabilityState;
+        public float weaponDurability;
+        public bool hasTriggerModeState;
+        public int selectedTriggerMode;
         public bool hasArmorState;
         public float armorDurability;
+        public List<string> attachmentItemIds = new List<string>();
         public int parentIndex = -1;
+        // 비어 있으면 일반 격자 아이템이고, 최상위 항목에 슬롯 이름이 있으면 거점에서 장착한 출격 장비입니다.
+        // 자식 contents에는 슬롯을 기록하지 않아 한 장비 아래의 모든 내부 아이템이 같은 트리로 복원됩니다.
+        public string equipmentSlot;
     }
 
     [Serializable]
@@ -37,14 +47,25 @@ namespace ZombieSurvival.Hideout
         public int activeMissionZombieKills;
         public int activeMissionProgress;
         public List<HideoutMissionCompletionState> missionCompletions = new List<HideoutMissionCompletionState>();
+        // 버전 6부터 상점에서 사용하는 공용 화폐를 저장합니다.
+        // 이전 저장에는 이 필드가 없으므로 LoadFromPath가 명시적으로 시작 자금을 적용합니다.
+        public int credits = HideoutEconomyStateStore.DefaultCredits;
+        public int tutorialStep;
+        // 버전 9부터 상인 진행도와 재고 회차를 저장해 재실행 후 가격·해금 상품이 되돌아가지 않게 합니다.
+        public int traderReputation;
+        public int stockRefreshIndex;
+        // 버전 10부터 제작 대기열과 발전기 상태를 저장합니다.
+        public List<HideoutCraftJobState> craftJobs = new List<HideoutCraftJobState>();
+        public bool generatorEnabled = true;
+        public float generatorFuelSeconds = HideoutCraftQueueStateStore.DefaultFuelSeconds;
     }
 
     // HideoutStateStore의 순수 메모리 목록을 로컬 JSON 파일로 저장하고 게임 시작 시 복원합니다.
     // 파일 읽기와 모든 항목 검증이 성공한 뒤에만 메모리 상태를 교체하여 손상 파일로 정상 데이터를 지우지 않습니다.
     public static class HideoutSaveService
     {
-        // 버전 5는 공통 임무 진행도와 임무별 완료 횟수를 추가했습니다. 버전 1~4 저장도 계속 읽고 다음 저장 때 자동 변환합니다.
-        public const int CurrentVersion = 5;
+        // 버전 10은 제작 대기열과 발전기 연료를 추가합니다. 이전 버전은 빈 대기열·기본 연료로 자동 이관됩니다.
+        public const int CurrentVersion = 10;
         private const int OldestSupportedVersion = 1;
         private const string SaveFileName = "hideout_save.json";
         private static bool defaultSaveLoaded;
@@ -70,6 +91,26 @@ namespace ZombieSurvival.Hideout
         public static string DefaultSavePath => string.IsNullOrWhiteSpace(defaultPathOverride)
             ? Path.Combine(Application.persistentDataPath, SaveFileName)
             : defaultPathOverride;
+        public static string DefaultBackupPath => DefaultSavePath + ".bak";
+
+        // 타이틀 화면의 '게임 로드' 버튼은 실제로 불러올 파일이 있을 때만 활성화되어야 합니다.
+        // 주 저장 파일이 손상되거나 교체 중이어도 백업 파일로 복구할 수 있으므로 둘 중 하나만 존재해도 true를 반환합니다.
+        public static bool DefaultSaveExists
+        {
+            get
+            {
+                try
+                {
+                    return File.Exists(DefaultSavePath) || File.Exists(DefaultBackupPath);
+                }
+                catch (Exception exception)
+                {
+                    // 경로 접근 자체가 실패한 환경에서는 로드 버튼을 비활성화하고 Console에 원인을 남깁니다.
+                    Debug.LogWarning($"저장 파일 존재 여부 확인 실패: {exception.Message}");
+                    return false;
+                }
+            }
+        }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetRuntimeSession()
@@ -80,6 +121,9 @@ namespace ZombieSurvival.Hideout
             HideoutStateStore.ClearInMemoryState();
             HideoutFacilityStateStore.ResetForTests();
             HideoutMissionStateStore.ResetForTests();
+            HideoutEconomyStateStore.ResetForTests();
+            HideoutCraftQueueStateStore.ResetForTests();
+            TutorialProgressStore.ResetForTests();
         }
 
         // 한 Play 세션에서 기본 파일을 한 번만 읽고, 파일이 없는 첫 실행은 정상적인 빈 창고로 처리합니다.
@@ -87,7 +131,11 @@ namespace ZombieSurvival.Hideout
         {
             if (defaultSaveLoaded) return defaultLoadSucceeded;
             defaultSaveLoaded = true;
-            defaultLoadSucceeded = !File.Exists(DefaultSavePath) || LoadFromPath(DefaultSavePath);
+            if (!File.Exists(DefaultSavePath))
+                defaultLoadSucceeded = !File.Exists(DefaultBackupPath) || LoadFromPath(DefaultBackupPath);
+            else
+                defaultLoadSucceeded = LoadFromPath(DefaultSavePath) ||
+                                       (File.Exists(DefaultBackupPath) && LoadFromPath(DefaultBackupPath));
             return defaultLoadSucceeded;
         }
 
@@ -113,11 +161,19 @@ namespace ZombieSurvival.Hideout
                 var data = new HideoutSaveData();
                 FlattenRoots(HideoutStateStore.StashItems, data.stashItems);
                 FlattenRoots(HideoutStateStore.LoadoutItems, data.loadoutItems);
+                FlattenEquipment(HideoutStateStore.LoadoutEquipment, data.loadoutItems);
                 data.facilityLevels.AddRange(HideoutFacilityStateStore.CaptureState());
                 data.activeMissionId = HideoutMissionStateStore.ActiveMissionId;
                 data.activeMissionProgress = HideoutMissionStateStore.ObjectiveProgress;
                 data.activeMissionZombieKills = HideoutMissionStateStore.ZombieKillProgress;
                 data.missionCompletions.AddRange(HideoutMissionStateStore.CaptureCompletionState());
+                data.credits = HideoutEconomyStateStore.Credits;
+                data.tutorialStep = (int)TutorialProgressStore.CurrentStep;
+                data.traderReputation = HideoutEconomyStateStore.TraderReputation;
+                data.stockRefreshIndex = HideoutEconomyStateStore.StockRefreshIndex;
+                data.craftJobs.AddRange(HideoutCraftQueueStateStore.CaptureState());
+                data.generatorEnabled = HideoutCraftQueueStateStore.GeneratorEnabled;
+                data.generatorFuelSeconds = HideoutCraftQueueStateStore.GeneratorFuelSeconds;
 
                 string json = JsonUtility.ToJson(data, true);
                 temporaryPath = fullPath + ".tmp";
@@ -126,7 +182,9 @@ namespace ZombieSurvival.Hideout
                 // 기존 최종 파일은 새 임시 파일 작성이 완전히 끝난 뒤 한 번에 교체합니다.
                 if (File.Exists(fullPath))
                 {
-                    File.Replace(temporaryPath, fullPath, null);
+                    string backupPath = fullPath + ".bak";
+                    if (File.Exists(backupPath)) File.Delete(backupPath);
+                    File.Replace(temporaryPath, fullPath, backupPath);
                     temporaryPath = null;
                 }
                 else
@@ -168,14 +226,22 @@ namespace ZombieSurvival.Hideout
 
                 List<RaidItemSnapshot> stash;
                 List<RaidItemSnapshot> loadout;
+                var loadoutEquipment = new List<RaidEquipmentSnapshot>();
                 var facilityLevels = new List<HideoutFacilityLevelState>();
                 string activeMissionId = string.Empty;
                 int activeMissionProgress = 0;
                 var missionCompletions = new List<HideoutMissionCompletionState>();
+                int savedCredits = HideoutEconomyStateStore.DefaultCredits;
+                int savedTutorialStep = 0;
+                int savedTraderReputation = 0;
+                int savedStockRefreshIndex = 0;
+                var savedCraftJobs = new List<HideoutCraftJobState>();
+                bool savedGeneratorEnabled = true;
+                float savedGeneratorFuel = HideoutCraftQueueStateStore.DefaultFuelSeconds;
                 if (header.version >= 3)
                 {
                     HideoutSaveData data = JsonUtility.FromJson<HideoutSaveData>(json);
-                    if (!TryUnflattenSave(data, out stash, out loadout)) return false;
+                    if (!TryUnflattenSave(data, out stash, out loadout, out loadoutEquipment)) return false;
                     if (header.version >= 4)
                     {
                         if (!TryReadProgression(
@@ -187,6 +253,36 @@ namespace ZombieSurvival.Hideout
                                 out missionCompletions))
                             return false;
                     }
+
+                    // 버전 1~5에는 화폐가 없으므로 새 게임과 같은 시작 자금을 제공합니다.
+                    // 버전 6 파일의 음수 잔액은 정상 플레이로 만들 수 없는 손상 데이터이므로 전체 불러오기를 거부합니다.
+                    if (header.version >= 6)
+                    {
+                        if (data.credits < 0 || data.tutorialStep < 0 ||
+                            data.tutorialStep > (int)TutorialStep.Completed) return false;
+                        savedCredits = data.credits;
+                        savedTutorialStep = data.tutorialStep;
+                    }
+                    if (header.version >= 9)
+                    {
+                        if (data.traderReputation < 0 || data.stockRefreshIndex < 0) return false;
+                        savedTraderReputation = data.traderReputation;
+                        savedStockRefreshIndex = data.stockRefreshIndex;
+                    }
+                    if (header.version >= 10)
+                    {
+                        if (data.craftJobs == null || data.craftJobs.Count > HideoutCraftQueueStateStore.MaximumQueueSize ||
+                            data.generatorFuelSeconds < 0f || data.generatorFuelSeconds > 86400f) return false;
+                        foreach (HideoutCraftJobState job in data.craftJobs)
+                        {
+                            if (job == null || string.IsNullOrWhiteSpace(job.recipeId) ||
+                                string.IsNullOrWhiteSpace(job.outputItemId) || job.outputQuantity <= 0 ||
+                                job.remainingSeconds < 0f) return false;
+                            savedCraftJobs.Add(job);
+                        }
+                        savedGeneratorEnabled = data.generatorEnabled;
+                        savedGeneratorFuel = data.generatorFuelSeconds;
+                    }
                 }
                 else
                 {
@@ -197,9 +293,12 @@ namespace ZombieSurvival.Hideout
                     loadout = CloneList(legacy.loadoutItems);
                 }
 
-                HideoutStateStore.ReplaceState(stash, loadout);
+                HideoutStateStore.ReplaceState(stash, loadout, loadoutEquipment);
                 HideoutFacilityStateStore.ReplaceState(facilityLevels);
                 HideoutMissionStateStore.Restore(activeMissionId, activeMissionProgress, missionCompletions);
+                HideoutEconomyStateStore.Restore(savedCredits, savedTraderReputation, savedStockRefreshIndex);
+                HideoutCraftQueueStateStore.Restore(savedCraftJobs, savedGeneratorEnabled, savedGeneratorFuel);
+                TutorialProgressStore.Restore(savedTutorialStep);
                 return true;
             }
             catch (Exception exception)
@@ -223,17 +322,55 @@ namespace ZombieSurvival.Hideout
             defaultLoadSucceeded = false;
         }
 
+        // 새 게임 확인 UI가 호출하는 진입점입니다. 메인·백업 파일을 지우고 모든 메모리 진행도를 시작 상태로 되돌립니다.
+        // 호출 전에 UI에서 별도 확인을 받아야 하며, 삭제 실패 시 false를 반환해 빈 상태를 저장하지 않습니다.
+        public static bool TryResetDefaultSave()
+        {
+            try
+            {
+                if (File.Exists(DefaultSavePath)) File.Delete(DefaultSavePath);
+                if (File.Exists(DefaultBackupPath)) File.Delete(DefaultBackupPath);
+                HideoutStateStore.ClearInMemoryState();
+                HideoutFacilityStateStore.ResetForTests();
+                HideoutMissionStateStore.ResetForTests();
+                HideoutEconomyStateStore.ResetForTests();
+                HideoutCraftQueueStateStore.ResetForTests();
+                TutorialProgressStore.ResetForTests();
+                defaultSaveLoaded = true;
+                defaultLoadSucceeded = true;
+                return true;
+            }
+            catch (Exception exception)
+            {
+                Debug.LogWarning($"새 게임 데이터 초기화 실패: {exception.Message}");
+                return false;
+            }
+        }
+
         private static void FlattenRoots(
             IReadOnlyList<RaidItemSnapshot> roots,
             List<HideoutSaveItemData> target)
         {
             if (roots == null) return;
-            foreach (RaidItemSnapshot root in roots) FlattenItem(root, -1, target);
+            foreach (RaidItemSnapshot root in roots) FlattenItem(root, -1, string.Empty, target);
+        }
+
+        // 장비는 일반 출격 아이템과 같은 평탄 목록에 저장하되 최상위 항목에만 장비 슬롯 이름을 붙입니다.
+        // 기존 버전의 loadoutItems 배열을 유지하므로 별도 재귀 자료형을 추가하지 않고도 이전 저장과 호환됩니다.
+        private static void FlattenEquipment(
+            IReadOnlyList<RaidEquipmentSnapshot> equipment,
+            List<HideoutSaveItemData> target)
+        {
+            if (equipment == null) return;
+            foreach (RaidEquipmentSnapshot equipped in equipment)
+                if (equipped?.item != null && !string.IsNullOrWhiteSpace(equipped.slot))
+                    FlattenItem(equipped.item, -1, equipped.slot, target);
         }
 
         private static void FlattenItem(
             RaidItemSnapshot item,
             int parentIndex,
+            string equipmentSlot,
             List<HideoutSaveItemData> target)
         {
             if (item == null) return;
@@ -247,26 +384,37 @@ namespace ZombieSurvival.Hideout
                 rotated = item.rotated,
                 hasMagazineState = item.hasMagazineState,
                 magazineRounds = item.magazineRounds,
+                hasWeaponDurabilityState = item.hasWeaponDurabilityState,
+                weaponDurability = item.weaponDurability,
+                hasTriggerModeState = item.hasTriggerModeState,
+                selectedTriggerMode = item.selectedTriggerMode,
                 hasArmorState = item.hasArmorState,
                 armorDurability = item.armorDurability,
-                parentIndex = parentIndex
+                attachmentItemIds = item.attachmentItemIds != null
+                    ? new List<string>(item.attachmentItemIds)
+                    : new List<string>(),
+                parentIndex = parentIndex,
+                equipmentSlot = equipmentSlot ?? string.Empty
             });
 
             if (item.contents != null)
-                foreach (RaidItemSnapshot child in item.contents) FlattenItem(child, ownIndex, target);
+                foreach (RaidItemSnapshot child in item.contents) FlattenItem(child, ownIndex, string.Empty, target);
         }
 
         private static bool TryUnflattenSave(
             HideoutSaveData data,
             out List<RaidItemSnapshot> stash,
-            out List<RaidItemSnapshot> loadout)
+            out List<RaidItemSnapshot> loadout,
+            out List<RaidEquipmentSnapshot> loadoutEquipment)
         {
             stash = null;
             loadout = null;
+            loadoutEquipment = null;
             if (data == null || data.version < 3 || data.version > CurrentVersion ||
                 data.stashItems == null || data.loadoutItems == null)
                 return false;
-            return TryUnflattenList(data.stashItems, out stash) && TryUnflattenList(data.loadoutItems, out loadout);
+            return TryUnflattenList(data.stashItems, false, out stash, out _) &&
+                   TryUnflattenList(data.loadoutItems, true, out loadout, out loadoutEquipment);
         }
 
         private static bool TryReadProgression(
@@ -331,15 +479,20 @@ namespace ZombieSurvival.Hideout
 
         private static bool TryUnflattenList(
             List<HideoutSaveItemData> flat,
-            out List<RaidItemSnapshot> roots)
+            bool allowEquipment,
+            out List<RaidItemSnapshot> roots,
+            out List<RaidEquipmentSnapshot> equipment)
         {
             roots = new List<RaidItemSnapshot>();
+            equipment = new List<RaidEquipmentSnapshot>();
             var created = new List<RaidItemSnapshot>(flat.Count);
+            var usedEquipmentSlots = new HashSet<EquipmentSlotType>();
             for (int i = 0; i < flat.Count; i++)
             {
                 HideoutSaveItemData item = flat[i];
                 // 부모는 반드시 자신보다 먼저 기록되어야 하므로 순환 참조와 잘못된 인덱스를 동시에 차단합니다.
                 if (!IsValidFlatItem(item) || item.parentIndex >= i || item.parentIndex < -1) return false;
+                if (item.parentIndex != -1 && !string.IsNullOrWhiteSpace(item.equipmentSlot)) return false;
 
                 var snapshot = new RaidItemSnapshot
                 {
@@ -350,11 +503,32 @@ namespace ZombieSurvival.Hideout
                     rotated = item.rotated,
                     hasMagazineState = item.hasMagazineState,
                     magazineRounds = item.magazineRounds,
+                    hasWeaponDurabilityState = item.hasWeaponDurabilityState,
+                    weaponDurability = item.weaponDurability,
+                    hasTriggerModeState = item.hasTriggerModeState,
+                    selectedTriggerMode = item.selectedTriggerMode,
                     hasArmorState = item.hasArmorState,
                     armorDurability = item.armorDurability
                 };
+                if (item.attachmentItemIds != null)
+                    foreach (string attachmentId in item.attachmentItemIds)
+                        if (!string.IsNullOrWhiteSpace(attachmentId)) snapshot.attachmentItemIds.Add(attachmentId);
                 created.Add(snapshot);
-                if (item.parentIndex == -1) roots.Add(snapshot);
+                if (item.parentIndex == -1)
+                {
+                    if (string.IsNullOrWhiteSpace(item.equipmentSlot))
+                    {
+                        roots.Add(snapshot);
+                    }
+                    else
+                    {
+                        if (!allowEquipment ||
+                            !Enum.TryParse(item.equipmentSlot, out EquipmentSlotType slot) ||
+                            slot == EquipmentSlotType.None ||
+                            !usedEquipmentSlots.Add(slot)) return false;
+                        equipment.Add(new RaidEquipmentSnapshot { slot = slot.ToString(), item = snapshot });
+                    }
+                }
                 else created[item.parentIndex].contents.Add(snapshot);
             }
             return true;
@@ -364,6 +538,9 @@ namespace ZombieSurvival.Hideout
         {
             return item != null && !string.IsNullOrWhiteSpace(item.itemId) && item.quantity > 0 &&
                    (!item.hasMagazineState || item.magazineRounds >= 0) &&
+                   (!item.hasWeaponDurabilityState || item.weaponDurability >= 0f) &&
+                   (!item.hasTriggerModeState ||
+                    Enum.IsDefined(typeof(WeaponTriggerMode), item.selectedTriggerMode)) &&
                    (!item.hasArmorState || item.armorDurability >= 0f);
         }
 
@@ -382,6 +559,9 @@ namespace ZombieSurvival.Hideout
         {
             if (item == null || string.IsNullOrWhiteSpace(item.itemId) || item.quantity <= 0 || item.contents == null ||
                 (item.hasMagazineState && item.magazineRounds < 0) ||
+                (item.hasWeaponDurabilityState && item.weaponDurability < 0f) ||
+                (item.hasTriggerModeState &&
+                 !Enum.IsDefined(typeof(WeaponTriggerMode), item.selectedTriggerMode)) ||
                 (item.hasArmorState && item.armorDurability < 0f)) return false;
             foreach (RaidItemSnapshot child in item.contents)
                 if (!IsValidLegacyItem(child)) return false;

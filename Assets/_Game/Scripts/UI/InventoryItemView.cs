@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -11,7 +12,8 @@ namespace ZombieSurvival.UI
     // InventoryEntry 하나를 실제 점유 모양대로 여러 Image 칸으로 그리는 재사용 UI 프리팹입니다.
     // 루트 전체에 클릭 이미지를 두지 않고 점유 칸 Image만 Raycast를 받으므로 L자 아이템의 빈 모서리를 다른 아이템이 정상적으로 사용할 수 있습니다.
     public sealed class InventoryItemView : MonoBehaviour,
-        IPointerClickHandler, IBeginDragHandler, IDragHandler, IEndDragHandler
+        IPointerClickHandler, IPointerDownHandler, IPointerUpHandler, IPointerExitHandler,
+        IBeginDragHandler, IDragHandler, IEndDragHandler
     {
         [SerializeField] private RectTransform occupiedLayer;
         [SerializeField] private Image occupiedCellPrefab;
@@ -20,9 +22,10 @@ namespace ZombieSurvival.UI
         [SerializeField] private Image iconImage;
         [SerializeField] private Text labelText;
         [SerializeField] private CanvasGroup canvasGroup;
-        [SerializeField] private Color normalColor = new Color(0.25f, 0.48f, 0.34f, 1f);
-        [SerializeField] private Color selectedColor = new Color(0.15f, 0.8f, 0.86f, 1f);
-        [SerializeField] private Color dragColor = new Color(0.3f, 0.9f, 0.65f, 0.78f);
+        // 평상시·선택·드래그 색은 공용 테마를 사용합니다. 프리팹의 직렬화 값도 테마 적용 도구가 같은 값으로 갱신합니다.
+        [SerializeField] private Color normalColor = SurvivalUiTheme.ItemCommon;
+        [SerializeField] private Color selectedColor = SurvivalUiTheme.ItemSelected;
+        [SerializeField] private Color dragColor = SurvivalUiTheme.ItemDragging;
 
         private readonly List<GameObject> generatedCells = new List<GameObject>();
         private RectTransform rootRect;
@@ -31,6 +34,12 @@ namespace ZombieSurvival.UI
         private IInventoryGridViewOwner owner;
         private Color currentColor;
         private Vector3 dragScreenDelta;
+        private Coroutine detailHoldRoutine;
+        private bool detailPopupShown;
+        private bool suppressNextClick;
+
+        // 짧은 클릭과 드래그는 기존 조작으로 남기고, 의도적으로 누르고 있을 때만 설명이 열리도록 하는 대기 시간입니다.
+        public const float DetailHoldDuration = 0.45f;
 
         public InventoryEntry Entry => entry;
 
@@ -122,14 +131,43 @@ namespace ZombieSurvival.UI
 
         public void OnPointerClick(PointerEventData eventData)
         {
+            // 길게 눌러 설명을 본 뒤 손을 뗀 동작이 컨테이너 열기나 아이템 사용으로 이어지지 않게 클릭 한 번을 소비합니다.
+            if (suppressNextClick)
+            {
+                suppressNextClick = false;
+                return;
+            }
+
             owner?.HandleItemClick(entry, gridView?.Data, eventData.button,
                 Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift),
                 Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl));
         }
 
+        public void OnPointerDown(PointerEventData eventData)
+        {
+            if (eventData.button != PointerEventData.InputButton.Left || entry == null || owner == null) return;
+            CancelDetailHold(true);
+            suppressNextClick = false;
+            detailHoldRoutine = StartCoroutine(WaitForDetailHold(eventData.position, eventData.pressEventCamera));
+        }
+
+        public void OnPointerUp(PointerEventData eventData)
+        {
+            // 길게 눌러 열린 팝업은 손을 떼도 유지합니다. 닫기는 팝업 바깥 클릭, X 버튼 또는 인벤토리 닫기가 담당합니다.
+            if (eventData.button == PointerEventData.InputButton.Left) CancelDetailHold(false);
+        }
+
+        public void OnPointerExit(PointerEventData eventData)
+        {
+            // 아직 0.45초가 지나지 않았다면 열기 대기만 취소합니다. 이미 열린 팝업은 커서를 옮겨도 유지합니다.
+            CancelDetailHold(false);
+        }
+
         public void OnBeginDrag(PointerEventData eventData)
         {
             if (eventData.button != PointerEventData.InputButton.Left || entry == null || gridView == null) return;
+            // 마우스를 움직여 드래그가 시작된 경우에는 길게 누르기와 다른 의도이므로 팝업 대기를 취소합니다.
+            CancelDetailHold(true);
             Vector2 pointerOffset = gridView.GetPointerOffset(entry, eventData.position, eventData.pressEventCamera);
             owner?.BeginItemDrag(this, entry, gridView.Data, pointerOffset, eventData);
         }
@@ -183,9 +221,9 @@ namespace ZombieSurvival.UI
         {
             switch (rarity)
             {
-                case ItemRarity.Uncommon: return new Color(0.24f, 0.62f, 0.34f, 1f);
-                case ItemRarity.Rare: return new Color(0.25f, 0.46f, 0.82f, 1f);
-                case ItemRarity.Quest: return new Color(0.90f, 0.66f, 0.18f, 1f);
+                case ItemRarity.Uncommon: return SurvivalUiTheme.RarityUncommon;
+                case ItemRarity.Rare: return SurvivalUiTheme.RarityRare;
+                case ItemRarity.Quest: return SurvivalUiTheme.RarityQuest;
                 default: return commonColor;
             }
         }
@@ -199,6 +237,36 @@ namespace ZombieSurvival.UI
                 else DestroyImmediate(generated);
             }
             generatedCells.Clear();
+        }
+
+        private IEnumerator WaitForDetailHold(Vector2 screenPosition, Camera eventCamera)
+        {
+            float elapsed = 0f;
+            while (elapsed < DetailHoldDuration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                yield return null;
+            }
+
+            detailHoldRoutine = null;
+            detailPopupShown = true;
+            suppressNextClick = true;
+            owner?.ShowItemDetailPopup(entry, screenPosition, eventCamera);
+        }
+
+        private void CancelDetailHold(bool hidePopup)
+        {
+            if (detailHoldRoutine != null)
+            {
+                StopCoroutine(detailHoldRoutine);
+                detailHoldRoutine = null;
+            }
+
+            if (hidePopup && detailPopupShown)
+            {
+                owner?.HideItemDetailPopup(entry);
+                detailPopupShown = false;
+            }
         }
 
         private void EnsureIconView()
@@ -259,6 +327,12 @@ namespace ZombieSurvival.UI
             rect.anchorMin = new Vector2(0f, 1f);
             rect.anchorMax = new Vector2(0f, 1f);
             rect.pivot = new Vector2(0f, 1f);
+        }
+
+        private void OnDisable()
+        {
+            // 격자 새로고침으로 View가 파괴되는 순간에도 팝업을 닫아 사라진 아이템의 정보가 화면에 남지 않게 합니다.
+            CancelDetailHold(true);
         }
     }
 }

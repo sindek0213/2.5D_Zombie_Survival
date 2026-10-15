@@ -6,12 +6,15 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/_Game/Scenes/Bootstrap.unity
-    guid: b1db3a1ea1ec9da41b0500f5c40bc2e3
+    path: Assets/_Game/Scenes/Title.unity
+    guid: bfa3b56919570d94783cd446f1524a18
+  - enabled: 1
+    path: Assets/_Game/Scenes/Loading.unity
+    guid: 3cf3f771c0b36c84c8cc58bc44674ab3
   - enabled: 1
     path: Assets/_Game/Scenes/Hideout.unity
     guid: 6ef823a27a344df4fa7f867837bd261d
   - enabled: 1
-    path: Assets/_Game/Scenes/RaidPrototype.unity
-    guid: 9d1de547d27ab75408c41a535629c33f
+    path: Assets/_Game/Scenes/RaidSchool.unity
+    guid: 80e979654faf17b4ba3029665c575fdc
   m_configObjects: {}

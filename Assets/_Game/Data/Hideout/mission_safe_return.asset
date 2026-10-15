@@ -14,14 +14,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   missionId: safe_return
   displayName: "\uBB34\uC0AC \uADC0\uD658"
-  description: "\uB808\uC774\uB4DC\uC5D0\uC11C \uD55C \uBC88 \uC131\uACF5\uC801\uC73C\uB85C
-    \uD0C8\uCD9C\uD558\uC138\uC694."
-  objectiveType: 2
+  description: "\uD53C\uD574\uB97C \uD55C \uBC88\uB3C4 \uBC1B\uC9C0 \uC54A\uACE0
+    \uB808\uC774\uB4DC\uC5D0\uC11C \uD0C8\uCD9C\uD558\uC138\uC694."
+  objectiveType: 5
   objectiveItem: {fileID: 0}
+  objectiveWeapon: {fileID: 0}
+  objectiveZoneId: 
   requiredAmount: 1
-  repeatable: 1
+  repeatable: 0
   itemRewards:
   - item: {fileID: 11400000, guid: d563bd5957ca6824a89fb6ea1d9cb420, type: 2}
     quantity: 1
   - item: {fileID: 11400000, guid: 24bd518f8a78a084794a91f18883a77b, type: 2}
     quantity: 10
+  prerequisiteMissionId: school_radio_recovery
+  creditReward: 400
+  riskRating: 3

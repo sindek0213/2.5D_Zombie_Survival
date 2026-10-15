@@ -19,10 +19,15 @@ namespace ZombieSurvival.Hideout
     public static class HideoutMissionStateStore
     {
         private static readonly Dictionary<string, int> completionCounts = new Dictionary<string, int>();
+        private static readonly Dictionary<string, HideoutMissionDefinition> definitions = new Dictionary<string, HideoutMissionDefinition>();
 
         public static string ActiveMissionId { get; private set; }
         public static int ObjectiveProgress { get; private set; }
         public static bool HasActiveMission => !string.IsNullOrWhiteSpace(ActiveMissionId);
+        public static HideoutMissionDefinition ActiveMissionDefinition
+            => HasActiveMission && definitions.TryGetValue(ActiveMissionId, out HideoutMissionDefinition mission) ? mission : null;
+        public static string LastNotification { get; private set; } = string.Empty;
+        public static event Action<string> NotificationRaised;
 
         // 이전 좀비 처치 전용 코드가 읽던 이름은 공통 진행도를 반환하도록 유지합니다.
         // 저장 버전 4의 activeMissionZombieKills도 새 ObjectiveProgress로 이관됩니다.
@@ -33,14 +38,25 @@ namespace ZombieSurvival.Hideout
             if (!CanAccept(mission)) return false;
             ActiveMissionId = mission.MissionId;
             ObjectiveProgress = 0;
+            definitions[mission.MissionId] = mission;
             return true;
         }
 
         public static bool CanAccept(HideoutMissionDefinition mission)
         {
-            if (mission == null || string.IsNullOrWhiteSpace(mission.MissionId) || HasActiveMission) return false;
+            if (mission == null || string.IsNullOrWhiteSpace(mission.MissionId) || HasActiveMission || !mission.IsUnlocked()) return false;
             // 반복 불가 임무는 완료 횟수가 한 번이라도 기록돼 있으면 다시 수락하지 못합니다.
             return mission.Repeatable || GetCompletionCount(mission.MissionId) == 0;
+        }
+
+        // 거점이 가진 ScriptableObject 목록을 ID 사전으로 연결합니다. 씬 전환 뒤 레이드 HUD도 같은 정의를 읽을 수 있습니다.
+        public static void RegisterDefinitions(IEnumerable<HideoutMissionDefinition> availableDefinitions)
+        {
+            definitions.Clear();
+            if (availableDefinitions == null) return;
+            foreach (HideoutMissionDefinition definition in availableDefinitions)
+                if (definition != null && !string.IsNullOrWhiteSpace(definition.MissionId))
+                    definitions[definition.MissionId] = definition;
         }
 
         // 레이드 결과 중 현재 임무에 해당하는 값만 공통 진행도에 더합니다.
@@ -57,8 +73,24 @@ namespace ZombieSurvival.Hideout
                         ? CountExtractedItem(result, activeMission.ObjectiveItem?.ItemId)
                         : 0;
                     break;
+                case HideoutMissionObjectiveType.CollectedItemInZone:
+                    gainedProgress = result.succeeded && HasVisitedZone(result, activeMission.ObjectiveZoneId)
+                        ? CountExtractedItem(result, activeMission.ObjectiveItem?.ItemId)
+                        : 0;
+                    break;
                 case HideoutMissionObjectiveType.SuccessfulExtraction:
                     gainedProgress = result.succeeded ? 1 : 0;
+                    break;
+                case HideoutMissionObjectiveType.NoDamageExtraction:
+                    gainedProgress = result.succeeded && result.damageTaken <= 0.001f ? 1 : 0;
+                    break;
+                case HideoutMissionObjectiveType.WeaponKills:
+                    gainedProgress = CountWeaponKills(result, activeMission.ObjectiveWeapon?.ItemId);
+                    break;
+                case HideoutMissionObjectiveType.VisitedZone:
+                    // 방문 임무는 구역에 실제로 들어갔다면 사망한 레이드도 인정합니다.
+                    // 아이템 회수와 달리 시체에서 정보를 잃는 개념이 없고, 짧은 정찰 임무가 초반 진입 학습 역할을 하기 때문입니다.
+                    gainedProgress = HasVisitedZone(result, activeMission.ObjectiveZoneId) ? 1 : 0;
                     break;
                 default:
                     gainedProgress = Mathf.Max(0, result.zombieKills);
@@ -89,6 +121,8 @@ namespace ZombieSurvival.Hideout
 
             string id = mission.MissionId;
             completionCounts[id] = GetCompletionCount(id) + 1;
+            LastNotification = $"임무 완료: {mission.DisplayName}";
+            NotificationRaised?.Invoke(LastNotification);
             ActiveMissionId = string.Empty;
             ObjectiveProgress = 0;
             return true;
@@ -99,6 +133,7 @@ namespace ZombieSurvival.Hideout
             if (!HasActiveMission) return false;
             ActiveMissionId = string.Empty;
             ObjectiveProgress = 0;
+            LastNotification = "진행 중인 임무를 포기했습니다.";
             return true;
         }
 
@@ -136,6 +171,7 @@ namespace ZombieSurvival.Hideout
             ObjectiveProgress = HasActiveMission ? Mathf.Max(0, progress) : 0;
 
             completionCounts.Clear();
+            LastNotification = string.Empty;
             if (savedCompletions == null) return;
             foreach (HideoutMissionCompletionState completion in savedCompletions)
             {
@@ -145,7 +181,12 @@ namespace ZombieSurvival.Hideout
             }
         }
 
-        public static void ResetForTests() => Restore(string.Empty, 0, null);
+        public static void ResetForTests()
+        {
+            Restore(string.Empty, 0, null);
+            definitions.Clear();
+            NotificationRaised = null;
+        }
 
         private static bool MatchesActive(HideoutMissionDefinition mission)
         {
@@ -175,6 +216,24 @@ namespace ZombieSurvival.Hideout
             int total = snapshot.itemId == itemId ? Mathf.Max(0, snapshot.quantity) : 0;
             if (snapshot.contents != null)
                 foreach (RaidItemSnapshot child in snapshot.contents) total += CountSnapshotItem(child, itemId);
+            return total;
+        }
+
+        private static bool HasVisitedZone(RaidResult result, string zoneId)
+        {
+            if (result?.visitedZoneIds == null || string.IsNullOrWhiteSpace(zoneId)) return false;
+            foreach (string visited in result.visitedZoneIds)
+                if (string.Equals(visited, zoneId, StringComparison.Ordinal)) return true;
+            return false;
+        }
+
+        private static int CountWeaponKills(RaidResult result, string weaponItemId)
+        {
+            if (result?.weaponKills == null || string.IsNullOrWhiteSpace(weaponItemId)) return 0;
+            int total = 0;
+            foreach (RaidWeaponKillStat stat in result.weaponKills)
+                if (stat != null && string.Equals(stat.weaponItemId, weaponItemId, StringComparison.Ordinal))
+                    total += Mathf.Max(0, stat.kills);
             return total;
         }
     }

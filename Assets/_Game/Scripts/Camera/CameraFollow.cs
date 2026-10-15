@@ -1,5 +1,7 @@
 using UnityEngine;
 using ZombieSurvival.Player;
+using ZombieSurvival.Combat;
+using ZombieSurvival.Core;
 
 namespace ZombieSurvival.CameraSystem
 {
@@ -26,22 +28,38 @@ namespace ZombieSurvival.CameraSystem
         private float normalFieldOfView;
         private float normalOrthographicSize;
         private bool lensInitialized;
+        private Health targetHealth;
+        private float shakeUntil;
+        private float shakeStrength;
 
         // 씬 생성 코드나 다른 시스템이 추적 대상을 지정할 수 있게 합니다.
         public void SetTarget(Transform value)
         {
             target = value;
             ResolveTargetCombat();
+            ResolveTargetHealth();
         }
 
         private void Awake()
         {
             ResolveCamera();
             ResolveTargetCombat();
+            ResolveTargetHealth();
+        }
+
+        private void OnEnable()
+        {
+            ResolveTargetHealth();
+            if (targetHealth != null)
+            {
+                targetHealth.Damaged -= HandleTargetDamaged;
+                targetHealth.Damaged += HandleTargetDamaged;
+            }
         }
 
         private void OnDisable()
         {
+            if (targetHealth != null) targetHealth.Damaged -= HandleTargetDamaged;
             // 씬을 다시 열거나 컴포넌트를 껐다 켰을 때 이전 조준 확대가 기본 시야처럼 저장되지 않도록 원래 렌즈 값으로 복구합니다.
             if (!lensInitialized || controlledCamera == null) return;
             controlledCamera.fieldOfView = normalFieldOfView;
@@ -54,7 +72,15 @@ namespace ZombieSurvival.CameraSystem
         private void LateUpdate()
         {
             if (target != null)
-                transform.position = Vector3.SmoothDamp(transform.position, target.position + offset, ref velocity, smoothTime);
+            {
+                Vector3 desired = target.position + offset;
+                if (Time.unscaledTime < shakeUntil && GameSettings.ScreenShakeIntensity > 0f)
+                {
+                    Vector2 random = Random.insideUnitCircle * shakeStrength * GameSettings.ScreenShakeIntensity;
+                    desired += new Vector3(random.x, random.y, 0f);
+                }
+                transform.position = Vector3.SmoothDamp(transform.position, desired, ref velocity, smoothTime);
+            }
 
             UpdateAimZoom();
         }
@@ -111,6 +137,22 @@ namespace ZombieSurvival.CameraSystem
 
             if (targetCombat == null || targetCombat.transform != target)
                 targetCombat = target.GetComponent<PlayerCombat>();
+        }
+
+        private void ResolveTargetHealth()
+        {
+            Health next = target != null ? target.GetComponent<Health>() : null;
+            if (next == targetHealth) return;
+            if (targetHealth != null) targetHealth.Damaged -= HandleTargetDamaged;
+            targetHealth = next;
+            if (targetHealth != null) targetHealth.Damaged += HandleTargetDamaged;
+        }
+
+        private void HandleTargetDamaged(float damage, Vector3 _)
+        {
+            if (damage <= 0f) return;
+            shakeStrength = Mathf.Clamp(damage / 120f, 0.025f, 0.16f);
+            shakeUntil = Time.unscaledTime + 0.18f;
         }
 
         // 원래 FOV 또는 Orthographic Size에 조준 비율을 곱해 확대 목표값을 계산합니다.

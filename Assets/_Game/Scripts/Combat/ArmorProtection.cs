@@ -8,7 +8,7 @@ namespace ZombieSurvival.Combat
     // 플레이어의 방탄복 장비 슬롯을 읽어 들어오는 피해 일부를 내구도로 대신 받습니다.
     // 피해를 실제로 줄이는 계산만 담당하고, 방탄복 장착·해제와 저장은 기존 인벤토리 시스템에 맡깁니다.
     [RequireComponent(typeof(PlayerInventory))]
-    public sealed class ArmorProtection : MonoBehaviour, IIncomingDamageModifier
+    public sealed class ArmorProtection : MonoBehaviour, IIncomingDamageModifier, IDetailedIncomingDamageModifier
     {
         private PlayerInventory inventory;
 
@@ -16,6 +16,7 @@ namespace ZombieSurvival.Combat
         public float CurrentDurability => EquippedArmor != null ? EquippedArmor.ArmorDurability : 0f;
         public float MaximumDurability => EquippedArmor != null ? EquippedArmor.Item.ArmorMaxDurability : 0f;
         public float DamageReduction => EquippedArmor != null ? EquippedArmor.Item.ArmorDamageReduction : 0f;
+        public ArmorClass ProtectionClass => EquippedArmor != null ? EquippedArmor.Item.ArmorClass : ArmorClass.None;
 
         // HUD나 효과가 방탄복 손상 직후 값을 갱신할 수 있도록 현재·최대 내구도를 전달합니다.
         public event Action<float, float> ArmorChanged;
@@ -23,15 +24,26 @@ namespace ZombieSurvival.Combat
         private void Awake() => inventory = GetComponent<PlayerInventory>();
 
         public float ModifyIncomingDamage(float incomingDamage, Vector3 hitPoint)
+            => ModifyIncomingDamage(new DamageInfo(incomingDamage, hitPoint));
+
+        // 탄환 관통력이 방어 등급보다 높을수록 방탄복의 원래 감소율 중 일부만 적용됩니다.
+        // 내구도 소모는 실제로 흡수한 피해와 같아 관통탄이 방어 효과를 줄이면 내구도도 그만큼 덜 감소합니다.
+        public float ModifyIncomingDamage(DamageInfo damageInfo)
         {
+            // 이미 몸에 발생한 출혈은 방탄복이 막을 수 없습니다. 상태 피해가 프레임마다 방탄 내구도까지 깎지 않게 바로 반환합니다.
+            if (damageInfo.IsStatusDamage) return Mathf.Max(0f, damageInfo.Amount);
             InventoryEntry armor = FindEquippedArmor();
             // 방어구를 착용하지 않았거나 내구도가 모두 닳았다면 피해를 줄이지 않습니다.
             // 내구도가 0인 방어구도 장비 슬롯에는 남아 있으므로 HUD에서는 0 / 최대 내구도로 계속 표시할 수 있습니다.
-            if (armor == null || armor.ArmorDurability <= 0f) return Mathf.Max(0f, incomingDamage);
+            if (armor == null || armor.ArmorDurability <= 0f) return Mathf.Max(0f, damageInfo.Amount);
+
+            float penetrationMultiplier = CalculatePenetrationReductionMultiplier(
+                damageInfo.ArmorPenetration,
+                armor.Item.ArmorClass);
 
             float finalDamage = CalculateDamageAfterArmor(
-                incomingDamage,
-                armor.Item.ArmorDamageReduction,
+                damageInfo.Amount,
+                armor.Item.ArmorDamageReduction * penetrationMultiplier,
                 armor.ArmorDurability,
                 out float absorbedDamage);
             if (absorbedDamage <= 0f) return finalDamage;
@@ -41,6 +53,14 @@ namespace ZombieSurvival.Combat
             inventory?.NotifyItemStateChanged();
             ArmorChanged?.Invoke(armor.ArmorDurability, armor.Item.ArmorMaxDurability);
             return finalDamage;
+        }
+
+        public static float CalculatePenetrationReductionMultiplier(int penetration, ArmorClass armorClass)
+        {
+            int difference = Mathf.Max(0, penetration) - (int)armorClass;
+            if (difference >= 1) return 0.35f;
+            if (difference == 0) return 0.65f;
+            return 1f;
         }
 
         private InventoryEntry FindEquippedArmor()

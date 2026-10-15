@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   displayName: "\uB0A1\uC740 \uC18C\uCD1D"
   triggerMode: 1
+  supportsSemiAutomatic: 1
+  supportsAutomatic: 1
   damage: 28
   range: 38
   fireInterval: 0.14
@@ -24,3 +26,9 @@ MonoBehaviour:
   spreadAngle: 0
   accuracySpreadAngle: 1.6
   knockbackForce: 1.1
+  armorPenetration: 3
+  maxDurability: 100
+  durabilityLossPerShot: 0.18
+  wornAccuracySpreadMultiplier: 2
+  wornReloadDurationMultiplier: 1.5
+  repairCostPerPoint: 3

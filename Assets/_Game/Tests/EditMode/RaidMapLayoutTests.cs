@@ -60,4 +60,57 @@ public sealed class RaidMapLayoutTests
         for (int i = 0; i < zoneCenters.Length; i++)
             Assert.That(RaidMapLayout.IsInsidePlayableArea(zoneCenters[i], 1f), Is.True, $"구역 중심 {i + 1}이 맵 밖에 있습니다.");
     }
+
+    // 학교는 기능 검증용 RaidPrototype과 크기가 다르므로 학교 전용 시작점과 탈출점이 84×84 담장 안에 있는지 별도로 검사합니다.
+    [Test]
+    public void SchoolStartAndExtraction_AreInsideLargeCampusAndFarApart()
+    {
+        Assert.That(SchoolRaidMapLayout.MapHalfExtent, Is.EqualTo(42f));
+        Assert.That(SchoolRaidMapLayout.IsInsidePlayableArea(SchoolRaidMapLayout.PlayerStartPosition, 1f), Is.True);
+        Assert.That(SchoolRaidMapLayout.IsInsidePlayableArea(SchoolRaidMapLayout.ExtractionPosition, 1f), Is.True);
+        Assert.That(
+            Vector3.Distance(SchoolRaidMapLayout.PlayerStartPosition, SchoolRaidMapLayout.ExtractionPosition),
+            Is.GreaterThanOrEqualTo(70f));
+    }
+
+    // 넓어진 학교의 12개 외곽 스폰 지점이 담장 안에 있고 정문 시작 위치 바로 옆에는 생성되지 않는지 검사합니다.
+    [Test]
+    public void SchoolZombieSpawnPoints_AreInsideCampusAndAwayFromPlayerStart()
+    {
+        Assert.That(SchoolRaidMapLayout.ZombieSpawnPointCount, Is.GreaterThanOrEqualTo(12));
+
+        for (int i = 0; i < SchoolRaidMapLayout.ZombieSpawnPointCount; i++)
+        {
+            Vector3 spawnPosition = SchoolRaidMapLayout.GetZombieSpawnPosition(i);
+            Assert.That(SchoolRaidMapLayout.IsInsidePlayableArea(spawnPosition, 2f), Is.True, $"학교 스폰 지점 {i + 1}이 외곽 담장과 너무 가깝습니다.");
+            Assert.That(
+                Vector3.Distance(spawnPosition, SchoolRaidMapLayout.PlayerStartPosition),
+                Is.GreaterThanOrEqualTo(12f),
+                $"학교 스폰 지점 {i + 1}이 정문 시작점과 너무 가깝습니다.");
+        }
+    }
+
+    // 대표 좌표가 정문, 행정동, 교실동, 중앙정원, 특별실동, 급식실, 체육관과 운동장 이름으로 구분되는지 검사합니다.
+    [TestCase(0f, -35f, "학교 정문·주차장")]
+    [TestCase(-28f, -21f, "행정동·보건실")]
+    [TestCase(-27f, 2f, "일반 교실동 1층")]
+    [TestCase(0f, 1f, "중앙정원·연결 복도")]
+    [TestCase(-10f, 23f, "특별실·도서관동")]
+    [TestCase(24f, -21f, "급식실·조리실")]
+    [TestCase(27f, 4f, "체육관")]
+    [TestCase(0f, 34f, "운동장·비상문")]
+    public void SchoolZoneDisplayName_UsesLargeCampusRegions(float x, float z, string expected)
+    {
+        Assert.That(SchoolRaidMapLayout.GetZoneDisplayName(new Vector3(x, 0f, z)), Is.EqualTo(expected));
+    }
+
+    // 2층 테스트 교실동의 중심은 발자국 안에 있고 바로 바깥 좌표는 제외되어 맵 생성용 경계가 뒤집히지 않았는지 확인합니다.
+    [Test]
+    public void SchoolTwoStoreyClassroom_UsesValidFootprintAndFloorHeights()
+    {
+        Assert.That(SchoolRaidMapLayout.IsInsideTwoStoreyClassroomFootprint(new Vector3(-27f, 0f, 2f)), Is.True);
+        Assert.That(SchoolRaidMapLayout.IsInsideTwoStoreyClassroomFootprint(new Vector3(-15.9f, 0f, 2f)), Is.False);
+        Assert.That(SchoolRaidMapLayout.ClassroomSecondFloorHeight, Is.GreaterThan(2.5f));
+        Assert.That(SchoolRaidMapLayout.ClassroomRoofHeight, Is.GreaterThan(SchoolRaidMapLayout.ClassroomSecondFloorHeight + 2.5f));
+    }
 }

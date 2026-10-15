@@ -38,7 +38,7 @@ namespace ZombieSurvival.Inventory
             Vector2Int position)
         {
             // 가방을 자기 내부 또는 더 안쪽의 중첩 컨테이너로 옮기면 객체 참조가 순환해 저장 재귀가 끝나지 않습니다.
-            // 실제 Entries를 바꾸기 전에 이 위험한 목표를 거부해 버전 5 저장 트리를 항상 단방향으로 유지합니다.
+            // 실제 Entries를 바꾸기 전에 이 위험한 목표를 거부해 현재 평탄화 저장 트리를 항상 단방향으로 유지합니다.
             if (IsGridOwnedByEntry(entry, target)) return false;
             if (!InventoryMoveResolver.TryResolve(source, target, entry, position, out InventoryMovePlan plan)) return false;
 

@@ -14,13 +14,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   displayName: "\uD38C\uD504 \uC0B0\uD0C4\uCD1D"
   triggerMode: 0
+  supportsSemiAutomatic: 1
+  supportsAutomatic: 0
   damage: 14
   range: 14
   fireInterval: 0.85
   reloadDuration: 2.3
   magazineSize: 5
   ammoType: 3
-  pelletCount: 7
+  pelletCount: 5
   spreadAngle: 16
   accuracySpreadAngle: 1.5
   knockbackForce: 0.35
+  armorPenetration: 1
+  maxDurability: 100
+  durabilityLossPerShot: 0.3
+  wornAccuracySpreadMultiplier: 2
+  wornReloadDurationMultiplier: 1.5
+  repairCostPerPoint: 3

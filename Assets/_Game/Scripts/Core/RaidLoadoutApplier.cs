@@ -6,19 +6,23 @@ using ZombieSurvival.Items;
 
 namespace ZombieSurvival.Core
 {
-    // Hideout에서 선택한 출격품을 RaidPrototype 플레이어의 루트 인벤토리에 한 번 복원합니다.
+    // Hideout에서 선택한 출격품을 현재 열린 레이드 지역 플레이어의 루트 인벤토리에 한 번 복원합니다.
     // 성공한 항목은 현재 레이드 소지품이 되고, 복원할 수 없는 항목은 손실시키지 않고 거점 창고로 반환합니다.
     public sealed class RaidLoadoutApplier : MonoBehaviour
     {
         [SerializeField] private PlayerInventory playerInventory;
         [SerializeField] private ItemCatalog itemCatalog;
         [SerializeField] private string testSidearmItemId = "weapon_pistol";
+        // 기본 권총은 탄창 한 개만으로 끝나지 않도록 재장전용 9mm 탄약도 테스트 지급품으로 제공합니다.
+        [SerializeField] private string testSidearmAmmoItemId = "ammo_9mm";
+        [SerializeField, Min(0)] private int testSidearmReserveRounds = 30;
         [SerializeField] private string hideoutSceneName = GameSceneNavigator.HideoutSceneName;
         private bool loadoutApplied;
 
         public int AppliedItemCount { get; private set; }
         public int ReturnedItemCount { get; private set; }
         public bool ProvidedTestSidearm { get; private set; }
+        public int ProvidedTestAmmoCount { get; private set; }
         public bool LoadoutApplicationFailed { get; private set; }
 
         // 에디터 생성기가 플레이어와 공용 카탈로그를 정확히 연결하도록 제공하는 설정 메서드입니다.
@@ -41,6 +45,7 @@ namespace ZombieSurvival.Core
             // Raid 씬을 직접 실행하거나 게임을 재시작한 경우에도 저장된 출격 목록을 먼저 메모리에 복원합니다.
             HideoutSaveService.LoadDefaultIfNeeded();
             List<RaidItemSnapshot> loadout = HideoutStateStore.TakeLoadoutForRaid();
+            List<RaidEquipmentSnapshot> equipment = HideoutStateStore.TakeLoadoutEquipmentForRaid();
 
             var failedItems = new List<RaidItemSnapshot>();
             // 저장 실패 시 플레이어에게 들어간 항목만 정확히 회수할 수 있도록 성공한 원본 스냅샷도 따로 기억합니다.
@@ -61,25 +66,54 @@ namespace ZombieSurvival.Core
                 }
             }
 
+            // 거점에서 착용한 장비는 저장된 슬롯을 확인한 뒤 작은 임시 격자에서 완전히 복원하고 바로 장착합니다.
+            // 루트 인벤토리가 가득 차 있어도 장비 슬롯 자체가 비어 있으면 정상 복원되며, 실패한 장비는 창고로 반환됩니다.
+            foreach (RaidEquipmentSnapshot equipped in equipment)
+            {
+                RaidItemSnapshot snapshot = equipped?.item;
+                if (snapshot == null ||
+                    !System.Enum.TryParse(equipped.slot, out EquipmentSlotType slot) ||
+                    slot == EquipmentSlotType.None ||
+                    playerInventory == null)
+                {
+                    if (snapshot != null) failedItems.Add(snapshot);
+                    continue;
+                }
+
+                var temporary = new PlayerInventory.GridData(7, 7);
+                if (RaidSnapshotUtility.TryRestoreItem(temporary, itemCatalog, snapshot, out InventoryEntry entry) &&
+                    entry.Item.EquipmentSlot == slot &&
+                    playerInventory.TryEquipOrSwap(temporary, entry, slot, out _))
+                {
+                    AppliedItemCount++;
+                    appliedItems.Add(snapshot);
+                }
+                else
+                {
+                    failedItems.Add(snapshot);
+                }
+            }
+
             ReturnedItemCount = failedItems.Count;
             HideoutStateStore.ReturnItemsToStash(failedItems);
 
             // 출격 목록을 메모리에서 비운 상태가 디스크에도 기록된 뒤에만 실제 레이드를 계속 진행합니다.
             // 이 저장이 실패한 채 플레이하면 강제 종료 후 이전 저장의 출격품과 현재 플레이어 아이템이 함께 존재해 복제될 수 있습니다.
-            if (loadout.Count > 0 && !HideoutSaveService.SaveDefault())
+            if (loadout.Count + equipment.Count > 0 && !HideoutSaveService.SaveDefault())
             {
                 // 성공적으로 복원했던 출격품을 플레이어에게서 제거하고, 실패 항목과 겹치지 않게 appliedItems만 창고로 돌려놓습니다.
                 // 디스크에는 이전 출격 목록이 그대로 남고 메모리에는 같은 아이템이 창고에 한 번만 있으므로 어느 쪽에서도 복제되지 않습니다.
                 playerInventory?.DiscardAllRaidItems();
                 HideoutStateStore.ReturnItemsToStash(appliedItems);
                 AppliedItemCount = 0;
-                ReturnedItemCount = loadout.Count;
+                ReturnedItemCount = loadout.Count + equipment.Count;
                 LoadoutApplicationFailed = true;
                 Debug.LogError("출격품 소비 상태를 저장하지 못해 레이드를 취소하고 아이템을 거점으로 반환합니다.");
 
                 // 정상 게임에서는 즉시 거점으로 돌아가며, 씬 이름이 비어 있는 EditMode 테스트에서는 상태 검증만 하고 전환을 생략합니다.
                 if (!string.IsNullOrWhiteSpace(hideoutSceneName))
-                    GameSceneNavigator.TryLoadScene(hideoutSceneName);
+                    // 출격 장비 적용에 실패해도 빈 화면에 머물지 않고 Loading을 거쳐 안전하게 거점으로 복귀합니다.
+                    GameSceneNavigator.TryLoadSceneThroughLoading(hideoutSceneName);
                 return;
             }
 
@@ -103,6 +137,16 @@ namespace ZombieSurvival.Core
 
             ItemDefinition sidearm = itemCatalog.Find(testSidearmItemId);
             ProvidedTestSidearm = sidearm != null && playerInventory.TryEquipRaidProvidedItem(sidearm);
+            if (!ProvidedTestSidearm || testSidearmReserveRounds <= 0) return;
+
+            // 무료 권총을 실제로 만든 경우에만 예비탄을 줍니다. 플레이어가 직접 준비한 권총에는 공짜 탄약을 중복 지급하지 않습니다.
+            ItemDefinition reserveAmmo = itemCatalog.Find(testSidearmAmmoItemId);
+            if (sidearm.WeaponDefinition != null &&
+                reserveAmmo != null &&
+                reserveAmmo.Type == ItemType.Ammo &&
+                reserveAmmo.Caliber == sidearm.WeaponDefinition.Caliber &&
+                playerInventory.TryAddRaidProvidedItem(reserveAmmo, testSidearmReserveRounds))
+                ProvidedTestAmmoCount = testSidearmReserveRounds;
         }
     }
 }

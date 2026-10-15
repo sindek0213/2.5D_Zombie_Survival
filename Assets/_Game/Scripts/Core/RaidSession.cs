@@ -18,11 +18,15 @@ namespace ZombieSurvival.Core
         [SerializeField] private Health playerHealth;
         [SerializeField] private ExtractionController extractionController;
         [SerializeField] private RaidRules raidRules;
+        [SerializeField] private RaidVisitTracker visitTracker;
+        [SerializeField] private PlayerCombat playerCombat;
         [SerializeField, Min(0f)] private float resultDisplayDuration = 2f;
         [SerializeField] private string hideoutSceneName = GameSceneNavigator.HideoutSceneName;
 
         private readonly List<Health> trackedZombieHealth = new List<Health>();
+        private readonly Dictionary<string, int> weaponKillCounts = new Dictionary<string, int>();
         private bool raidEnded;
+        private float damageTaken;
 
         public RaidResult Result { get; private set; }
         public int ZombieKills { get; private set; }
@@ -36,6 +40,7 @@ namespace ZombieSurvival.Core
             ElapsedTime,
             MinimumExtractionTime);
         public bool ReturnToHideoutFailed { get; private set; }
+        public float DamageTaken => damageTaken;
 
         // 자동 생성기가 private SerializeField 참조를 안전하게 연결할 수 있도록 명시적인 설정 메서드를 제공합니다.
         // 런타임 Start의 자동 탐색보다 정확한 참조를 우선 사용하며 테스트 씬에서는 일부 값을 null로 둘 수 있습니다.
@@ -52,16 +57,29 @@ namespace ZombieSurvival.Core
             extractionController?.SetRaidSession(this);
         }
 
+        // 방문 추적은 기본 전투 종료 규칙과 독립된 선택 기능이므로 별도 설정 함수로 연결합니다.
+        // 기존 테스트와 작은 씬은 이 함수를 호출하지 않아도 이전처럼 정상 종료됩니다.
+        public void SetVisitTracker(RaidVisitTracker tracker)
+        {
+            visitTracker = tracker;
+        }
+
         private void Start()
         {
             // 생성기 참조가 누락된 테스트 씬에서도 동작하도록 필요한 컴포넌트를 한 번 자동 탐색합니다.
             // FindObjectOfType은 비용이 있으므로 Start에서 한 번만 호출하고 매 프레임 반복하지 않습니다.
             if (playerInventory == null) playerInventory = FindObjectOfType<PlayerInventory>();
             if (playerHealth == null && playerInventory != null) playerHealth = playerInventory.GetComponent<Health>();
+            if (playerCombat == null && playerInventory != null) playerCombat = playerInventory.GetComponent<PlayerCombat>();
             if (extractionController == null) extractionController = FindObjectOfType<ExtractionController>();
+            if (visitTracker == null) visitTracker = GetComponent<RaidVisitTracker>();
             extractionController?.SetRaidSession(this);
 
-            if (playerHealth != null) playerHealth.Died += HandlePlayerDeath;
+            if (playerHealth != null)
+            {
+                playerHealth.Died += HandlePlayerDeath;
+                playerHealth.DamageResolved += HandlePlayerDamage;
+            }
             if (extractionController != null) extractionController.ExtractionSucceeded += HandleExtractionSuccess;
 
             // 현재 씬에 미리 배치된 좀비 Health에 사망 이벤트를 연결해 처치 수를 계산합니다.
@@ -78,7 +96,7 @@ namespace ZombieSurvival.Core
         public void RegisterZombie(Health zombieHealth)
         {
             if (zombieHealth == null || zombieHealth.IsDead || trackedZombieHealth.Contains(zombieHealth)) return;
-            zombieHealth.Died += HandleZombieDeath;
+            zombieHealth.DiedDetailed += HandleZombieDeath;
             trackedZombieHealth.Add(zombieHealth);
         }
 
@@ -87,24 +105,35 @@ namespace ZombieSurvival.Core
             if (raidEnded) return;
 
             // 제한 시간 실패는 없지만 결과 화면과 최소 탈출 시간에 사용할 실제 레이드 경과 시간은 계속 기록합니다.
-            // 인벤토리는 조작만 잠그고 timeScale을 바꾸지 않으므로 파밍 중에도 이 시간이 자연스럽게 증가합니다.
-            ElapsedTime += Mathf.Max(0f, Time.unscaledDeltaTime);
+            // 인벤토리는 timeScale을 바꾸지 않아 시간이 흐르고, ESC 일시정지는 timeScale이 0이므로 경과 시간도 함께 멈춥니다.
+            ElapsedTime += Mathf.Max(0f, Time.deltaTime);
         }
 
         private void OnDestroy()
         {
             // 이벤트 발행자가 세션보다 오래 살아남을 수 있으므로 파괴 시 구독을 반드시 해제합니다.
             // 해제하지 않으면 이전 씬의 메서드가 다음 씬에서 호출되거나 객체가 메모리에 남는 원인이 됩니다.
-            if (playerHealth != null) playerHealth.Died -= HandlePlayerDeath;
+            if (playerHealth != null)
+            {
+                playerHealth.Died -= HandlePlayerDeath;
+                playerHealth.DamageResolved -= HandlePlayerDamage;
+            }
             if (extractionController != null) extractionController.ExtractionSucceeded -= HandleExtractionSuccess;
             foreach (Health health in trackedZombieHealth)
-                if (health != null) health.Died -= HandleZombieDeath;
+                if (health != null) health.DiedDetailed -= HandleZombieDeath;
         }
 
-        private void HandleZombieDeath()
+        private void HandleZombieDeath(Health _, DamageInfo fatalDamage)
         {
             // 탈출 결과가 확정된 뒤 쓰러진 좀비는 이미 저장된 결과와 HUD 숫자를 바꾸면 안 됩니다.
-            if (!raidEnded) ZombieKills++;
+            if (raidEnded) return;
+            ZombieKills++;
+            string sourceId = string.IsNullOrWhiteSpace(fatalDamage.SourceId) ? "unknown" : fatalDamage.SourceId;
+            weaponKillCounts[sourceId] = weaponKillCounts.TryGetValue(sourceId, out int count) ? count + 1 : 1;
+        }
+        private void HandlePlayerDamage(DamageInfo damageInfo)
+        {
+            if (!raidEnded) damageTaken += Mathf.Max(0f, damageInfo.Amount);
         }
         private void HandleExtractionSuccess() => FinishRaid(RaidEndReason.Extracted);
         private void HandlePlayerDeath() => FinishRaid(RaidEndReason.PlayerDied);
@@ -116,15 +145,35 @@ namespace ZombieSurvival.Core
 
             // 플레이어 오브젝트가 사망으로 Destroy되기 전에 동기적으로 전체 인벤토리 스냅샷을 생성합니다.
             // 탈출은 회수 스냅샷을 남기고, 사망은 lostItemCount를 기록한 뒤 실제 인벤토리를 비웁니다.
-            Result = RaidResultFactory.Create(playerInventory, reason, ZombieKills, ElapsedTime);
+            Result = RaidResultFactory.Create(
+                playerInventory,
+                reason,
+                ZombieKills,
+                ElapsedTime,
+                visitTracker != null ? visitTracker.CaptureVisitedZoneIds() : null,
+                // Health는 Died 이벤트를 호출하기 직전에 원인을 확정하므로 여기서 파괴 전 문자열을 안전하게 복사할 수 있습니다.
+                playerHealth != null ? playerHealth.DeathCauseDescription : string.Empty,
+                playerCombat != null ? playerCombat.ShotsFired : 0,
+                playerCombat != null ? playerCombat.SuccessfulShots : 0,
+                damageTaken,
+                CaptureWeaponKillStats());
             RaidResultStore.Set(Result);
 
             // 손실 수량을 먼저 계산한 뒤 비워야 결과 화면에 정확한 숫자를 표시할 수 있습니다.
-            // 시간 초과 종료가 없으므로 성공하지 못한 종료 원인은 사망뿐이며 이때만 모든 레이드 아이템을 제거합니다.
+            // 시간 초과 종료는 없지만 사망과 직접 포기는 모두 실패이므로 두 경우 모두 레이드 아이템을 제거합니다.
             if (!Result.succeeded && playerInventory != null) playerInventory.DiscardAllRaidItems();
             DisablePlayerControls();
             DisableZombieActions();
             StartCoroutine(ReturnToHideoutRoutine());
+        }
+
+        private List<RaidWeaponKillStat> CaptureWeaponKillStats()
+        {
+            var result = new List<RaidWeaponKillStat>();
+            foreach (KeyValuePair<string, int> pair in weaponKillCounts)
+                if (pair.Value > 0)
+                    result.Add(new RaidWeaponKillStat { weaponItemId = pair.Key, kills = pair.Value });
+            return result;
         }
 
         // 현재 처치 수와 경과 시간이 에셋에 지정된 두 추가 조건을 모두 만족하는지 반환합니다.
@@ -193,8 +242,18 @@ namespace ZombieSurvival.Core
         public bool TryReturnToHideout()
         {
             if (!raidEnded) return false;
-            ReturnToHideoutFailed = !GameSceneNavigator.TryLoadScene(hideoutSceneName);
+            // 레이드 종료 뒤에도 Loading 화면을 거쳐 거점 씬과 저장 상태가 준비되는 과정을 보여 줍니다.
+            ReturnToHideoutFailed = !GameSceneNavigator.TryLoadSceneThroughLoading(hideoutSceneName);
             return !ReturnToHideoutFailed;
+        }
+
+        // 일시정지 메뉴에서 레이드 포기를 확정하면 사망과 같은 손실 규칙으로 결과를 즉시 확정합니다.
+        // FinishRaid의 raidEnded 검사 덕분에 사망이나 탈출과 같은 프레임에 눌려도 결과가 두 번 생성되지 않습니다.
+        public bool TryAbandonRaid()
+        {
+            if (raidEnded) return false;
+            FinishRaid(RaidEndReason.Abandoned);
+            return true;
         }
 
         private IEnumerator ReturnToHideoutRoutine()

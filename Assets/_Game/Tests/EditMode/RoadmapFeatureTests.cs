@@ -1,7 +1,9 @@
+using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UI;
 using ZombieSurvival.AI;
 using ZombieSurvival.Combat;
 using ZombieSurvival.Core;
@@ -31,6 +33,70 @@ public sealed class RoadmapFeatureTests
         HideoutStateStore.ResetForTests();
         HideoutSaveService.ResetTestOverrides();
         DeleteSaveFiles();
+    }
+
+    // 별도 TitleCanvas가 네 가지 시작 기능과 설정·확인 패널을 일반 uGUI 계층으로 보관하는지 검사합니다.
+    // 타이틀을 Loading에 다시 합치거나 버튼 하나가 생성기에서 빠지는 구조 회귀를 막습니다.
+    [Test]
+    public void TitleCanvas_ContainsFourFunctionalMenuEntries()
+    {
+        GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Game/Prefabs/UI/TitleCanvas.prefab");
+        Assert.That(prefab, Is.Not.Null);
+        Assert.That(prefab.GetComponent<TitleMenuHud>(), Is.Not.Null);
+
+        Transform panel = prefab.transform.Find("MainMenuPanel");
+        Assert.That(panel, Is.Not.Null);
+        Text title = panel.Find("Title")?.GetComponent<Text>();
+        Text subtitle = panel.Find("Subtitle")?.GetComponent<Text>();
+        Assert.That(title, Is.Not.Null);
+        Assert.That(title.text, Is.EqualTo(TitleMenuHud.WorkingGameTitle));
+        Assert.That(subtitle, Is.Not.Null);
+        Assert.That(subtitle.text, Is.EqualTo(TitleMenuHud.WorkingGameSubtitle));
+        Assert.That(panel.Find("StartGameButton")?.GetComponent<Button>(), Is.Not.Null);
+        Assert.That(panel.Find("LoadGameButton")?.GetComponent<Button>(), Is.Not.Null);
+        Assert.That(panel.Find("SettingsButton")?.GetComponent<Button>(), Is.Not.Null);
+        Assert.That(panel.Find("QuitButton")?.GetComponent<Button>(), Is.Not.Null);
+        Assert.That(prefab.transform.Find("SettingsPanel"), Is.Not.Null);
+        Assert.That(prefab.transform.Find("ConfirmationPanel"), Is.Not.Null);
+    }
+
+    // LoadingCanvas는 전체 화면 원화와 아래쪽 진행 막대를 실제 uGUI 자식으로 보관해야 합니다.
+    // 카탈로그에는 공용 이미지와 현재 해금된 학교 이미지가 함께 들어가 무작위 후보가 세 장이 되는지도 확인합니다.
+    [Test]
+    public void LoadingCanvas_ContainsArtworkProgressBarAndUnlockedImagePool()
+    {
+        GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Game/Prefabs/UI/LoadingCanvas.prefab");
+        Assert.That(prefab, Is.Not.Null);
+        Assert.That(prefab.GetComponent<LoadingScreenHud>(), Is.Not.Null);
+        Assert.That(prefab.transform.Find("LoadingArtwork")?.GetComponent<Image>(), Is.Not.Null);
+        Assert.That(prefab.transform.Find("LoadingArtwork")?.GetComponent<AspectRatioFitter>(), Is.Not.Null);
+
+        Transform panel = prefab.transform.Find("LoadingPanel");
+        Assert.That(panel, Is.Not.Null);
+        Assert.That(panel.Find("Status")?.GetComponent<Text>(), Is.Not.Null);
+        Image progressFill = panel.Find("ProgressFrame/ProgressFill")?.GetComponent<Image>();
+        Assert.That(progressFill, Is.Not.Null);
+        Assert.That(progressFill.type, Is.EqualTo(Image.Type.Filled));
+        Assert.That(progressFill.fillMethod, Is.EqualTo(Image.FillMethod.Horizontal));
+        Assert.That(panel.Find("ProgressText")?.GetComponent<Text>(), Is.Not.Null);
+
+        LoadingScreenCatalog catalog = AssetDatabase.LoadAssetAtPath<LoadingScreenCatalog>(
+            "Assets/_Game/Data/UI/loading_screen_catalog.asset");
+        Assert.That(catalog, Is.Not.Null);
+        var images = new List<Sprite>();
+        catalog.CollectUnlockedImages(images);
+        Assert.That(images.Count, Is.EqualTo(3));
+        Assert.That(images, Has.All.Not.Null);
+    }
+
+    // Unity의 비동기 로드 준비 상한 0.9가 화면에서는 정확히 100%로 표시되도록 변환 경계를 검사합니다.
+    [TestCase(0f, 0f)]
+    [TestCase(0.45f, 0.5f)]
+    [TestCase(0.9f, 1f)]
+    [TestCase(1f, 1f)]
+    public void LoadingProgress_NormalizesUnityAsyncRange(float unityProgress, float expected)
+    {
+        Assert.That(LoadingSceneController.NormalizeSceneProgress(unityProgress), Is.EqualTo(expected).Within(0.001f));
     }
 
     // 방어구 감소율만큼 피해를 흡수하되 남은 내구도보다 많은 피해를 사라지게 만들지 않는지 검사합니다.
@@ -135,9 +201,9 @@ public sealed class RoadmapFeatureTests
         }
     }
 
-    // 현재 버전 5 저장도 기존 평탄화 구조를 유지해 컨테이너 내부와 파손된 방어구의 0 내구도를 잃지 않아야 합니다.
+    // 현재 버전 6 저장도 기존 평탄화 구조를 유지해 컨테이너 내부와 파손된 방어구의 0 내구도를 잃지 않아야 합니다.
     [Test]
-    public void VersionFiveSave_RoundTripPreservesHierarchyAndArmorDurability()
+    public void CurrentSave_RoundTripPreservesHierarchyAndArmorDurability()
     {
         var backpack = new RaidItemSnapshot { itemId = "backpack", quantity = 1, gridX = 2, gridY = 3 };
         backpack.contents.Add(new RaidItemSnapshot
@@ -154,7 +220,8 @@ public sealed class RoadmapFeatureTests
 
         Assert.That(HideoutSaveService.SaveDefault(), Is.True);
         string json = File.ReadAllText(savePath);
-        Assert.That(json, Does.Contain("\"version\": 5"));
+        // 저장 형식이 확장되어도 현재 서비스가 기록하는 버전을 따라가도록 상수를 사용합니다.
+        Assert.That(json, Does.Contain($"\"version\": {HideoutSaveService.CurrentVersion}"));
         Assert.That(json, Does.Contain("\"parentIndex\""));
 
         HideoutStateStore.ResetForTests();

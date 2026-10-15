@@ -19,8 +19,13 @@ MonoBehaviour:
     \uCC98\uCE58\uD558\uC138\uC694."
   objectiveType: 0
   objectiveItem: {fileID: 0}
+  objectiveWeapon: {fileID: 0}
+  objectiveZoneId: 
   requiredAmount: 3
   repeatable: 0
   itemRewards:
   - item: {fileID: 11400000, guid: d563bd5957ca6824a89fb6ea1d9cb420, type: 2}
     quantity: 1
+  prerequisiteMissionId: 
+  creditReward: 150
+  riskRating: 1

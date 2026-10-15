@@ -142,6 +142,8 @@ namespace ZombieSurvival.Player
                 aim != null ? aim.AimDirection : Vector3.zero,
                 velocity,
                 lastDirectionRow);
+            // 구르기 시작 뒤 마우스를 옮겨도 몸 그림이 중간에 다른 방향으로 바뀌지 않도록 확정된 구르기 방향을 사용합니다.
+            if (movement != null && movement.IsRolling) facingDirection = movement.RollDirection;
             lastDirectionRow = DirectionToRow(facingDirection, lastDirectionRow);
 
             Sprite[,] activeFrames = isFiring ? GetCurrentWeaponFrames() : movementFrames;

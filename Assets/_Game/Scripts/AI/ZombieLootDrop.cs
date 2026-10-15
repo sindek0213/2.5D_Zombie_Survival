@@ -22,15 +22,28 @@ namespace ZombieSurvival.AI
     public sealed class ZombieLootDrop : MonoBehaviour
     {
         [SerializeField] private ZombieLootEntry[] lootEntries = Array.Empty<ZombieLootEntry>();
+        // 현재 지역 프로필에서 이 좀비 종류의 표를 찾을 때 사용하는 ID입니다.
+        // 지역 표가 없는 씬에서는 lootEntries가 그대로 대체 데이터로 사용됩니다.
+        [SerializeField] private string regionSourceId;
         private Health health;
         private bool dropped;
 
         public ZombieLootEntry[] LootEntries => lootEntries;
+        public string RegionSourceId => RegionLootSourceTable.NormalizeSourceId(regionSourceId);
 
         // 프로토타입 생성기나 다른 스폰 시스템이 좀비별 목록을 명시적으로 넣을 때 사용합니다.
         public void Configure(params ZombieLootEntry[] entries)
         {
+            regionSourceId = string.Empty;
             lootEntries = entries ?? Array.Empty<ZombieLootEntry>();
+        }
+
+        // ZombieArchetype은 에셋 이름 같은 안정적인 유형 ID와 기존 대체 목록을 함께 전달합니다.
+        // 학교처럼 지역 표가 준비된 씬에서는 ID에 맞는 지역 수치가 우선이고, 다른 씬에서는 대체 목록이 사용됩니다.
+        public void Configure(string sourceId, params ZombieLootEntry[] fallbackEntries)
+        {
+            regionSourceId = RegionLootSourceTable.NormalizeSourceId(sourceId);
+            lootEntries = fallbackEntries ?? Array.Empty<ZombieLootEntry>();
         }
 
         private void Awake()
@@ -54,6 +67,16 @@ namespace ZombieSurvival.AI
             // 시체 Collider는 Trigger라 플레이어 이동을 막지 않지만 PlayerInteraction의 수색 대상에는 계속 포함됩니다.
             WorldLootContainer corpse = WorldLootContainer.SpawnCorpse(gameObject.name, transform.position, transform.rotation);
 
+            RegionLootProfile regionProfile = RegionLootController.ActiveProfile;
+            RegionLootSourceTable regionTable = regionProfile?.FindTable(
+                RegionLootSourceType.Monster,
+                RegionSourceId);
+            if (regionTable != null)
+            {
+                DropRegionEntries(corpse, regionProfile, regionTable);
+                return;
+            }
+
             for (int i = 0; i < lootEntries.Length; i++)
             {
                 ZombieLootEntry entry = lootEntries[i];
@@ -69,6 +92,30 @@ namespace ZombieSurvival.AI
 
                 // 시체 격자에 공간이 있는 경우에만 전체 수량을 한 번에 넣습니다.
                 // 현재 기본 시체는 8×6으로 큰 무기와 여러 종류의 프로토타입 전리품을 함께 담을 수 있습니다.
+                corpse.TryAdd(entry.item, quantity);
+            }
+        }
+
+        // 몬스터 표는 상자처럼 후보 하나를 고르는 방식이 아니라 모든 항목의 확률을 각각 독립적으로 굴립니다.
+        // 따라서 좀비 한 마리가 탄약과 재료를 동시에 남길 수 있고 각 품목을 Inspector에서 따로 조절할 수 있습니다.
+        private static void DropRegionEntries(
+            WorldLootContainer corpse,
+            RegionLootProfile profile,
+            RegionLootSourceTable table)
+        {
+            RegionLootEntry[] entries = table.Entries;
+            for (int i = 0; i < entries.Length; i++)
+            {
+                RegionLootEntry entry = entries[i];
+                if (entry?.item == null) continue;
+
+                int quantity = CalculateDropQuantity(
+                    profile.GetEffectiveDropChance(entry),
+                    entry.minimumQuantity,
+                    entry.maximumQuantity,
+                    UnityEngine.Random.value,
+                    UnityEngine.Random.value);
+                if (quantity <= 0) continue;
                 corpse.TryAdd(entry.item, quantity);
             }
         }

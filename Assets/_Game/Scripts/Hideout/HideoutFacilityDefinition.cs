@@ -15,7 +15,13 @@ namespace ZombieSurvival.Hideout
         Infirmary,
         Generator,
         Trader,
-        Training
+        Training,
+        // 출격 터미널은 창고에서 아이템을 정리하는 기능과 지역 선택·출발 기능을 분리하기 위한 전용 시설입니다.
+        // 기존 enum 숫자가 바뀌지 않도록 항상 마지막에 추가합니다.
+        Deployment,
+        // 모든 시설 강화 기능을 한곳에 모으는 전용 강화소입니다.
+        // 기존 저장과 enum 숫자 호환을 위해 새 종류는 항상 마지막에 추가합니다.
+        UpgradeStation
     }
 
     // 시설 강화 한 단계에 필요한 아이템 종류와 수량입니다.

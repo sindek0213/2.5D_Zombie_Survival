@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   displayName: "9mm \uAE30\uAD00\uB2E8\uCD1D"
   triggerMode: 1
+  supportsSemiAutomatic: 1
+  supportsAutomatic: 1
   damage: 17
   range: 22
   fireInterval: 0.085
@@ -24,3 +26,9 @@ MonoBehaviour:
   spreadAngle: 0
   accuracySpreadAngle: 3.2
   knockbackForce: 0.65
+  armorPenetration: 1
+  maxDurability: 100
+  durabilityLossPerShot: 0.22
+  wornAccuracySpreadMultiplier: 2
+  wornReloadDurationMultiplier: 1.5
+  repairCostPerPoint: 2

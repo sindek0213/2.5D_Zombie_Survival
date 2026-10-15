@@ -101,11 +101,12 @@ MonoBehaviour:
   occupiedLayer: {fileID: 8021815883460771589}
   occupiedCellPrefab: {fileID: 5733091950722717927, guid: c6725aeddbed85d4d8cd860b5b8fdf73,
     type: 3}
+  iconImage: {fileID: 0}
   labelText: {fileID: 6854011986135124848}
   canvasGroup: {fileID: 1027144600142028555}
-  normalColor: {r: 0.25, g: 0.48, b: 0.34, a: 1}
-  selectedColor: {r: 0.15, g: 0.8, b: 0.86, a: 1}
-  dragColor: {r: 0.3, g: 0.9, b: 0.65, a: 0.78}
+  normalColor: {r: 0.2, g: 0.22, b: 0.17, a: 1}
+  selectedColor: {r: 0.76, g: 0.37, b: 0.09, a: 1}
+  dragColor: {r: 0.91, g: 0.55, b: 0.18, a: 0.78}
 --- !u!1 &9099124407787458043
 GameObject:
   m_ObjectHideFlags: 0
@@ -117,6 +118,7 @@ GameObject:
   - component: {fileID: 8889991551704431502}
   - component: {fileID: 5023486217229427329}
   - component: {fileID: 6854011986135124848}
+  - component: {fileID: 3300081257351386625}
   m_Layer: 0
   m_Name: ItemLabel
   m_TagString: Untagged
@@ -164,7 +166,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.9, g: 0.88, b: 0.79, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -185,3 +187,18 @@ MonoBehaviour:
     m_VerticalOverflow: 0
     m_LineSpacing: 1
   m_Text: "\uC544\uC774\uD15C\nx1"
+--- !u!114 &3300081257351386625
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9099124407787458043}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cfabb0440166ab443bba8876756fdfa9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_EffectColor: {r: 0, g: 0, b: 0, a: 0.82}
+  m_EffectDistance: {x: 1.25, y: -1.25}
+  m_UseGraphicAlpha: 1

@@ -1,6 +1,8 @@
 using UnityEngine;
 using UnityEngine.AI;
+using ZombieSurvival.CameraSystem;
 using ZombieSurvival.Inventory;
+using System.Collections.Generic;
 
 namespace ZombieSurvival.Items
 {
@@ -8,6 +10,9 @@ namespace ZombieSurvival.Items
     // 플레이어가 E키를 누르면 아이템을 자동으로 모두 줍지 않고, InventoryHud가 이 격자를 열어 직접 필요한 물건만 옮기게 합니다.
     public sealed class WorldLootContainer : MonoBehaviour, IInteractable
     {
+        // 시체가 계속 쌓여 렌더링·Collider 비용이 끝없이 늘지 않도록 오래된 시체 수를 제한합니다.
+        private const int MaximumRuntimeCorpses = 30;
+        private static readonly List<WorldLootContainer> runtimeCorpses = new List<WorldLootContainer>();
         [SerializeField] private string displayName = "전리품";
         [SerializeField, Min(1)] private int gridWidth = 8;
         [SerializeField, Min(1)] private int gridHeight = 6;
@@ -20,11 +25,12 @@ namespace ZombieSurvival.Items
         public string DisplayName => string.IsNullOrWhiteSpace(displayName) ? "전리품" : displayName;
         public bool IsEmpty => LootGrid == null || LootGrid.Entries.Count == 0;
         public bool BlocksMovement => blocksMovement;
+        public bool HasBeenSearched { get; private set; }
         public bool CanInteract => nearbyInventory != null && LootGrid != null;
         public string InteractionPrompt => HasPendingLoot
             ? $"[E]  {DisplayName} 수색"
             : IsEmpty
-            ? $"[E]  {DisplayName} 확인  (비어 있음)"
+            ? $"[E]  {DisplayName} 확인  ({(HasBeenSearched ? "수색 완료" : "비어 있음")})"
             : $"[E]  {DisplayName} 수색";
 
         private bool HasPendingLoot => lootSource != null && lootSource.HasPendingLoot;
@@ -33,6 +39,8 @@ namespace ZombieSurvival.Items
         {
             EnsureGrid();
             ApplyCollisionPolicy();
+            // 필드 상자와 시체도 현재 플레이어가 있는 층에서만 렌더링해 투명한 천장 너머 전리품이 미리 보이지 않게 합니다.
+            if (GetComponent<FloorVisibilityTarget>() == null) gameObject.AddComponent<FloorVisibilityTarget>();
         }
 
         // 생성기와 런타임 시체 생성 코드가 표시 이름, 내부 크기와 이동 차단 여부를 한 번에 지정합니다.
@@ -62,6 +70,7 @@ namespace ZombieSurvival.Items
         {
             if (!CanInteract) return false;
             lootSource?.PopulateIfNeeded();
+            HasBeenSearched = true;
             return true;
         }
 
@@ -139,8 +148,34 @@ namespace ZombieSurvival.Items
 
             WorldLootContainer container = corpse.AddComponent<WorldLootContainer>();
             container.Configure("좀비 시체", 8, 6, false);
+            RegisterRuntimeCorpse(container);
             return container;
         }
+
+        // 빈 시체를 먼저, 빈 시체가 없으면 가장 오래된 시체를 제거합니다.
+        // Destroy는 프레임 끝에 처리되므로 목록에서는 즉시 빼 중복 정리 대상이 되지 않게 합니다.
+        private static void RegisterRuntimeCorpse(WorldLootContainer corpse)
+        {
+            runtimeCorpses.RemoveAll(entry => entry == null);
+            runtimeCorpses.Add(corpse);
+            while (runtimeCorpses.Count > MaximumRuntimeCorpses)
+            {
+                int removeIndex = runtimeCorpses.FindIndex(entry => entry == null || entry.IsEmpty);
+                if (removeIndex < 0) removeIndex = 0;
+                WorldLootContainer removed = runtimeCorpses[removeIndex];
+                runtimeCorpses.RemoveAt(removeIndex);
+                if (removed != null) Destroy(removed.gameObject);
+            }
+        }
+
+        private void OnDestroy()
+        {
+            runtimeCorpses.Remove(this);
+        }
+
+        // 도메인 리로드를 끈 에디터에서도 이전 Play 세션의 파괴된 시체 참조가 남지 않게 합니다.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetRuntimeCorpses() => runtimeCorpses.Clear();
 
         // 앞으로 필드 파밍 상자를 만들 때 사용할 공통 생성 함수입니다.
         // 시체와 달리 BoxCollider를 Trigger로 바꾸지 않으며 높이를 충분히 주어 플레이어가 통과하거나 Step Offset으로 올라타지 못하게 합니다.

@@ -234,6 +234,9 @@ GameObject:
   - component: {fileID: 8800000000000000004}
   - component: {fileID: 8800000000000000005}
   - component: {fileID: 8800000000000000002}
+  - component: {fileID: 1450604806690834765}
+  - component: {fileID: 6386872118147060752}
+  - component: {fileID: 8677725372990621950}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -299,6 +302,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveSpeed: 5
   gravity: -20
+  walkNoiseRadius: 4.5
+  sprintNoiseRadius: 9
+  walkNoiseInterval: 0.65
+  sprintNoiseInterval: 0.38
+  rollDistance: 3
+  rollDuration: 0.24
+  rollCooldown: 0.55
+  rollStaminaFraction: 0.25
+  animateRoll: 1
 --- !u!114 &7353365124811458460
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -317,6 +329,7 @@ MonoBehaviour:
   aimOrigin: {fileID: 3478876822258667555}
   groundHeight: 0
   weaponHeight: 1
+  baseTurnSpeedDegrees: 1080
 --- !u!114 &2856507663236805472
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -333,6 +346,12 @@ MonoBehaviour:
   hitMask:
     serializedVersion: 2
     m_Bits: 4294967295
+  aimingAccuracyMultiplier: 0.35
+  meleeRange: 1.45
+  meleeRadius: 0.45
+  meleeDamage: 18
+  meleeCooldown: 0.65
+  meleeKnockbackForce: 2.2
 --- !u!114 &8335442159652409083
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -361,8 +380,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gridWidth: 10
   gridHeight: 6
-  healingUseDuration: 1.5
+  healingUseDuration: 4
+  bandageUseDuration: 2.2
+  splintUseDuration: 3.5
   foodUseDuration: 1.2
+  buffUseDuration: 1
 --- !u!114 &8800000000000000006
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -494,3 +516,43 @@ MonoBehaviour:
   targetRenderer: {fileID: 3342574283026973968}
   flashColor: {r: 1, g: 0.18, b: 0.12, a: 1}
   flashDuration: 0.12
+--- !u!114 &1450604806690834765
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8876641461711413501}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7bc7b19576bd4526a012be76331b6298, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bleedingDamagePerSecond: 1.5
+  fractureMovementMultiplier: 0.72
+  fractureAimSpreadMultiplier: 1.15
+  fractureReloadMultiplier: 1.2
+--- !u!114 &6386872118147060752
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8876641461711413501}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ac0e005cc1699945870e37b1b315a4a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &8677725372990621950
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8876641461711413501}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4dada092961027e42884ebfd3398a223, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

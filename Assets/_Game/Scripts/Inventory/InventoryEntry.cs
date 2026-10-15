@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
+using ZombieSurvival.Combat;
 using ZombieSurvival.Items;
 
 namespace ZombieSurvival.Inventory
@@ -19,6 +21,16 @@ namespace ZombieSurvival.Inventory
         // 같은 종류의 총 두 자루도 서로 다른 InventoryEntry이므로 각자 독립된 탄창 상태를 가질 수 있습니다.
         public int MagazineRounds { get; private set; }
         public bool HasMagazineState => Item.Type == ItemType.Weapon && Item.WeaponDefinition != null;
+        // 탄창과 마찬가지로 같은 종류의 무기라도 현재 내구도와 선택한 발사 모드는 각 무기 인스턴스가 따로 보관합니다.
+        // 이 값을 ItemDefinition에 두면 소총 한 자루가 닳을 때 플레이어가 가진 모든 소총이 함께 닳는 오류가 생깁니다.
+        public float WeaponDurability { get; private set; }
+        public WeaponTriggerMode SelectedTriggerMode { get; private set; }
+        public bool HasWeaponDurabilityState => HasMagazineState;
+        public bool HasTriggerModeState => HasMagazineState;
+        public float WeaponDurabilityNormalized => HasWeaponDurabilityState
+            ? Mathf.Clamp01(WeaponDurability / Item.WeaponDefinition.MaxDurability)
+            : 0f;
+        public bool IsWeaponBroken => HasWeaponDurabilityState && WeaponDurability <= 0f;
         // 방탄복 한 벌이 현재 얼마나 더 피해를 흡수할 수 있는지 저장합니다.
         // 같은 방탄복 정의를 사용해도 각각의 InventoryEntry가 별도 값을 가지므로 손상 상태가 서로 섞이지 않습니다.
         public float ArmorDurability { get; private set; }
@@ -26,6 +38,17 @@ namespace ZombieSurvival.Inventory
         // 테스트 레이드가 무료로 지급한 장비인지 표시하는 실행 중 전용 값입니다.
         // 이 값은 저장 스냅샷에 기록하지 않으며 RaidResultFactory가 보상과 분실 수량에서 제외할 때만 사용합니다.
         public bool IsRaidProvided { get; private set; }
+        // 장착된 부착물은 무기 InventoryEntry 안에 포함되는 개별 상태입니다.
+        // 격자에 따로 남지 않으며 레이드 결과와 거점 저장에서는 각 부착물의 ItemId 목록으로 함께 보존합니다.
+        private readonly List<ItemDefinition> installedAttachments = new List<ItemDefinition>();
+        public IReadOnlyList<ItemDefinition> InstalledAttachments => installedAttachments;
+        public int EffectiveMagazineSize => HasMagazineState
+            ? Mathf.Max(1, Item.WeaponDefinition.MagazineSize + SumMagazineCapacityBonus())
+            : 0;
+        public float AttachmentDamageMultiplier => MultiplyAttachmentValue(a => a.DamageMultiplier);
+        public float AttachmentFireIntervalMultiplier => MultiplyAttachmentValue(a => a.FireIntervalMultiplier);
+        public float AttachmentAccuracyMultiplier => MultiplyAttachmentValue(a => a.AccuracySpreadMultiplier);
+        public float AttachmentReloadMultiplier => MultiplyAttachmentValue(a => a.ReloadDurationMultiplier);
         public int Width => Rotated ? Item.GridHeight : Item.GridWidth;
         public int Height => Rotated ? Item.GridWidth : Item.GridHeight;
 
@@ -45,7 +68,11 @@ namespace ZombieSurvival.Inventory
             bool rotated = false,
             bool isRaidProvided = false,
             int magazineRounds = -1,
-            float armorDurability = -1f)
+            float armorDurability = -1f,
+            IEnumerable<ItemDefinition> attachments = null,
+            float weaponDurability = -1f,
+            bool hasSelectedTriggerMode = false,
+            WeaponTriggerMode selectedTriggerMode = WeaponTriggerMode.SemiAutomatic)
         {
             // 정의가 없는 엔트리는 크기, 중첩 한도와 저장 ID를 어느 코드에서도 안전하게 계산할 수 없습니다.
             // 잘못된 엔트리를 나중에 NullReferenceException으로 발견하지 않고 생성 지점에서 원인을 바로 알 수 있게 명시적으로 거부합니다.
@@ -57,12 +84,28 @@ namespace ZombieSurvival.Inventory
             Position = position;
             Rotated = rotated;
             IsRaidProvided = isRaidProvided;
+            if (attachments != null)
+            {
+                // 저장 복원은 부착물 ID를 ItemCatalog로 먼저 해결한 뒤 이 생성자에 전달합니다.
+                // 같은 슬롯이 중복된 손상 데이터는 첫 항목만 유지하지 않고 TryRestoreItem 단계에서 전체 복원을 실패시킵니다.
+                foreach (ItemDefinition attachment in attachments)
+                    if (CanInstallAttachment(attachment) && GetAttachment(attachment.WeaponAttachmentDefinition.Slot) == null)
+                        installedAttachments.Add(attachment);
+            }
             if (HasMagazineState)
             {
                 // 새로 생성하거나 이전 버전 저장에서 복원한 무기는 가득 찬 탄창으로 시작합니다.
                 // 새 저장 형식은 0발도 유효한 값이므로 magazineRounds가 0 이상이면 그대로 제한 범위에 맞춰 복원합니다.
                 int initialRounds = magazineRounds < 0 ? Item.WeaponDefinition.MagazineSize : magazineRounds;
-                MagazineRounds = Mathf.Clamp(initialRounds, 0, Item.WeaponDefinition.MagazineSize);
+                MagazineRounds = Mathf.Clamp(initialRounds, 0, EffectiveMagazineSize);
+                // -1은 내구도 필드가 없던 구버전 저장 또는 새 무기를 뜻하므로 최대 내구도로 시작합니다.
+                // 0은 완전히 파손된 정상 저장값이므로 0 이상 값은 그대로 복원합니다.
+                float initialWeaponDurability = weaponDurability < 0f
+                    ? Item.WeaponDefinition.MaxDurability
+                    : weaponDurability;
+                WeaponDurability = Mathf.Clamp(initialWeaponDurability, 0f, Item.WeaponDefinition.MaxDurability);
+                SelectedTriggerMode = Item.WeaponDefinition.ClampTriggerMode(
+                    hasSelectedTriggerMode ? selectedTriggerMode : Item.WeaponDefinition.TriggerMode);
             }
             if (HasArmorState)
             {
@@ -87,9 +130,105 @@ namespace ZombieSurvival.Inventory
         public int AddMagazineRounds(int quantity)
         {
             if (!HasMagazineState || quantity <= 0) return 0;
-            int accepted = Mathf.Min(quantity, Item.WeaponDefinition.MagazineSize - MagazineRounds);
+            int accepted = Mathf.Min(quantity, EffectiveMagazineSize - MagazineRounds);
             MagazineRounds += accepted;
             return accepted;
+        }
+
+        // 실제로 발사에 성공한 경우에만 무기 정의의 발사당 감소량만큼 내구도를 줄입니다.
+        // 탄약 부족이나 재장전 중처럼 발사가 실패한 입력은 이 메서드를 호출하지 않으므로 내구도를 소모하지 않습니다.
+        public float ConsumeWeaponDurability(float amount)
+        {
+            if (!HasWeaponDurabilityState || amount <= 0f || WeaponDurability <= 0f) return 0f;
+            float consumed = Mathf.Min(amount, WeaponDurability);
+            WeaponDurability -= consumed;
+            return consumed;
+        }
+
+        // 거점 수리 성공 뒤 현재 무기만 최대 내구도로 복구하고 실제 회복량을 반환합니다.
+        public float RepairWeaponDurability()
+        {
+            if (!HasWeaponDurabilityState) return 0f;
+            float restored = Mathf.Max(0f, Item.WeaponDefinition.MaxDurability - WeaponDurability);
+            WeaponDurability = Item.WeaponDefinition.MaxDurability;
+            return restored;
+        }
+
+        // B키 입력은 현재 무기 정의가 단발과 연사를 모두 지원할 때만 실제 값을 바꿉니다.
+        // 반환값으로 UI가 전환 불가능한 무기인지 구분해 정확한 안내를 보여 줄 수 있습니다.
+        public bool TryCycleTriggerMode()
+        {
+            if (!HasTriggerModeState) return false;
+            WeaponTriggerMode next = Item.WeaponDefinition.GetNextTriggerMode(SelectedTriggerMode);
+            if (next == SelectedTriggerMode) return false;
+            SelectedTriggerMode = next;
+            return true;
+        }
+
+        // 부착물 아이템과 무기 탄종이 맞는지, 실제 슬롯 데이터가 있는지 확인합니다.
+        public bool CanInstallAttachment(ItemDefinition attachmentItem)
+        {
+            return Item.Type == ItemType.Weapon && Item.WeaponDefinition != null &&
+                   attachmentItem != null && attachmentItem.Type == ItemType.Attachment &&
+                   attachmentItem.WeaponAttachmentDefinition != null &&
+                   attachmentItem.WeaponAttachmentDefinition.IsCompatible(Item.WeaponDefinition);
+        }
+
+        public ItemDefinition GetAttachment(WeaponAttachmentSlot slot)
+        {
+            foreach (ItemDefinition installed in installedAttachments)
+                if (installed?.WeaponAttachmentDefinition != null && installed.WeaponAttachmentDefinition.Slot == slot)
+                    return installed;
+            return null;
+        }
+
+        // 같은 위치의 부착물이 이미 있으면 목록에서 빼서 replaced로 반환합니다.
+        // 호출자는 교체 전에 기존 부착물을 돌려놓을 격자 공간을 먼저 확보해야 하므로 이 메서드는 최종 적용 단계에서만 사용합니다.
+        public bool TryInstallAttachment(ItemDefinition attachmentItem, out ItemDefinition replaced)
+        {
+            replaced = null;
+            if (!CanInstallAttachment(attachmentItem)) return false;
+
+            WeaponAttachmentSlot slot = attachmentItem.WeaponAttachmentDefinition.Slot;
+            replaced = GetAttachment(slot);
+            if (replaced != null) installedAttachments.Remove(replaced);
+            installedAttachments.Add(attachmentItem);
+            ClampMagazineToEffectiveCapacity();
+            return true;
+        }
+
+        public bool TryDetachAttachment(WeaponAttachmentSlot slot, out ItemDefinition detached)
+        {
+            detached = GetAttachment(slot);
+            if (detached == null) return false;
+            installedAttachments.Remove(detached);
+            // 확장 탄창을 제거했을 때 새 용량보다 많은 탄은 프로토타입 규칙상 탄창에서 제거됩니다.
+            // 실제 게임에서 탄창 아이템 자체에 탄을 저장하도록 확장하면 이 위치에서 탄창 인스턴스로 옮길 수 있습니다.
+            ClampMagazineToEffectiveCapacity();
+            return true;
+        }
+
+        private void ClampMagazineToEffectiveCapacity()
+        {
+            if (HasMagazineState) MagazineRounds = Mathf.Clamp(MagazineRounds, 0, EffectiveMagazineSize);
+        }
+
+        private int SumMagazineCapacityBonus()
+        {
+            int total = 0;
+            foreach (ItemDefinition installed in installedAttachments)
+                if (installed?.WeaponAttachmentDefinition != null)
+                    total += installed.WeaponAttachmentDefinition.MagazineCapacityBonus;
+            return total;
+        }
+
+        private float MultiplyAttachmentValue(Func<WeaponAttachmentDefinition, float> selector)
+        {
+            float result = 1f;
+            foreach (ItemDefinition installed in installedAttachments)
+                if (installed?.WeaponAttachmentDefinition != null)
+                    result *= selector(installed.WeaponAttachmentDefinition);
+            return Mathf.Clamp(result, 0.25f, 4f);
         }
 
         // 방어구가 실제로 흡수한 피해만큼 내구도를 줄이고 감소한 양을 반환합니다.
@@ -126,7 +265,18 @@ namespace ZombieSurvival.Inventory
             if (Item.MaxStack <= 1 || amount <= 0 || amount >= Quantity) return null;
             Quantity -= amount;
             // 일반 아이템 분할에서는 false가 유지되고, 향후 중첩 가능한 지급품이 생겨도 지급 상태가 일반 보상으로 바뀌지 않게 전달합니다.
-            return new InventoryEntry(Item, amount, Position, Rotated, IsRaidProvided, MagazineRounds, ArmorDurability);
+            return new InventoryEntry(
+                Item,
+                amount,
+                Position,
+                Rotated,
+                IsRaidProvided,
+                MagazineRounds,
+                ArmorDurability,
+                installedAttachments,
+                WeaponDurability,
+                true,
+                SelectedTriggerMode);
         }
 
         // 사용하거나 버린 수량만큼 감소했는지 반환합니다.

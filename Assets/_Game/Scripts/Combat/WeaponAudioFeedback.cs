@@ -1,4 +1,5 @@
 using UnityEngine;
+using ZombieSurvival.Core;
 using ZombieSurvival.Player;
 
 namespace ZombieSurvival.Combat
@@ -41,7 +42,8 @@ namespace ZombieSurvival.Combat
         {
             if (audioSource == null || gunshotClip == null) CreateRuntimeAudio();
             audioSource.transform.position = origin;
-            audioSource.PlayOneShot(gunshotClip, volume);
+            // 개별 총성 크기에 설정 화면의 효과음 배율을 곱합니다. 마스터 음량은 AudioListener에서 별도로 전체 출력에 적용됩니다.
+            audioSource.PlayOneShot(gunshotClip, GameSettings.ScaleEffectVolume(volume));
         }
 
         private void CreateRuntimeAudio()

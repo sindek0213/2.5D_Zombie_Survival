@@ -1,6 +1,7 @@
 using NUnit.Framework;
 using UnityEngine;
 using ZombieSurvival.CameraSystem;
+using ZombieSurvival.Core;
 using ZombieSurvival.Player;
 
 public sealed class MovementAndAimTests
@@ -85,5 +86,37 @@ public sealed class MovementAndAimTests
     public void AimZoom_ReducesCameraLensValue()
     {
         Assert.That(CameraFollow.CalculateZoomedLensValue(60f, 0.8f), Is.EqualTo(48f).Within(0.001f));
+    }
+
+    // 가림이 시작되면 현재 알파가 지정 속도만큼 감소하고 목표 알파 아래로 넘어가지 않는지 확인합니다.
+    // 이 계산이 틀리면 낮은 프레임에서 천장이 한 번에 사라지거나 음수 알파가 되어 렌더링이 불안정해질 수 있습니다.
+    [Test]
+    public void OccluderFade_MovesTowardTransparentTargetWithoutOvershoot()
+    {
+        float firstStep = OccluderFadeTarget.MoveFadeAlpha(1f, 0.18f, 5f, 0.1f);
+        float finalStep = OccluderFadeTarget.MoveFadeAlpha(firstStep, 0.18f, 5f, 1f);
+
+        Assert.That(firstStep, Is.EqualTo(0.5f).Within(0.001f));
+        Assert.That(finalStep, Is.EqualTo(0.18f).Within(0.001f));
+    }
+
+    // 가림이 끝난 뒤에는 같은 계산이 다시 1을 향해 증가해야 건물을 빠져나왔을 때 지붕이 원래 모습으로 돌아옵니다.
+    [Test]
+    public void OccluderFade_RestoresOpaqueAlpha()
+    {
+        float restored = OccluderFadeTarget.MoveFadeAlpha(0.18f, 1f, 5f, 1f);
+        Assert.That(restored, Is.EqualTo(1f).Within(0.001f));
+    }
+
+    // 1층 플레이어에게는 1층 대상만, 2층 플레이어에게는 2층 대상만 보여야 투명한 천장 너머 오브젝트가 노출되지 않습니다.
+    [Test]
+    public void FloorVisibility_ShowsOnlyTargetsOnPlayersCurrentFloor()
+    {
+        const float floorHeight = SchoolRaidMapLayout.ClassroomSecondFloorHeight;
+
+        Assert.That(FloorVisibilityTarget.ShouldShowOnFloor(0.3f, 0f, floorHeight), Is.True);
+        Assert.That(FloorVisibilityTarget.ShouldShowOnFloor(floorHeight + 0.3f, 0f, floorHeight), Is.False);
+        Assert.That(FloorVisibilityTarget.ShouldShowOnFloor(floorHeight + 0.3f, floorHeight, floorHeight), Is.True);
+        Assert.That(FloorVisibilityTarget.ShouldShowOnFloor(0.3f, floorHeight, floorHeight), Is.False);
     }
 }

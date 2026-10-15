@@ -29,6 +29,33 @@ public sealed class SurvivalTests
             Is.EqualTo(expected).Within(0.001f));
     }
 
+    // 현재값이 아니라 최대치의 25%를 지불해야 합니다. 정확히 25%가 있으면 가능하고 그보다 부족하면 비용도 빠지지 않습니다.
+    [TestCase(100f, 100f, true, 75f)]
+    [TestCase(200f, 200f, true, 150f)]
+    [TestCase(200f, 50f, true, 0f)]
+    [TestCase(200f, 40f, false, 40f)]
+    public void SpendStamina_ForRollUsesMaximumAndIsAtomic(float maximum, float starting, bool expectedSuccess, float expectedRemaining)
+    {
+        var player = new GameObject("RollStaminaTestPlayer");
+        player.SetActive(false);
+        try
+        {
+            PlayerSurvival survival = player.AddComponent<PlayerSurvival>();
+            var data = new SerializedObject(survival);
+            data.FindProperty("maximumStamina").floatValue = maximum;
+            data.FindProperty("startingStamina").floatValue = starting;
+            data.ApplyModifiedPropertiesWithoutUndo();
+            InvokeAwake(survival);
+
+            Assert.That(survival.TrySpendStaminaFraction(0.25f), Is.EqualTo(expectedSuccess));
+            Assert.That(survival.CurrentStamina, Is.EqualTo(expectedRemaining).Within(0.001f));
+        }
+        finally
+        {
+            Object.DestroyImmediate(player);
+        }
+    }
+
     // HUD는 평상시에는 간단한 기력 수치만 보여 주고 실제 달리기 중에만 상태 안내를 추가합니다.
     [Test]
     public void StaminaHud_ShowsSprintStateOnlyWhileRunning()

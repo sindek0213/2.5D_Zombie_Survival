@@ -44,6 +44,22 @@ MonoBehaviour:
     weight: 0.65
     minimumQuantity: 1
     maximumQuantity: 2
+  - item: {fileID: 11400000, guid: 8f7e5db612b1744469a08c0b7d304805, type: 2}
+    weight: 1.6
+    minimumQuantity: 1
+    maximumQuantity: 2
+  - item: {fileID: 11400000, guid: 1979e903a48c1934494052fcecf7ef06, type: 2}
+    weight: 0.8
+    minimumQuantity: 1
+    maximumQuantity: 1
+  - item: {fileID: 11400000, guid: f736025bf9ea40848801e9b525d5632e, type: 2}
+    weight: 1.5
+    minimumQuantity: 1
+    maximumQuantity: 2
+  - item: {fileID: 11400000, guid: 726be726246fd8945badbe79dcc37284, type: 2}
+    weight: 0.75
+    minimumQuantity: 1
+    maximumQuantity: 1
   - item: {fileID: 11400000, guid: 07052abb7903fbb458e8db8667a46756, type: 2}
     weight: 0.35
     minimumQuantity: 1

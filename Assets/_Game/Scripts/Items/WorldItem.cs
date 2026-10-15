@@ -1,4 +1,5 @@
 using UnityEngine;
+using ZombieSurvival.CameraSystem;
 using ZombieSurvival.Inventory;
 
 namespace ZombieSurvival.Items
@@ -25,6 +26,8 @@ namespace ZombieSurvival.Items
             // 바닥에 놓인 작은 아이템은 물리 장애물이 아니라 줍기 감지 대상이므로 모든 Collider를 Trigger로 사용합니다.
             // 이렇게 하면 CharacterController가 아이템에 막히거나 작은 Cube 위로 계단처럼 올라타는 현상이 사라집니다.
             ConfigurePickupColliders();
+            // 위층 바닥이 투과될 때 다른 층의 드롭 아이템까지 보이지 않도록 공용 층 표시 대상을 자동으로 붙입니다.
+            if (GetComponent<FloorVisibilityTarget>() == null) gameObject.AddComponent<FloorVisibilityTarget>();
         }
 
         // 탐색 중인 플레이어 인벤토리를 연결합니다.

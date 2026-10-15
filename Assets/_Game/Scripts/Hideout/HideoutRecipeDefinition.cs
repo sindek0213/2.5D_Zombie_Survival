@@ -19,6 +19,7 @@ namespace ZombieSurvival.Hideout
         [SerializeField, Min(1)] private int baseOutputQuantity = 1;
         // 1이면 시설 레벨이 하나 오를 때마다 결과 수량이 1개씩 늘고, 0이면 레벨과 관계없이 같은 수량을 만듭니다.
         [SerializeField, Min(0)] private int bonusOutputPerLevel;
+        [SerializeField, Min(1f)] private float baseCraftDurationSeconds = 15f;
 
         public string RecipeId => recipeId;
         public string DisplayName => string.IsNullOrWhiteSpace(displayName) ? recipeId : displayName;
@@ -26,6 +27,15 @@ namespace ZombieSurvival.Hideout
         public int RequiredFacilityLevel => Mathf.Max(1, requiredFacilityLevel);
         public IReadOnlyList<HideoutFacilityItemCost> Ingredients => ingredients ?? Array.Empty<HideoutFacilityItemCost>();
         public ItemDefinition OutputItem => outputItem;
+
+        // 시설 레벨이 높아질 때마다 12%씩 단축하되 너무 짧아 제작 완료 알림을 놓치지 않도록 최소 2초를 유지합니다.
+        public float GetCraftDuration(int facilityLevel)
+        {
+            int extraLevels = Mathf.Max(0, facilityLevel - RequiredFacilityLevel);
+            return Mathf.Max(2f, baseCraftDurationSeconds * Mathf.Pow(0.88f, extraLevels));
+        }
+
+        public void ConfigureCraftDuration(float seconds) => baseCraftDurationSeconds = Mathf.Max(1f, seconds);
 
         public int GetOutputQuantity(int facilityLevel)
         {
@@ -59,6 +69,7 @@ namespace ZombieSurvival.Hideout
             requiredFacilityLevel = Mathf.Max(1, requiredFacilityLevel);
             baseOutputQuantity = Mathf.Max(1, baseOutputQuantity);
             bonusOutputPerLevel = Mathf.Max(0, bonusOutputPerLevel);
+            baseCraftDurationSeconds = Mathf.Max(1f, baseCraftDurationSeconds);
             NormalizeIngredients();
         }
 

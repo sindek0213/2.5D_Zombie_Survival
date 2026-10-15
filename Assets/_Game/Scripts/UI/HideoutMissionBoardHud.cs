@@ -159,6 +159,7 @@ namespace ZombieSurvival.UI
                           $"\n보상: {mission.RewardDescription}"
                         : $"목표: {mission.BuildProgressDescription(0)}\n" +
                           $"보상: {mission.RewardDescription}\n" +
+                          $"위험도: {new string('◆', mission.RiskRating)}{new string('◇', 5 - mission.RiskRating)}\n" +
                           (mission.Repeatable ? $"반복 가능 · 완료 {completionCount}회" : completionCount > 0 ? "완료한 일회성 임무" : "일회성 임무");
                 }
             }

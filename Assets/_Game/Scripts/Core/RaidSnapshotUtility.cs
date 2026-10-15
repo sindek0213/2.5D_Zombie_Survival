@@ -1,11 +1,12 @@
 using UnityEngine;
+using ZombieSurvival.Combat;
 using ZombieSurvival.Inventory;
 using ZombieSurvival.Items;
 
 namespace ZombieSurvival.Core
 {
     // RaidItemSnapshot을 복제하거나 다시 런타임 InventoryEntry로 만드는 공통 변환 함수입니다.
-    // Hideout 창고, 출격 준비와 버전 5 JSON 저장이 같은 복원 규칙을 사용하도록 한곳에 모았습니다.
+    // Hideout 창고, 출격 준비와 현재 JSON 저장이 같은 복원 규칙을 사용하도록 한곳에 모았습니다.
     public static class RaidSnapshotUtility
     {
         // 현재 격자의 모든 엔트리를 저장 가능한 스냅샷으로 깊게 복사합니다.
@@ -38,9 +39,17 @@ namespace ZombieSurvival.Core
                 rotated = entry.Rotated,
                 hasMagazineState = entry.HasMagazineState,
                 magazineRounds = entry.MagazineRounds,
+                hasWeaponDurabilityState = entry.HasWeaponDurabilityState,
+                weaponDurability = entry.WeaponDurability,
+                hasTriggerModeState = entry.HasTriggerModeState,
+                selectedTriggerMode = (int)entry.SelectedTriggerMode,
                 hasArmorState = entry.HasArmorState,
                 armorDurability = entry.ArmorDurability
             };
+
+            foreach (ItemDefinition attachment in entry.InstalledAttachments)
+                if (attachment != null && !string.IsNullOrWhiteSpace(attachment.ItemId))
+                    snapshot.attachmentItemIds.Add(attachment.ItemId);
 
             if (entry.Contents != null)
                 foreach (InventoryEntry child in entry.Contents.Entries)
@@ -63,9 +72,17 @@ namespace ZombieSurvival.Core
                 rotated = source.rotated,
                 hasMagazineState = source.hasMagazineState,
                 magazineRounds = source.magazineRounds,
+                hasWeaponDurabilityState = source.hasWeaponDurabilityState,
+                weaponDurability = source.weaponDurability,
+                hasTriggerModeState = source.hasTriggerModeState,
+                selectedTriggerMode = source.selectedTriggerMode,
                 hasArmorState = source.hasArmorState,
                 armorDurability = source.armorDurability
             };
+
+            if (source.attachmentItemIds != null)
+                foreach (string attachmentId in source.attachmentItemIds)
+                    if (!string.IsNullOrWhiteSpace(attachmentId)) clone.attachmentItemIds.Add(attachmentId);
 
             if (source.contents != null)
                 foreach (RaidItemSnapshot child in source.contents)
@@ -109,8 +126,31 @@ namespace ZombieSurvival.Core
 
             // 새 저장 데이터는 0발도 그대로 복원하고, 탄창 필드가 없던 이전 저장 데이터는 -1을 전달해 기본 가득 찬 탄창으로 호환합니다.
             int magazineRounds = snapshot.hasMagazineState ? snapshot.magazineRounds : -1;
+            // 무기 내구도와 발사 모드 필드가 없던 저장은 각각 -1과 false를 전달해 생성자가 안전한 기본값을 선택하게 합니다.
+            float weaponDurability = snapshot.hasWeaponDurabilityState ? snapshot.weaponDurability : -1f;
+            bool hasTriggerMode = snapshot.hasTriggerModeState &&
+                                  System.Enum.IsDefined(typeof(WeaponTriggerMode), snapshot.selectedTriggerMode);
+            WeaponTriggerMode selectedTriggerMode = hasTriggerMode
+                ? (WeaponTriggerMode)snapshot.selectedTriggerMode
+                : WeaponTriggerMode.SemiAutomatic;
             // 내구도 필드가 없는 1·2번 저장은 -1을 전달해 기존 방탄복을 최대 내구도로 안전하게 복원합니다.
             float armorDurability = snapshot.hasArmorState ? snapshot.armorDurability : -1f;
+            var restoredAttachments = new System.Collections.Generic.List<ItemDefinition>();
+            if (snapshot.attachmentItemIds != null && snapshot.attachmentItemIds.Count > 0)
+            {
+                // 부착물은 무기에만 존재할 수 있고 한 슬롯에 하나만 허용합니다.
+                // ID 누락·비호환·중복 슬롯 중 하나라도 발견되면 조용히 버리지 않고 아이템 전체 복원을 실패시킵니다.
+                if (definition.Type != ItemType.Weapon || definition.WeaponDefinition == null) return false;
+                var usedSlots = new System.Collections.Generic.HashSet<WeaponAttachmentSlot>();
+                foreach (string attachmentId in snapshot.attachmentItemIds)
+                {
+                    ItemDefinition attachment = catalog.Find(attachmentId);
+                    WeaponAttachmentDefinition attachmentData = attachment?.WeaponAttachmentDefinition;
+                    if (attachmentData == null || !attachmentData.IsCompatible(definition.WeaponDefinition) ||
+                        !usedSlots.Add(attachmentData.Slot)) return false;
+                    restoredAttachments.Add(attachment);
+                }
+            }
             var candidate = new InventoryEntry(
                 definition,
                 snapshot.quantity,
@@ -118,7 +158,11 @@ namespace ZombieSurvival.Core
                 rotated,
                 false,
                 magazineRounds,
-                armorDurability);
+                armorDurability,
+                restoredAttachments,
+                weaponDurability,
+                hasTriggerMode,
+                selectedTriggerMode);
             if (snapshot.contents != null && snapshot.contents.Count > 0)
             {
                 // 내용물이 있는데 정의가 컨테이너가 아니라면 손실을 감수하고 무시하지 않고 전체 복원을 실패시킵니다.

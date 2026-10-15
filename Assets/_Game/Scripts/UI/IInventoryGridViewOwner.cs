@@ -26,5 +26,10 @@ namespace ZombieSurvival.UI
 
         void UpdateItemDrag(PointerEventData eventData);
         void EndItemDrag(PointerEventData eventData);
+
+        // 아이템 View가 길게 누르기 시간을 직접 판단한 뒤, 실제 팝업 내용과 위치 표시는 현재 화면의 HUD에 요청합니다.
+        // 레이드와 거점은 비교 무기를 찾는 데이터가 서로 다르므로 View가 상세 문자열을 직접 만들지 않습니다.
+        void ShowItemDetailPopup(InventoryEntry entry, Vector2 screenPosition, Camera eventCamera);
+        void HideItemDetailPopup(InventoryEntry entry);
     }
 }

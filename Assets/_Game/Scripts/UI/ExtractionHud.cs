@@ -12,9 +12,10 @@ namespace ZombieSurvival.UI
         [SerializeField] private GameObject panel;
         [SerializeField] private Text messageText;
         [SerializeField] private Image stateAccent;
-        [SerializeField] private Color lockedColor = new Color(0.8f, 0.25f, 0.22f, 1f);
-        [SerializeField] private Color availableColor = new Color(0.2f, 0.85f, 0.35f, 1f);
-        [SerializeField] private Color succeededColor = new Color(0.2f, 0.9f, 0.9f, 1f);
+        // 탈출 상태색도 공용 팔레트를 사용해 HUD와 메뉴의 성공·실패 의미가 일치하도록 합니다.
+        [SerializeField] private Color lockedColor = SurvivalUiTheme.Danger;
+        [SerializeField] private Color availableColor = SurvivalUiTheme.Success;
+        [SerializeField] private Color succeededColor = SurvivalUiTheme.Accent;
 
         public void SetController(ExtractionController value)
         {

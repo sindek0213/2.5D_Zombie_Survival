@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using ZombieSurvival.Art;
+using ZombieSurvival.Combat;
 using ZombieSurvival.Inventory;
 using ZombieSurvival.Items;
 using ZombieSurvival.Player;
@@ -13,7 +14,7 @@ namespace ZombieSurvival.UI
     // 실제 아이템 배치 가능 여부와 교환 규칙은 PlayerInventory가 계속 판단하며,
     // 이 클래스는 Canvas 화면에서 받은 사용자의 명령만 안전한 인벤토리 API로 전달합니다.
     [DefaultExecutionOrder(-100)]
-    public sealed class InventoryHud : MonoBehaviour, IInventoryGridViewOwner
+    public sealed class InventoryHud : MonoBehaviour, IInventoryGridViewOwner, IEquipmentSlotViewOwner
     {
         private enum AuxiliaryGridTab
         {
@@ -28,6 +29,7 @@ namespace ZombieSurvival.UI
         [SerializeField] private PlayerInteraction interaction;
         [SerializeField] private PlayerControlGate controlGate;
         [SerializeField] private PlayerCombat combat;
+        [SerializeField] private PlayerQuickSlots quickSlots;
 
         [Header("Canvas 화면")]
         [SerializeField] private GameObject inventoryPanel;
@@ -39,6 +41,8 @@ namespace ZombieSurvival.UI
         [SerializeField] private Text interactionPromptText;
         [SerializeField] private Text interactionStatusText;
         [SerializeField] private Text itemDetailText;
+        [SerializeField] private ItemDetailPopup itemDetailPopup;
+        [SerializeField] private WeaponManagementPanel weaponManagementPanel;
 
         [Header("캐릭터와 장비 배치")]
         // 왼쪽 위에는 전신 그림을 크게 표시하고, 장비 슬롯은 전신 그림 아래에서 세로로 이어지도록 배치합니다.
@@ -57,6 +61,8 @@ namespace ZombieSurvival.UI
         [SerializeField, Min(0.01f)] private float closeAnimationDuration = 0.12f;
         [SerializeField, Range(0.75f, 1f)] private float closedScale = 0.94f;
         [SerializeField] private int canvasSortingOrder = 20;
+        // 레이드에서는 InventoryHud가 Tab을 직접 읽지만, 거점에서는 시설 화면 관리자와 입력이 충돌하지 않도록 외부에서 끌 수 있습니다.
+        [SerializeField] private bool keyboardToggleEnabled = true;
 
         private bool open;
         private InventoryEntry selected;
@@ -77,6 +83,9 @@ namespace ZombieSurvival.UI
         private Button backpackTabButton;
         private Button rigTabButton;
         private InventoryGridView previewGridView;
+        // popupEntry는 단순 선택 항목이 아니라 현재 길게 누르고 있는 항목입니다.
+        // 선택을 바꾸지 않고 정보를 잠깐 보는 조작을 허용하려면 selected와 별도로 보관해야 합니다.
+        private InventoryEntry popupEntry;
 
         // 장비 슬롯에서 격자로 끌어낼 때는 일반 격자 드래그와 출발 데이터 구조가 다르므로 별도 상태로 보관합니다.
         // equipmentDragEntry는 실제 슬롯에 계속 남아 있고, 마우스를 놓아 검증이 성공한 순간에만 격자로 이동합니다.
@@ -92,6 +101,10 @@ namespace ZombieSurvival.UI
         public bool IsOpen => open;
         public RectTransform DragLayer => dragLayer;
 
+        // 거점의 HideoutWorldController처럼 상위 화면 관리자가 Tab을 처리할 때 이 HUD의 중복 토글만 비활성화합니다.
+        // SetOpen을 통한 열기·닫기와 장비/격자 조작은 그대로 사용할 수 있습니다.
+        public void SetKeyboardToggleEnabled(bool value) => keyboardToggleEnabled = value;
+
         // 씬 생성기가 플레이어의 실제 인벤토리와 상호작용 시스템을 이 HUD에 연결할 때 사용합니다.
         // Configure가 OnEnable 뒤에 호출될 수도 있으므로 이전 이벤트를 해제한 다음 새 인벤토리 이벤트를 다시 연결합니다.
         public void Configure(PlayerInventory value, PlayerInteraction interactionValue)
@@ -104,6 +117,7 @@ namespace ZombieSurvival.UI
             interaction = interactionValue;
             controlGate = inventory != null ? inventory.GetComponent<PlayerControlGate>() : null;
             combat = inventory != null ? inventory.GetComponent<PlayerCombat>() : null;
+            quickSlots = inventory != null ? inventory.GetComponent<PlayerQuickSlots>() : null;
             SubscribeInventory();
             SubscribeInteraction();
             RefreshAll();
@@ -131,11 +145,21 @@ namespace ZombieSurvival.UI
             interactionPromptText = promptText;
             interactionStatusText = statusText;
             itemDetailText = detailText;
+            EnsureItemDetailPopup();
             ApplyCharacterAndEquipmentLayout();
             EnsureGeneratedCharacterPreview();
             EnsureAuxiliaryTabs();
             EnsurePanelAnimationComponents();
+            EnsureItemDetailPopup();
             ApplyOpenStateImmediately();
+            RefreshAll();
+        }
+
+        // 전용 무기 관리 패널은 기존 ConfigureViews 매개변수를 바꾸지 않고 별도로 연결합니다.
+        // 이전 테스트나 사용자가 만든 프리팹은 이 참조가 없어도 기존 인벤토리 기능을 그대로 사용할 수 있습니다.
+        public void ConfigureWeaponManagementPanel(WeaponManagementPanel panel)
+        {
+            weaponManagementPanel = panel;
             RefreshAll();
         }
 
@@ -158,12 +182,21 @@ namespace ZombieSurvival.UI
 
         private void Update()
         {
+            // ESC는 인벤토리가 열려 있을 때 항상 이 창을 먼저 닫습니다.
+            // PauseMenuHud도 같은 우선순위를 사용하므로 레이드와 거점 어느 쪽에서도 한 번의 ESC로 두 화면이 연달아 열리지 않습니다.
+            if (open && Input.GetKeyDown(KeyCode.Escape))
+            {
+                SetOpen(false);
+                return;
+            }
+
             // Tab은 인벤토리를 열고 닫으며, 창이 열린 동안에만 선택 아이템 단축키를 처리합니다.
             // 회전과 버리기는 장비 슬롯이 아닌 실제 격자 안의 아이템을 선택했을 때만 실행할 수 있습니다.
-            if (Input.GetKeyDown(KeyCode.Tab)) SetOpen(!open);
+            if (keyboardToggleEnabled && Input.GetKeyDown(KeyCode.Tab)) SetOpen(!open);
 
             if (open && selected != null && selectedGrid != null && inventory != null && !inventory.IsUsingItem)
             {
+                // 숫자 1~0은 인벤토리를 닫은 뒤 사용 전용입니다. 등록은 아이템을 아래 퀵슬롯 UI로 직접 드래그해서 처리합니다.
                 if (Input.GetKeyDown(KeyCode.R))
                 {
                     CancelDropConfirmation();
@@ -180,7 +213,8 @@ namespace ZombieSurvival.UI
             UpdateInteractionFeedback();
             // 아이템 사용 진행률은 매 프레임 달라지지만 격자 전체를 다시 만들 필요는 없으므로 상세 문구만 가볍게 갱신합니다.
             // 실패 안내 시간이 끝난 첫 프레임에는 문자열을 비우고 한 번 더 그려, 만료된 문구가 화면에 계속 남는 문제를 막습니다.
-            if (open && (inventory?.IsUsingItem == true || !string.IsNullOrEmpty(inventoryFeedbackMessage)))
+            if (open && (inventory?.IsUsingItem == true || inventory?.HasVisibleItemUseMessage == true ||
+                         !string.IsNullOrEmpty(inventoryFeedbackMessage)))
             {
                 if (inventory?.IsUsingItem != true && Time.unscaledTime >= inventoryFeedbackExpiresAt)
                     inventoryFeedbackMessage = string.Empty;
@@ -209,7 +243,7 @@ namespace ZombieSurvival.UI
             else
             {
                 // 사용 중 창을 닫으면 취소하는 규칙을 명확히 해, 닫은 뒤 효과만 적용되는 혼란을 막습니다.
-                inventory?.CancelItemUse();
+                inventory?.CancelItemUse("인벤토리를 닫아 사용이 취소되었습니다. 아이템은 소비되지 않았습니다.");
                 CancelDropConfirmation();
                 // 수색 화면을 닫으면 다음 Tab 열기에서는 다시 장착 가방/조끼를 보여 주도록 외부 대상 참조를 비웁니다.
                 if (activeLootContainer != null && selectedGrid == activeLootContainer.LootGrid)
@@ -223,6 +257,7 @@ namespace ZombieSurvival.UI
                 dragSession.Cancel();
                 CancelEquipmentDrag();
                 ClearPlacementPreview();
+                HideItemDetailPopup(popupEntry);
                 StartPanelTransition(false);
             }
         }
@@ -317,6 +352,21 @@ namespace ZombieSurvival.UI
 
             if (button == PointerEventData.InputButton.Right)
             {
+                // Shift+우클릭은 장착 무기에서 마지막 부착물 하나를 주 인벤토리로 해제합니다.
+                // 일반 우클릭의 장비 해제 동작은 그대로 유지해 기존 조작과 충돌하지 않게 합니다.
+                bool shiftHeld = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+                if (shiftHeld && entry.Item.Type == ItemType.Weapon && entry.InstalledAttachments.Count > 0)
+                {
+                    ItemDefinition lastAttachment = entry.InstalledAttachments[entry.InstalledAttachments.Count - 1];
+                    WeaponAttachmentSlot attachmentSlot = lastAttachment.WeaponAttachmentDefinition.Slot;
+                    if (!inventory.TryDetachAttachment(entry, attachmentSlot, inventory.Root, out string detachFailure))
+                        ShowInventoryFeedback(detachFailure);
+                    else
+                        ShowInventoryFeedback($"{lastAttachment.DisplayName}을 무기에서 해제했습니다.");
+                    RefreshAll();
+                    return;
+                }
+
                 if (!inventory.TryUnequip(slot))
                     ShowInventoryFeedback("장비를 주 인벤토리에 돌려놓을 공간이 없습니다.");
             }
@@ -371,12 +421,36 @@ namespace ZombieSurvival.UI
 
             bool handled = false;
             GameObject hit = eventData != null ? eventData.pointerCurrentRaycast.gameObject : null;
+            QuickSlotView targetQuickSlot = hit != null ? hit.GetComponentInParent<QuickSlotView>() : null;
+            if (inventory != null && targetQuickSlot != null)
+            {
+                handled = true;
+                string message = "퀵슬롯 시스템을 찾을 수 없습니다.";
+                if (quickSlots != null)
+                    quickSlots.TryAssign(targetQuickSlot.SlotIndex, dragSession.Entry.Item, out message);
+                // 퀵슬롯 등록은 아이템을 이동하거나 소비하지 않고 ItemId 연결만 바꾸므로 원래 격자 위치는 그대로 유지됩니다.
+                ShowInventoryFeedback(message);
+            }
+
             EquipmentSlotView targetSlotView = hit != null ? hit.GetComponentInParent<EquipmentSlotView>() : null;
-            if (inventory != null && targetSlotView != null)
+            if (!handled && inventory != null && targetSlotView != null)
             {
                 handled = true;
                 InventoryEntry draggedEntry = dragSession.Entry;
-                if (inventory.TryEquipOrSwap(
+                // 부착물은 캐릭터 장비 슬롯 자체에 장착되는 것이 아니라 그 슬롯의 무기 안으로 들어갑니다.
+                if (draggedEntry.Item.Type == ItemType.Attachment &&
+                    inventory.Equipment.TryGetValue(targetSlotView.Slot, out InventoryEntry targetWeapon))
+                {
+                    if (inventory.TryInstallAttachment(
+                            dragSession.SourceGrid,
+                            draggedEntry,
+                            targetWeapon,
+                            out string attachmentFailure))
+                        ShowInventoryFeedback($"{draggedEntry.Item.DisplayName}을 {targetWeapon.Item.DisplayName}에 장착했습니다.");
+                    else
+                        ShowInventoryFeedback(attachmentFailure);
+                }
+                else if (inventory.TryEquipOrSwap(
                         dragSession.SourceGrid,
                         draggedEntry,
                         targetSlotView.Slot,
@@ -404,7 +478,19 @@ namespace ZombieSurvival.UI
                     targetGrid,
                     dragSession.Entry,
                     position);
-                if (!string.IsNullOrEmpty(failure))
+                InventoryEntry targetWeapon = FindEntryAt(targetGrid, position, dragSession.Entry);
+                if (dragSession.Entry.Item.Type == ItemType.Attachment && targetWeapon?.Item.Type == ItemType.Weapon)
+                {
+                    if (!inventory.TryInstallAttachment(
+                            dragSession.SourceGrid,
+                            dragSession.Entry,
+                            targetWeapon,
+                            out string attachmentFailure))
+                        ShowInventoryFeedback(attachmentFailure);
+                    else
+                        ShowInventoryFeedback($"{dragSession.Entry.Item.DisplayName}을 {targetWeapon.Item.DisplayName}에 장착했습니다.");
+                }
+                else if (!string.IsNullOrEmpty(failure))
                     ShowInventoryFeedback(failure);
                 else if (!inventory.TryMove(dragSession.SourceGrid, targetGrid, dragSession.Entry, position))
                     ShowInventoryFeedback("드롭 위치에 배치·중첩·교환할 수 없습니다.");
@@ -415,6 +501,23 @@ namespace ZombieSurvival.UI
             ClearPlacementPreview();
             dragSession.Cancel();
             RefreshAll();
+        }
+
+        // 격자 아이템이나 장비 슬롯을 0.45초 동안 누르면 선택 상태를 바꾸지 않고 해당 항목의 정보를 커서 옆에 고정해서 표시합니다.
+        public void ShowItemDetailPopup(InventoryEntry entry, Vector2 screenPosition, Camera eventCamera)
+        {
+            if (entry == null) return;
+            EnsureItemDetailPopup();
+            popupEntry = entry;
+            itemDetailPopup?.Show(entry.Item.DisplayName, BuildPopupDetail(entry), screenPosition, eventCamera);
+        }
+
+        // 다른 아이템 View가 뒤늦게 PointerUp을 보내도 현재 팝업을 닫지 않도록 같은 엔트리일 때만 닫습니다.
+        public void HideItemDetailPopup(InventoryEntry entry)
+        {
+            if (popupEntry != null && entry != null && popupEntry != entry) return;
+            itemDetailPopup?.Hide();
+            popupEntry = null;
         }
 
         // 장비 슬롯 자체는 GridData가 없으므로 별도 드래그 상태와 작은 아이콘 유령을 사용합니다.
@@ -491,28 +594,80 @@ namespace ZombieSurvival.UI
             }
             RefreshAuxiliaryTabs();
 
+            // 무기를 좌클릭으로 선택하면 세 부착물 슬롯과 실제 내구도 보정 수치를 전용 패널에 표시합니다.
+            // 레이드 중에는 수리할 수 없으므로 해제 기능만 연결하고 수리 버튼은 숨깁니다.
+            weaponManagementPanel?.Bind(
+                selected,
+                FindWeaponComparison(selected),
+                false,
+                HandleWeaponPanelDetach,
+                null);
+
             RefreshItemDetail();
         }
 
-        // 기본 상세 설명 아래에 현재 사용 진행률이나 최근 실패 이유를 붙입니다.
-        // 진행률은 0~100%로 제한하고 실패 안내는 잠시 뒤 자동으로 사라져 다음 선택의 설명을 가리지 않게 합니다.
+        private void HandleWeaponPanelDetach(WeaponAttachmentSlot slot)
+        {
+            if (inventory == null || selected?.Item.Type != ItemType.Weapon) return;
+            ItemDefinition installed = selected.GetAttachment(slot);
+            if (!inventory.TryDetachAttachment(selected, slot, inventory.Root, out string failure))
+                ShowInventoryFeedback(failure);
+            else
+                ShowInventoryFeedback($"{installed.DisplayName}을 무기에서 해제했습니다.");
+            RefreshAll();
+        }
+
+        // 고정 설명창은 제거했으므로 팝업이 실제로 열린 동안에만 내용과 크기를 다시 계산합니다.
+        // 사용 진행률이나 실패 안내는 상태 Text에도 표시하지만, 현재 보고 있는 같은 아이템의 팝업에도 함께 반영합니다.
         private void RefreshItemDetail()
         {
-            if (itemDetailText == null) return;
+            if (itemDetailPopup?.IsVisible != true || popupEntry == null) return;
+            itemDetailPopup.SetContent(BuildPopupDetail(popupEntry));
+        }
 
-            string detail = ItemDetailFormatter.Build(selected, FindWeaponComparison(selected));
-            detail += "\n\n좌클릭 선택/드래그 · Ctrl+좌클릭 빠른 이동 · Shift+좌클릭 절반 분할 · R 회전 · Delete 두 번 버리기";
-            if (inventory?.IsUsingItem == true)
+        private string BuildPopupDetail(InventoryEntry entry)
+        {
+            string detail = ItemDetailFormatter.Build(entry, FindWeaponComparison(entry));
+            if (entry == selected && inventory?.IsUsingItem == true)
             {
                 int percentage = Mathf.RoundToInt(Mathf.Clamp01(inventory.ItemUseProgress) * 100f);
                 detail += $"\n\n{inventory.CurrentItemUseName} 사용 중... {percentage}%\n(Tab을 누르면 취소)";
             }
-            else if (!string.IsNullOrEmpty(inventoryFeedbackMessage) && Time.unscaledTime < inventoryFeedbackExpiresAt)
+            else if (entry == selected && !string.IsNullOrEmpty(inventoryFeedbackMessage) &&
+                     Time.unscaledTime < inventoryFeedbackExpiresAt)
             {
                 detail += "\n\n안내: " + inventoryFeedbackMessage;
             }
+            return detail;
+        }
 
-            itemDetailText.text = detail;
+        private void EnsureItemDetailPopup()
+        {
+            if (itemDetailText == null) return;
+            RectTransform panel = itemDetailText.transform.parent as RectTransform;
+            RectTransform overlay = dragLayer != null
+                ? dragLayer
+                : inventoryPanel != null ? inventoryPanel.transform as RectTransform : null;
+            if (panel == null || overlay == null) return;
+
+            if (itemDetailPopup == null) itemDetailPopup = GetComponent<ItemDetailPopup>();
+            if (itemDetailPopup == null) itemDetailPopup = gameObject.AddComponent<ItemDetailPopup>();
+            itemDetailPopup.Configure(panel, itemDetailText, overlay);
+            itemDetailPopup.Closed -= HandleItemDetailPopupClosed;
+            itemDetailPopup.Closed += HandleItemDetailPopupClosed;
+
+            // 기존 프리팹의 조작 안내도 런타임에 보충해 새 길게 누르기 기능을 바로 알 수 있게 합니다.
+            Text controls = inventoryPanel != null
+                ? inventoryPanel.transform.Find("Controls")?.GetComponent<Text>()
+                : null;
+            if (controls != null && !controls.text.Contains("팝업 상단 드래그"))
+                controls.text += "  |  아이템 길게 누르기 정보 · 팝업 상단 드래그";
+        }
+
+        private void HandleItemDetailPopupClosed()
+        {
+            // 바깥 클릭이나 X 버튼으로 닫힌 경우에도 더 이상 사라진 팝업 내용을 갱신하지 않도록 표시 항목 참조를 비웁니다.
+            popupEntry = null;
         }
 
         private void ShowInventoryFeedback(string message)
@@ -637,8 +792,13 @@ namespace ZombieSurvival.UI
                 ClearPlacementPreview();
                 bool compatible = dragSession.Entry.Item.EquipmentSlot == slotView.Slot &&
                                   slotView.Slot != EquipmentSlotType.None;
+                if (dragSession.Entry.Item.Type == ItemType.Attachment && inventory != null &&
+                    inventory.Equipment.TryGetValue(slotView.Slot, out InventoryEntry weapon))
+                    compatible = weapon.CanInstallAttachment(dragSession.Entry.Item);
                 ShowInventoryFeedback(compatible
-                    ? "장비 슬롯에 놓으면 장착하거나 기존 장비와 교체합니다."
+                    ? dragSession.Entry.Item.Type == ItemType.Attachment
+                        ? "무기 슬롯에 놓으면 호환 부착물을 설치합니다."
+                        : "장비 슬롯에 놓으면 장착하거나 기존 장비와 교체합니다."
                     : "이 아이템과 장비 슬롯 종류가 맞지 않습니다.");
                 return;
             }
@@ -655,6 +815,18 @@ namespace ZombieSurvival.UI
 
             if (previewGridView != targetView) ClearPlacementPreview();
             previewGridView = targetView;
+            InventoryEntry targetWeapon = FindEntryAt(targetGrid, position, dragSession.Entry);
+            if (dragSession.Entry.Item.Type == ItemType.Attachment && targetWeapon?.Item.Type == ItemType.Weapon)
+            {
+                InventoryPlacementPreview attachmentPreview = targetWeapon.CanInstallAttachment(dragSession.Entry.Item)
+                    ? InventoryPlacementPreview.Swap
+                    : InventoryPlacementPreview.Invalid;
+                targetView.ShowPlacementPreview(dragSession.Entry, position, attachmentPreview);
+                ShowInventoryFeedback(attachmentPreview == InventoryPlacementPreview.Swap
+                    ? $"{targetWeapon.Item.DisplayName}에 부착물을 설치할 수 있습니다."
+                    : "이 무기와 부착물은 호환되지 않습니다.");
+                return;
+            }
             InventoryPlacementPreview preview = InventoryGridOperations.GetPlacementPreview(
                 dragSession.SourceGrid,
                 targetGrid,
@@ -662,6 +834,18 @@ namespace ZombieSurvival.UI
                 position);
             targetView.ShowPlacementPreview(dragSession.Entry, position, preview);
             ShowInventoryFeedback(PreviewMessage(preview));
+        }
+
+        private static InventoryEntry FindEntryAt(
+            PlayerInventory.GridData grid,
+            Vector2Int position,
+            InventoryEntry ignored)
+        {
+            if (grid == null) return null;
+            foreach (InventoryEntry candidate in grid.Entries)
+                if (candidate != null && candidate != ignored &&
+                    candidate.OccupiesGridCell(position.x, position.y)) return candidate;
+            return null;
         }
 
         private void UpdateEquipmentPlacementPreview(PointerEventData eventData)
@@ -838,7 +1022,8 @@ namespace ZombieSurvival.UI
                 Text text = labelObject.GetComponent<Text>();
                 text.font = itemDetailText != null ? itemDetailText.font : Resources.GetBuiltinResource<Font>("Arial.ttf");
                 text.alignment = TextAnchor.MiddleCenter;
-                text.color = Color.white;
+                // 런타임에 생성되는 탭도 프리팹 Text와 같은 따뜻한 본문색을 사용합니다.
+                text.color = SurvivalUiTheme.TextPrimary;
                 text.raycastTarget = false;
                 RectTransform labelRect = text.rectTransform;
                 labelRect.anchorMin = Vector2.zero;
@@ -891,9 +1076,10 @@ namespace ZombieSurvival.UI
         {
             Image image = button != null ? button.targetGraphic as Image : null;
             if (image != null)
+                // 현재 열린 탭은 공용 주황 강조색, 나머지는 어두운 버튼색으로 표시합니다.
                 image.color = active
-                    ? new Color(0.16f, 0.65f, 0.68f, 0.96f)
-                    : new Color(0.13f, 0.17f, 0.20f, 0.94f);
+                    ? SurvivalUiTheme.AccentSoft
+                    : SurvivalUiTheme.ButtonNormal;
         }
 
         private void UpdateInteractionFeedback()
@@ -906,14 +1092,45 @@ namespace ZombieSurvival.UI
             }
 
             if (interactionStatusText == null) return;
+            // 인벤토리가 열린 동안에는 월드 상호작용 대신 아이템 사용 진행률과 최근 실패 이유를 같은 작은 상태 영역에 표시합니다.
+            // 큰 설명 패널을 숨겨도 중요한 실패 메시지가 사라지지 않도록 정보와 조작 결과의 역할을 분리합니다.
+            if (open && !panelTransitionRunning)
+            {
+                bool isUsingItem = inventory?.IsUsingItem == true;
+                bool hasFeedback = !string.IsNullOrEmpty(inventoryFeedbackMessage) &&
+                                   Time.unscaledTime < inventoryFeedbackExpiresAt;
+                bool hasUseMessage = inventory?.HasVisibleItemUseMessage == true;
+                interactionStatusText.gameObject.SetActive(isUsingItem || hasFeedback || hasUseMessage);
+                if (isUsingItem)
+                {
+                    int percentage = Mathf.RoundToInt(Mathf.Clamp01(inventory.ItemUseProgress) * 100f);
+                    interactionStatusText.text = $"{inventory.CurrentItemUseName} 사용 중... {percentage}%  ·  Tab 취소";
+                    interactionStatusText.color = SurvivalUiTheme.Info;
+                }
+                else if (hasFeedback)
+                {
+                    interactionStatusText.text = inventoryFeedbackMessage;
+                    interactionStatusText.color = SurvivalUiTheme.Warning;
+                }
+                else if (hasUseMessage)
+                {
+                    // 치료 완료와 피격 취소를 같은 상태 영역에 표시해 아이템이 소비됐는지 사용자가 즉시 확인할 수 있게 합니다.
+                    interactionStatusText.text = inventory.LastItemUseMessage;
+                    interactionStatusText.color = inventory.LastItemUseMessage.Contains("완료")
+                        ? SurvivalUiTheme.Success
+                        : SurvivalUiTheme.Warning;
+                }
+                return;
+            }
+
             bool showStatus = !open && !panelTransitionRunning && interaction != null && interaction.HasVisibleStatus;
             interactionStatusText.gameObject.SetActive(showStatus);
             if (!showStatus) return;
 
             interactionStatusText.text = interaction.StatusMessage;
             interactionStatusText.color = interaction.LastInteractionSucceeded
-                ? new Color(0.35f, 1f, 0.55f)
-                : new Color(1f, 0.4f, 0.3f);
+                ? SurvivalUiTheme.Success
+                : SurvivalUiTheme.Danger;
         }
 
         // 열기에서는 먼저 패널을 활성화한 뒤 알파와 크기를 1까지 올리고, 닫기에서는 반대로 줄인 뒤 마지막에 비활성화합니다.
@@ -922,6 +1139,7 @@ namespace ZombieSurvival.UI
         {
             EnsurePanelAnimationComponents();
             if (panelTransition != null) StopCoroutine(panelTransition);
+            HideItemDetailPopup(popupEntry);
 
             if (!isActiveAndEnabled || inventoryPanel == null || inventoryPanelGroup == null || inventoryPanelRect == null)
             {
@@ -1083,6 +1301,7 @@ namespace ZombieSurvival.UI
             if (inventory == null) return;
             if (controlGate == null) controlGate = inventory.GetComponent<PlayerControlGate>();
             if (combat == null) combat = inventory.GetComponent<PlayerCombat>();
+            if (quickSlots == null) quickSlots = inventory.GetComponent<PlayerQuickSlots>();
         }
 
         private void SubscribeInventory()
@@ -1141,6 +1360,7 @@ namespace ZombieSurvival.UI
             CancelEquipmentDrag();
             ClearPlacementPreview();
             CancelDropConfirmation();
+            HideItemDetailPopup(popupEntry);
             ApplyOpenStateImmediately();
         }
     }
