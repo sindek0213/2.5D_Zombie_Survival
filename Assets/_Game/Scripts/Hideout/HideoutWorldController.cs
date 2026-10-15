@@ -248,8 +248,12 @@ namespace ZombieSurvival.Hideout
         {
             // 씬 전환이나 Play 종료 중에도 이 관리자가 남긴 조작 잠금이 플레이어에 남지 않도록 자신의 잠금만 해제합니다.
             if (controlGate != null) controlGate.ReleaseLock(this);
-            playerInventoryHud?.SetOpen(false);
-            worldHud?.SetMissionJournalOpen(false);
+
+            // Unity 오브젝트는 파괴된 뒤 C# 참조가 남아 있어도 `== null`이 true가 되는 특별한 수명 주기를 사용합니다.
+            // 일반 C#의 `?.` 연산자는 이 Unity식 null 판정을 거치지 않으므로, 씬 종료 중 먼저 파괴된 HUD 메서드를 호출해
+            // MissingReferenceException이 발생할 수 있습니다. 명시적으로 비교한 뒤 살아 있는 HUD만 닫아 안전하게 씬을 떠납니다.
+            if (playerInventoryHud != null) playerInventoryHud.SetOpen(false);
+            if (worldHud != null) worldHud.SetMissionJournalOpen(false);
             activeScreen = null;
             activeFacility = null;
         }

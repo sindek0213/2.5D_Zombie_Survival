@@ -73,7 +73,8 @@ public sealed class RaidMapLayoutTests
             Is.GreaterThanOrEqualTo(70f));
     }
 
-    // 넓어진 학교의 12개 외곽 스폰 지점이 담장 안에 있고 정문 시작 위치 바로 옆에는 생성되지 않는지 검사합니다.
+    // 넓어진 학교의 모든 스폰 지점이 담장 안에 있고 정문 시작 위치와 운동장 탈출구 바로 옆에는 생성되지 않는지 검사합니다.
+    // 위치 배열과 위험도·해금 시간 배열의 길이가 달라지면 아래 접근 자체가 실패하므로 맵을 다시 만들 때 데이터 순서 누락도 함께 잡습니다.
     [Test]
     public void SchoolZombieSpawnPoints_AreInsideCampusAndAwayFromPlayerStart()
     {
@@ -82,11 +83,23 @@ public sealed class RaidMapLayoutTests
         for (int i = 0; i < SchoolRaidMapLayout.ZombieSpawnPointCount; i++)
         {
             Vector3 spawnPosition = SchoolRaidMapLayout.GetZombieSpawnPosition(i);
+            int dangerRating = SchoolRaidMapLayout.GetZombieSpawnDangerRating(i);
+            float unlockTime = SchoolRaidMapLayout.GetZombieSpawnUnlockTime(i);
             Assert.That(SchoolRaidMapLayout.IsInsidePlayableArea(spawnPosition, 2f), Is.True, $"학교 스폰 지점 {i + 1}이 외곽 담장과 너무 가깝습니다.");
             Assert.That(
                 Vector3.Distance(spawnPosition, SchoolRaidMapLayout.PlayerStartPosition),
                 Is.GreaterThanOrEqualTo(12f),
                 $"학교 스폰 지점 {i + 1}이 정문 시작점과 너무 가깝습니다.");
+            Assert.That(
+                Vector3.Distance(spawnPosition, SchoolRaidMapLayout.ExtractionPosition),
+                Is.GreaterThanOrEqualTo(12f),
+                $"학교 스폰 지점 {i + 1}이 운동장 탈출구를 바로 막을 수 있습니다.");
+            Assert.That(dangerRating, Is.InRange(1, 5), $"학교 스폰 지점 {i + 1}의 위험도가 1~5 범위를 벗어났습니다.");
+            Assert.That(unlockTime, Is.GreaterThanOrEqualTo(0f), $"학교 스폰 지점 {i + 1}의 해금 시간이 음수입니다.");
+
+            // 고위험 실내는 시작 직후 열리지 않아야 하고, 저위험 외곽은 즉시 사용할 수 있어야 초반 난이도가 갑자기 튀지 않습니다.
+            if (dangerRating >= 4) Assert.That(unlockTime, Is.GreaterThanOrEqualTo(60f));
+            if (dangerRating == 1) Assert.That(unlockTime, Is.Zero);
         }
     }
 

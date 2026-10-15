@@ -213,7 +213,7 @@ Raid 종료
 
 ### 6.4 최종 안정화
 
-- EditMode 249개와 PlayMode 4개 자동 테스트 통과
+- EditMode 280개와 PlayMode 8개 자동 테스트 통과
 - 버전 1~9 저장 파일 마이그레이션과 손상 데이터 보존 규칙 확인 완료
 - C# 컴파일, 누락 스크립트와 Build Settings 씬 등록 확인 완료
 - 새 리소스 적용 뒤 실제 조작 기반 전체 게임 루프를 한 번 더 확인
@@ -274,7 +274,7 @@ Raid 종료
 ## 10. 현재 검증 상태
 
 - Runtime, Editor, EditModeTests, PlayModeTests 프로젝트 컴파일: 경고 0개, 오류 0개
-- 2026-10-13 Unity Test Runner 실행: EditMode 249개와 PlayMode 4개 모두 통과
+- 2026-10-15 Unity Test Runner 실행: EditMode 280개와 PlayMode 8개 모두 통과
 - Title, Loading, Hideout, RaidSchool 실제 비동기 씬 흐름과 핵심 참조 자동 확인 완료
 - Build Settings에 위 네 씬만 등록했고 타이틀의 네 메뉴와 학교 전용 구역·NavMesh·출격 Canvas의 누락 참조가 없는지 확인 완료
 - 플레이어 테스트 빌드: Windows Development 빌드 생성 및 15초 Direct3D 11 시작 검사 완료
@@ -286,7 +286,7 @@ Raid 종료
 - 전체 C# 코드와 Unity 참조 검토: 완료
 - 임무 저장 실패 안내, 시설 ID 정규화, 출격품 저장 실패 롤백: 완료
 - 네 프로젝트 어셈블리 컴파일: 경고 0개, 오류 0개
-- Unity Test Runner: 별도 검증 프로젝트에서 EditMode 249개와 PlayMode 4개 모두 통과
+- Unity Test Runner: 현재 프로젝트에서 EditMode 280개와 PlayMode 8개 모두 통과
 - 상인·화폐, 무기 부착물, 출혈·골절 상태 이상, 좀비 소음·특수형, 연속 임무와 튜토리얼 구현 완료
 - 실제 플레이 지역은 학교를 구현했으며 추가 지역은 현재 범위에서 제외
 - 첫 지역으로 84×84 대형 학교 회색 상자 맵을 생성하고, 창고와 분리된 출격 터미널·지역 데이터·거점 Tab 인벤토리 구현 완료

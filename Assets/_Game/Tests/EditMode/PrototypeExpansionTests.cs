@@ -432,6 +432,32 @@ public sealed class PrototypeExpansionTests
         Assert.That(profile.FindTable(RegionLootSourceType.Ground, "school_floor"), Is.Not.Null);
         Assert.That(profile.FindTable(RegionLootSourceType.Monster, "walker"), Is.Not.Null);
 
+        // 지역 에셋의 GUID가 끊기거나 Inspector에서 확률·수량 범위를 뒤집으면 실제 레이드에서 빈 상자나 잘못된 수량이 생깁니다.
+        // 모든 출처를 순회해 각 품목 참조와 기본 수치를 한 번에 검증하면 아이템을 추가할 때 특정 표만 빠뜨린 실수도 바로 찾을 수 있습니다.
+        RegionLootSourceTable[] tables = profile.SourceTables;
+        Assert.That(tables.Length, Is.GreaterThanOrEqualTo(8));
+        for (int tableIndex = 0; tableIndex < tables.Length; tableIndex++)
+        {
+            RegionLootSourceTable table = tables[tableIndex];
+            Assert.That(table, Is.Not.Null, $"학교 드랍 표 {tableIndex + 1}이 비어 있습니다.");
+            Assert.That(table.SourceId, Is.Not.Empty, $"학교 드랍 표 {tableIndex + 1}의 출처 ID가 비어 있습니다.");
+            Assert.That(table.MinimumRolls, Is.GreaterThanOrEqualTo(1));
+            Assert.That(table.MaximumRolls, Is.GreaterThanOrEqualTo(table.MinimumRolls));
+            Assert.That(table.Entries.Length, Is.GreaterThan(0), $"{table.SourceId} 드랍 표에 후보 아이템이 없습니다.");
+
+            for (int entryIndex = 0; entryIndex < table.Entries.Length; entryIndex++)
+            {
+                RegionLootEntry entry = table.Entries[entryIndex];
+                string location = $"{table.SourceId} 표의 {entryIndex + 1}번 항목";
+                Assert.That(entry, Is.Not.Null, $"{location}이 비어 있습니다.");
+                Assert.That(entry.item, Is.Not.Null, $"{location}의 아이템 참조가 끊어졌습니다.");
+                Assert.That(entry.dropChance, Is.InRange(0f, 1f), $"{location}의 확률이 0~1 범위를 벗어났습니다.");
+                Assert.That(entry.weight, Is.GreaterThan(0f), $"{location}의 선택 가중치는 0보다 커야 합니다.");
+                Assert.That(entry.minimumQuantity, Is.GreaterThanOrEqualTo(1));
+                Assert.That(entry.maximumQuantity, Is.GreaterThanOrEqualTo(entry.minimumQuantity));
+            }
+        }
+
         Assert.That(CountItemInSource(profile, "quest_radio", RegionLootSourceType.Ground), Is.GreaterThan(0));
         Assert.That(CountItemInSource(profile, "quest_radio", RegionLootSourceType.Container), Is.EqualTo(0));
         Assert.That(CountItemInSource(profile, "quest_radio", RegionLootSourceType.Monster), Is.EqualTo(0));

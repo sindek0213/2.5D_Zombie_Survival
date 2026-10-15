@@ -19,7 +19,7 @@
 - 주요 씬: `Title -> Loading -> Hideout -> Loading -> RaidSchool -> Loading -> Hideout`
 - 런타임 코드: `Assets/_Game/Scripts`
 - EditMode 테스트: `Assets/_Game/Tests/EditMode`
-- 2026-10-13 전체 Unity 검증: EditMode 테스트 249개와 PlayMode 테스트 4개 통과, 실패·건너뜀 0개
+- 2026-10-15 전체 Unity 검증: EditMode 테스트 280개와 PlayMode 테스트 8개 통과, 실패·건너뜀 0개
 - 이전 Windows Development 빌드와 15초 시작 검사는 통과했으며 이번 Loading 전환 뒤에는 사용량을 아끼기 위해 새 실행 파일을 만들지 않음
 
 현재 코드는 프로토타입 단계입니다. 시작 화면, 거점, 전투 정보, 피격, 탈출, 결과와 인벤토리는 모두 수정 가능한 uGUI `Canvas`와 프리팹 구조를 사용합니다. 총성과 피격음은 아직 외부 음원 없이 코드로 생성한 임시 효과음입니다.
@@ -671,7 +671,7 @@ HideoutController
 - [`ItemRarityTests.cs`](Assets/_Game/Tests/EditMode/ItemRarityTests.cs): 네 희귀도의 한글 이름과 인벤토리 아이템 색상 구분을 검사합니다.
 - [`RoadmapPlayModeTests.cs`](Assets/_Game/Tests/PlayMode/RoadmapPlayModeTests.cs): 실제 방어구 피해 적용, 출혈 테두리와 의료품 치료·소비, 전방 구르기의 이동 거리·벽 충돌·기력 비용·무적 해제, 좀비 사망 드롭과 게임 씬 연결을 실행 중에 검사합니다.
 
-Unity에서 `Window > General > Test Runner`를 열고 EditMode와 PlayMode 탭의 테스트를 실행할 수 있습니다. 2026-10-14 구르기 변경 검증에서는 EditMode 258개와 PlayMode 7개가 모두 통과했으며 실패하거나 건너뛴 테스트는 없습니다. 이번 변경으로 실행 파일 빌드를 새로 만들지는 않았습니다. 실제 조작감과 화면 효과 강도는 사람이 확인하는 별도 단계입니다.
+Unity에서 `Window > General > Test Runner`를 열고 EditMode와 PlayMode 탭의 테스트를 실행할 수 있습니다. 2026-10-15 전체 검증에서는 EditMode 280개와 PlayMode 8개가 모두 통과했으며 실패하거나 건너뛴 테스트는 없습니다. 이번 변경으로 실행 파일 빌드를 새로 만들지는 않았습니다. 실제 조작감과 화면 효과 강도는 사람이 확인하는 별도 단계입니다.
 
 ## 8. 새 채팅에서 설명받을 때 지켜 달라고 할 규칙
 
